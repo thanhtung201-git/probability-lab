@@ -1,0 +1,174 @@
+{
+  "phien_ban": "0.1-nhap",
+  "ghi_chu": "Bản nháp do người làm sản phẩm soạn, CẦN GIÁO VIÊN DUYỆT trước khi dùng thật. Từ khóa viết không dấu, chữ thường (sau khi chuẩn hóa).",
+  "ngo_nhan": [
+    {
+      "ma": "M0",
+      "ten": "Hiểu đúng",
+      "mo_ta": "Học sinh nhận ra các lần thử độc lập, xác suất không đổi theo lịch sử, hoặc hiểu xác suất là mức độ có thể xảy ra.",
+      "vi_du": [
+        "Đồng xu không nhớ các lần trước nên lần sau vẫn là 1/2",
+        "Hai dãy có khả năng như nhau vì mỗi lần tung độc lập"
+      ],
+      "tu_khoa": [
+        "doc lap",
+        "khong phu thuoc",
+        "khong lien quan",
+        "khong anh huong",
+        "khong nho",
+        "van (la )?1/2",
+        "van (la )?50",
+        "van nhu cu",
+        "nhu nhau",
+        "bang nhau",
+        "kha nang nhu nhau",
+        "chi la kha nang",
+        "khong chac chan",
+        "van co the (khong )?(mua|xay ra)",
+        "it lan qua",
+        "chua du (lan|nhieu)",
+        "can tung (them|nhieu)"
+      ],
+      "thi_nghiem_mac_dinh": null,
+      "cau_hoi_mo_rong": "Nhóm thử nghĩ: nếu đồng xu bị lệch thật thì nhóm sẽ cần làm gì để kiểm tra?"
+    },
+    {
+      "ma": "M1",
+      "ten": "Bù trừ giữa các lần thử độc lập",
+      "mo_ta": "Cho rằng sau nhiều lần ra cùng một kết quả thì lần sau sẽ ra kết quả khác để 'bù lại', hoặc kết quả lâu chưa xuất hiện thì sắp xuất hiện.",
+      "vi_du": [
+        "Ngửa 5 lần rồi nên lần sau chắc ra sấp",
+        "Con số 30 kỳ chưa về thì kỳ tới phải về"
+      ],
+      "tu_khoa": [
+        "bu lai",
+        "den luot",
+        "lan (sau|toi|tiep|thu 6)[^.]*(de|chac|se|phai)",
+        "(de|chac|se|phai) ra sap",
+        "lau (chua|khong) ve",
+        "(sap|chac chan|phai|se) ve",
+        "ra (nhieu|lien tiep|5 lan)[^.]*roi",
+        "nhieu ngua roi",
+        "cung phai"
+      ],
+      "thi_nghiem_mac_dinh": "co_dieu_kien",
+      "cau_hoi_mo_rong": "Theo nhóm, đồng xu có nhớ được những lần tung trước không? Điều gì có thể làm lần tung sau thay đổi?"
+    },
+    {
+      "ma": "M2",
+      "ten": "Kết luận vội từ ít lần thử",
+      "mo_ta": "Dựa vào rất ít lần thử để kết luận chắc chắn về xác suất hoặc về tính cân đối của đồng xu.",
+      "vi_du": [
+        "Tung 10 lần ra 7 ngửa thì đồng xu bị lệch",
+        "Ra ngửa nhiều hơn nên xác suất ngửa là 0,7"
+      ],
+      "tu_khoa": [
+        "bi lech",
+        "lech ve",
+        "khong can doi",
+        "gian lan",
+        "bi loi",
+        "(dong xu|no) (bi )?(meo|hong)",
+        "xac suat (ngua )?la 0[,.]7",
+        "xac suat (ngua )?la 70",
+        "dong y voi binh",
+        "dong y vi"
+      ],
+      "thi_nghiem_mac_dinh": "hoi_tu",
+      "cau_hoi_mo_rong": "Nếu chỉ tung vài lần, kết quả có thể lệch nhiều không? Nhóm cần làm gì để kết luận chắc chắn hơn?"
+    },
+    {
+      "ma": "M3",
+      "ten": "Coi mọi kết quả là đồng khả năng",
+      "mo_ta": "Cho rằng có bao nhiêu loại kết quả thì xác suất chia đều, không xét số kết quả đồng khả năng.",
+      "vi_du": [
+        "Có đỏ và xanh nên mỗi màu 1/2"
+      ],
+      "tu_khoa": [
+        "(2|hai) (ket qua|truong hop|kha nang)[^.]*(nen|thi) (moi|deu)",
+        "moi (mau|loai|ben) (deu )?1/2"
+      ],
+      "thi_nghiem_mac_dinh": "xac_suat_lap",
+      "cau_hoi_mo_rong": "Các kết quả có thật sự có cùng khả năng xảy ra không? Mỗi kết quả có bao nhiêu cách xảy ra?"
+    },
+    {
+      "ma": "M4",
+      "ten": "Tính đại diện",
+      "mo_ta": "Cho rằng dãy kết quả trông 'ngẫu nhiên', xen kẽ thì dễ xảy ra hơn dãy lặp lại cùng một kết quả.",
+      "vi_du": [
+        "Dãy NSNSSN dễ ra hơn NNNNNN",
+        "Ra 6 lần ngửa liên tiếp rất khó"
+      ],
+      "tu_khoa": [
+        "nsnssn (de|hon|nhieu)",
+        "nnnnnn (kho|it|hiem)",
+        "(xen ke|lon xon|ngau nhien hon|tu nhien hon)",
+        "lap lai[^.]*(kho|it|hiem)",
+        "(6|sau) lan (ngua )?lien tiep[^.]*(kho|hiem|it)",
+        "it khi (ra )?(giong nhau|lien tiep)"
+      ],
+      "thi_nghiem_mac_dinh": "so_sanh_day",
+      "cau_hoi_mo_rong": "Khi tung, đồng xu có biết dãy trước đó trông đều đặn hay lộn xộn không? Vậy một dãy cụ thể có gì đặc biệt hơn dãy khác?"
+    },
+    {
+      "ma": "M5",
+      "ten": "Hiểu xác suất như lời tiên đoán chắc chắn",
+      "mo_ta": "Cho rằng xác suất cao nghĩa là chắc chắn xảy ra, nên nếu không xảy ra thì dự báo là sai.",
+      "vi_du": [
+        "Dự báo 70% mưa mà không mưa là dự báo sai"
+      ],
+      "tu_khoa": [
+        "du bao (da )?sai",
+        "(noi|bao) sai",
+        "khong (chinh xac|dung)",
+        "(70|70%)[^.]*(chac|phai|se) mua",
+        "da noi (la )?mua"
+      ],
+      "thi_nghiem_mac_dinh": "xac_suat_lap",
+      "cau_hoi_mo_rong": "Khi nói khả năng mưa cao, điều đó có nghĩa là chắc chắn mưa không? Làm sao biết một dự báo có đáng tin hay không?"
+    },
+    {
+      "ma": "M6",
+      "ten": "Coi các lần lấy là độc lập khi không hoàn lại",
+      "mo_ta": "Khi lấy không hoàn lại, học sinh vẫn dùng xác suất ban đầu cho các lần sau, quên rằng số phần tử trong hộp đã thay đổi.",
+      "vi_du": [
+        "Lấy 2 bi không bỏ lại, xác suất cả hai đỏ là 3/5 × 3/5",
+        "Rút 2 thẻ không trả lại, lần hai vẫn có 6 thẻ"
+      ],
+      "tu_khoa": [
+        "9/25",
+        "1/4",
+        "3/5 ?[x*×] ?3/5",
+        "van (la )?(3/5|1/2)",
+        "khong (thay doi|anh huong)",
+        "nhu cu",
+        "(lan|luot) (sau|thu hai|2)[^.]*(van|cung) (la )?(3/5|1/2|nhu)"
+      ],
+      "thi_nghiem_mac_dinh": "bi",
+      "cau_hoi_mo_rong": "Sau khi lấy ra lần đầu, trong hộp còn bao nhiêu vật? Điều đó ảnh hưởng thế nào đến lần lấy thứ hai?"
+    },
+    {
+      "ma": "KXD",
+      "ten": "Không xác định",
+      "mo_ta": "Câu trả lời mơ hồ, lạc đề, hoặc không đủ thông tin để xếp vào mã nào.",
+      "vi_du": [
+        "Em không biết",
+        "Tùy"
+      ],
+      "tu_khoa": [],
+      "thi_nghiem_mac_dinh": null,
+      "cau_hoi_mo_rong": "Nhóm có thể nói rõ hơn kết quả nào dễ xảy ra hơn và vì sao không?"
+    }
+  ],
+  "khuon_phan_hoi": {
+    "co_dieu_kien": "Máy đã tạo {so_chuoi_da_tao} chuỗi tung, trong đó {so_chuoi} chuỗi có {k} lần {lap} liên tiếp. Ở lần kế tiếp, kết quả {bien_co} xuất hiện {dem} lần, tức {tan_suat_pt}. Con số này có lớn hơn hẳn so với kết quả còn lại như nhóm dự đoán không?",
+    "hoi_tu": "Sau {moc_nho} lần, tần suất {nhan_n} là {tan_suat_nho_pt}; sau {moc_lon} lần là {tan_suat_lon_pt}. Theo nhóm, chỉ nhìn vào ít lần có đủ để kết luận không?",
+    "so_sanh_day": "Trong {so_lan} lần tung dãy {do_dai} đồng xu, dãy {day_a} xuất hiện {dem_a} lần, dãy {day_b} xuất hiện {dem_b} lần. Hai con số này có chênh lệch nhiều như nhóm nghĩ không?",
+    "xac_suat_lap": "Trong {so_ngay} ngày cùng có khả năng {nhan_xay_ra} là {ly_thuyet_pt}, có {khong_xay_ra} ngày {nhan_khong}, tức {ty_le_khong_pt}. Nếu dự báo đúng mà vẫn có những ngày {nhan_khong}, nhóm nghĩ gì về câu \"dự báo đã sai\"?",
+    "xuc_xac": "Sau {so_luot} lượt gieo, {chi_tiet}. Kết quả này có giống dự đoán ban đầu của nhóm không?",
+    "dong_xu": "Sau {so_luot} lượt tung, {chi_tiet}. Kết quả này có giống dự đoán ban đầu của nhóm không?",
+    "bi": "Sau {so_luot} lượt lấy, {chi_tiet}. Kết quả này có giống dự đoán ban đầu của nhóm không?",
+    "the": "Sau {so_luot} lượt rút, {chi_tiet}. Kết quả này có giống dự đoán ban đầu của nhóm không?",
+    "bai_toan": "Sau {so_luot} lượt lấy, {chi_tiet}. Kết quả này có giống dự đoán ban đầu của nhóm không?"
+  }
+}

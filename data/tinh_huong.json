@@ -1,0 +1,704 @@
+{
+  "phien_ban": "0.1-nhap",
+  "ghi_chu": "Bản nháp, CẦN GIÁO VIÊN DUYỆT. `thi_nghiem` là các thí nghiệm giáo viên cho phép với tình huống này; `chinh` là thí nghiệm mặc định. `tu_khoa` (nếu có) thay từ khóa của thư viện cho mã tương ứng trong riêng tình huống đó.",
+  "tinh_huong": [
+    {
+      "id": "dong_xu_5_ngua",
+      "tieu_de": "Năm lần ngửa liên tiếp",
+      "noi_dung": "Bạn An tung một đồng xu cân đối 5 lần, cả 5 lần đều ra mặt ngửa. Theo em, ở lần tung thứ 6, mặt sấp có dễ xuất hiện hơn mặt ngửa không? Vì sao?",
+      "nhan": {
+        "N": "ngửa",
+        "S": "sấp"
+      },
+      "chinh": "co_dieu_kien",
+      "thi_nghiem": {
+        "co_dieu_kien": {
+          "loai": "co_dieu_kien",
+          "so_lan_truoc": 5,
+          "ket_qua_lap": "N",
+          "bien_co": "S",
+          "so_chuoi": 300,
+          "xac_suat_ngua": {
+            "tu": 1,
+            "mau": 2
+          }
+        },
+        "hoi_tu": {
+          "loai": "hoi_tu",
+          "moc": [
+            10,
+            100,
+            1000,
+            10000
+          ],
+          "xac_suat_ngua": {
+            "tu": 1,
+            "mau": 2
+          }
+        },
+        "so_sanh_day": {
+          "loai": "so_sanh_day",
+          "day_a": "NNNNNS",
+          "day_b": "NNNNNN",
+          "so_lan": 6400,
+          "xac_suat_ngua": {
+            "tu": 1,
+            "mau": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "dong_xu_7_10",
+      "tieu_de": "Bảy ngửa trong mười lần",
+      "noi_dung": "Bạn Bình tung một đồng xu 10 lần, được 7 lần ngửa và 3 lần sấp. Bình kết luận đồng xu này bị lệch về mặt ngửa. Em có đồng ý với Bình không? Vì sao?",
+      "nhan": {
+        "N": "ngửa",
+        "S": "sấp"
+      },
+      "chinh": "hoi_tu",
+      "thi_nghiem": {
+        "hoi_tu": {
+          "loai": "hoi_tu",
+          "moc": [
+            10,
+            100,
+            1000,
+            10000
+          ],
+          "xac_suat_ngua": {
+            "tu": 1,
+            "mau": 2
+          }
+        },
+        "co_dieu_kien": {
+          "loai": "co_dieu_kien",
+          "so_lan_truoc": 3,
+          "ket_qua_lap": "N",
+          "bien_co": "N",
+          "so_chuoi": 300,
+          "xac_suat_ngua": {
+            "tu": 1,
+            "mau": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "hai_day",
+      "tieu_de": "Dãy nào dễ xuất hiện hơn?",
+      "noi_dung": "Tung một đồng xu cân đối 6 lần liên tiếp và ghi lại kết quả (N là ngửa, S là sấp). Theo em, dãy NSNSSN hay dãy NNNNNN dễ xuất hiện hơn? Vì sao?",
+      "nhan": {
+        "N": "ngửa",
+        "S": "sấp"
+      },
+      "chinh": "so_sanh_day",
+      "thi_nghiem": {
+        "so_sanh_day": {
+          "loai": "so_sanh_day",
+          "day_a": "NSNSSN",
+          "day_b": "NNNNNN",
+          "so_lan": 6400,
+          "xac_suat_ngua": {
+            "tu": 1,
+            "mau": 2
+          }
+        },
+        "hoi_tu": {
+          "loai": "hoi_tu",
+          "moc": [
+            10,
+            100,
+            1000,
+            10000
+          ],
+          "xac_suat_ngua": {
+            "tu": 1,
+            "mau": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "du_bao_mua",
+      "tieu_de": "Dự báo 70% mưa",
+      "noi_dung": "Dự báo thời tiết nói ngày mai có 70% khả năng mưa. Hôm sau trời không mưa. Có người nói: \"Dự báo đã sai.\" Em có đồng ý không? Vì sao?",
+      "nhan": {
+        "N": "mưa",
+        "S": "không mưa"
+      },
+      "chinh": "xac_suat_lap",
+      "thi_nghiem": {
+        "xac_suat_lap": {
+          "loai": "xac_suat_lap",
+          "xac_suat": {
+            "tu": 7,
+            "mau": 10
+          },
+          "so_ngay": 100
+        },
+        "hoi_tu": {
+          "loai": "hoi_tu",
+          "moc": [
+            10,
+            100,
+            1000,
+            10000
+          ],
+          "xac_suat_ngua": {
+            "tu": 7,
+            "mau": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "lo_de",
+      "tieu_de": "Con số lâu chưa về",
+      "noi_dung": "Một người chơi lô đề nói: \"Con số 27 đã 10 kỳ liền chưa về, kỳ tới chắc chắn nó sẽ về.\" Mỗi kỳ, khả năng một con số về là 1/100. Em có đồng ý không? Vì sao?",
+      "nhan": {
+        "N": "về",
+        "S": "không về"
+      },
+      "chinh": "co_dieu_kien",
+      "thi_nghiem": {
+        "co_dieu_kien": {
+          "loai": "co_dieu_kien",
+          "so_lan_truoc": 10,
+          "ket_qua_lap": "S",
+          "bien_co": "N",
+          "so_chuoi": 3000,
+          "xac_suat_ngua": {
+            "tu": 1,
+            "mau": 100
+          }
+        },
+        "xac_suat_lap": {
+          "loai": "xac_suat_lap",
+          "xac_suat": {
+            "tu": 1,
+            "mau": 100
+          },
+          "so_ngay": 1000
+        }
+      }
+    },
+    {
+      "id": "xx_tong_7_12",
+      "tieu_de": "Tổng 7 hay tổng 12?",
+      "noi_dung": "Gieo đồng thời hai con xúc xắc cân đối và tính tổng số chấm trên hai mặt. Theo em, tổng bằng 7 hay tổng bằng 12 dễ xuất hiện hơn, hay khả năng như nhau? Vì sao?",
+      "tu_khoa": {
+        "M3": [
+          "nhu nhau",
+          "bang nhau",
+          "(11|muoi mot) (tong|ket qua|truong hop|kha nang|gia tri)",
+          "1/11",
+          "moi tong (deu|co)",
+          "deu (la )?(1|mot) (ket qua|truong hop)",
+          "tu 2 den 12"
+        ],
+        "M0": [
+          "(nhieu|6|sau) cach",
+          "(chi (co )?)?(1|mot) cach",
+          "tong 7 (de|nhieu|hay|thuong)[^.]*hon",
+          "6/36",
+          "1/36",
+          "khong (nhu nhau|bang nhau|deu)",
+          "chi (co )?6 ?[+] ?6"
+        ]
+      },
+      "chinh": "xuc_xac",
+      "thi_nghiem": {
+        "xuc_xac": {
+          "loai": "xuc_xac",
+          "che_do": "phan_phoi",
+          "so_xuc_xac": 2,
+          "theo_doi": [
+            7,
+            12
+          ],
+          "so_lan_goi_y": 1000
+        }
+      }
+    },
+    {
+      "id": "xx_mat_6",
+      "tieu_de": "Năm lần chưa ra mặt 6",
+      "noi_dung": "Bạn Lan gieo một con xúc xắc cân đối 5 lần liên tiếp mà chưa lần nào ra mặt 6. Lan nói: \"Lần gieo tiếp theo, mặt 6 sẽ dễ xuất hiện hơn.\" Em có đồng ý với Lan không? Vì sao?",
+      "tu_khoa": {
+        "M1": [
+          "(sap|de|chac|phai|se) ra (mat )?6",
+          "lau (chua|khong) ra",
+          "den luot",
+          "bu lai",
+          "dong y",
+          "6 (se|phai|chac) (ra|xuat hien)"
+        ],
+        "M0": [
+          "doc lap",
+          "khong nho",
+          "khong phu thuoc",
+          "khong lien quan",
+          "khong anh huong",
+          "van (la )?1/6",
+          "van nhu cu",
+          "khong dong y"
+        ]
+      },
+      "chinh": "xuc_xac",
+      "thi_nghiem": {
+        "xuc_xac": {
+          "loai": "xuc_xac",
+          "che_do": "dieu_kien",
+          "so_lan_truoc": 5,
+          "mat": 6,
+          "theo_doi": [
+            "ra"
+          ],
+          "so_lan_goi_y": 3000
+        }
+      }
+    },
+    {
+      "id": "xx_lech",
+      "tieu_de": "Xúc xắc có bị lệch?",
+      "noi_dung": "Bạn Hùng gieo một con xúc xắc 12 lần, mặt 1 xuất hiện 4 lần trong khi mỗi mặt khác chỉ xuất hiện 1 hoặc 2 lần. Hùng kết luận: \"Con xúc xắc này bị lệch về mặt 1.\" Em có đồng ý không? Vì sao?",
+      "tu_khoa": {
+        "M2": [
+          "bi lech",
+          "lech ve",
+          "khong can doi",
+          "gian lan",
+          "dong y",
+          "mat 1 (de|nhieu|hay) (ra )?hon",
+          "ra nhieu (nhat|hon)"
+        ],
+        "M0": [
+          "it lan qua",
+          "chua du",
+          "can gieo (them|nhieu)",
+          "12 lan (la )?(it|qua it)",
+          "ngau nhien",
+          "khong dong y",
+          "van (la )?1/6",
+          "con qua it"
+        ]
+      },
+      "chinh": "xuc_xac",
+      "thi_nghiem": {
+        "xuc_xac": {
+          "loai": "xuc_xac",
+          "che_do": "phan_phoi",
+          "so_xuc_xac": 1,
+          "theo_doi": [
+            1
+          ],
+          "so_lan_goi_y": 10000
+        }
+      }
+    },
+    {
+      "id": "xx_day",
+      "tieu_de": "Dãy 6-6-6 hay 2-5-3?",
+      "noi_dung": "Gieo một con xúc xắc cân đối 3 lần liên tiếp và ghi lại các mặt theo thứ tự. Theo em, dãy 6-6-6 hay dãy 2-5-3 khó xuất hiện hơn? Vì sao?",
+      "tu_khoa": {
+        "M4": [
+          "6-?6-?6[^.]*(kho|hiem|it)",
+          "(kho|hiem)[^.]*(3|ba) lan (6|giong nhau|lien tiep)",
+          "lap lai[^.]*(kho|hiem|it)",
+          "2-?5-?3[^.]*(de|nhieu)",
+          "ngau nhien hon",
+          "lon xon",
+          "giong nhau[^.]*(kho|hiem|it)"
+        ],
+        "M0": [
+          "nhu nhau",
+          "bang nhau",
+          "1/216",
+          "doc lap",
+          "kha nang (nhu nhau|bang nhau)"
+        ]
+      },
+      "chinh": "xuc_xac",
+      "thi_nghiem": {
+        "xuc_xac": {
+          "loai": "xuc_xac",
+          "che_do": "day",
+          "day_a": [
+            6,
+            6,
+            6
+          ],
+          "day_b": [
+            2,
+            5,
+            3
+          ],
+          "theo_doi": [
+            "a",
+            "b"
+          ],
+          "so_lan_goi_y": 21600
+        }
+      }
+    },
+    {
+      "id": "dx_5_ngua",
+      "tieu_de": "Năm lần ngửa liên tiếp",
+      "noi_dung": "Bạn An tung một đồng xu cân đối 5 lần, cả 5 lần đều ra mặt ngửa. Theo em, ở lần tung thứ 6, mặt sấp có dễ xuất hiện hơn mặt ngửa không? Vì sao?",
+      "chinh": "dong_xu",
+      "thi_nghiem": {
+        "dong_xu": {
+          "loai": "dong_xu",
+          "che_do": "dieu_kien",
+          "so_lan_truoc": 5,
+          "mat": "N",
+          "theo_doi": [
+            "S"
+          ],
+          "so_lan_goi_y": 3000
+        }
+      }
+    },
+    {
+      "id": "dx_7_10",
+      "tieu_de": "Bảy ngửa trong mười lần",
+      "noi_dung": "Bạn Bình tung một đồng xu 10 lần, được 7 lần ngửa và 3 lần sấp. Bình kết luận đồng xu này bị lệch về mặt ngửa. Em có đồng ý với Bình không? Vì sao?",
+      "chinh": "dong_xu",
+      "thi_nghiem": {
+        "dong_xu": {
+          "loai": "dong_xu",
+          "che_do": "phan_phoi",
+          "so_dong_xu": 1,
+          "theo_doi": [
+            "N"
+          ],
+          "so_lan_goi_y": 10000
+        }
+      }
+    },
+    {
+      "id": "dx_hai_day",
+      "tieu_de": "Dãy nào dễ xuất hiện hơn?",
+      "noi_dung": "Tung một đồng xu cân đối 6 lần liên tiếp và ghi lại kết quả (N là ngửa, S là sấp). Theo em, dãy NSNSSN hay dãy NNNNNN dễ xuất hiện hơn? Vì sao?",
+      "chinh": "dong_xu",
+      "thi_nghiem": {
+        "dong_xu": {
+          "loai": "dong_xu",
+          "che_do": "day",
+          "day_a": "NSNSSN",
+          "day_b": "NNNNNN",
+          "theo_doi": [
+            "a",
+            "b"
+          ],
+          "so_lan_goi_y": 64000
+        }
+      }
+    },
+    {
+      "id": "dx_hai_dong",
+      "tieu_de": "Tung hai đồng xu",
+      "noi_dung": "Tung đồng thời hai đồng xu cân đối. Có thể xảy ra 3 trường hợp: không có mặt ngửa, có một mặt ngửa, hoặc có hai mặt ngửa. Bạn Mai nói: \"Có 3 trường hợp nên mỗi trường hợp có khả năng như nhau.\" Em có đồng ý với Mai không? Vì sao?",
+      "tu_khoa": {
+        "M3": [
+          "(3|ba) (ket qua|truong hop|kha nang)[^.]*(nen|thi) (moi|deu)",
+          "1/3",
+          "nhu nhau",
+          "bang nhau",
+          "moi (ket qua|truong hop) (deu )?(la )?1/3",
+          "dong y"
+        ],
+        "M0": [
+          "(2|hai) (cach|dong xu khac nhau)",
+          "ngua[- ]sap (va|hoac) sap[- ]ngua",
+          "1/2",
+          "1/4",
+          "4 (ket qua|truong hop|kha nang)",
+          "khong (nhu nhau|bang nhau|deu)",
+          "khong dong y",
+          "nhieu cach hon",
+          "phan biet"
+        ]
+      },
+      "chinh": "dong_xu",
+      "thi_nghiem": {
+        "dong_xu": {
+          "loai": "dong_xu",
+          "che_do": "phan_phoi",
+          "so_dong_xu": 2,
+          "theo_doi": [
+            "0",
+            "1",
+            "2"
+          ],
+          "so_lan_goi_y": 1000
+        }
+      }
+    },
+    {
+      "id": "bi_mot",
+      "tieu_de": "Một bi đỏ, chín bi xanh",
+      "noi_dung": "Hộp có 1 bi đỏ và 9 bi xanh, các bi giống hệt nhau về kích thước. Lấy ngẫu nhiên 1 bi từ hộp. Bạn Nam nói: \"Chỉ có 2 màu nên khả năng lấy được bi đỏ là 1/2.\" Em có đồng ý với Nam không? Vì sao?",
+      "tu_khoa": {
+        "M3": [
+          "nhu nhau",
+          "bang nhau",
+          "(2|hai) mau[^.]*(nen|thi) (moi|deu)",
+          "1/2",
+          "moi mau (deu )?(la )?1/2",
+          "dong y"
+        ],
+        "M0": [
+          "1/10",
+          "9/10",
+          "(1|mot) (bi )?do (tren|trong) (10|muoi)",
+          "xanh nhieu hon",
+          "nhieu (bi )?xanh",
+          "ty le",
+          "khong (nhu nhau|bang nhau|dong y)",
+          "10 (bi|vien)"
+        ]
+      },
+      "chinh": "bi",
+      "thi_nghiem": {
+        "bi": {
+          "loai": "bi",
+          "hop": [
+            {
+              "ten": "đỏ",
+              "so": 1
+            },
+            {
+              "ten": "xanh",
+              "so": 9
+            }
+          ],
+          "che_do": "phan_phoi",
+          "so_lay": 1,
+          "hoan_lai": true,
+          "mau_muc_tieu": "đỏ",
+          "theo_doi": [
+            "đỏ"
+          ],
+          "so_lan_goi_y": 1000
+        }
+      }
+    },
+    {
+      "id": "bi_hai_khong_hoan",
+      "tieu_de": "Lấy hai bi, không bỏ lại",
+      "noi_dung": "Hộp có 3 bi đỏ và 2 bi xanh. Lấy ngẫu nhiên lần lượt 2 bi, không bỏ bi đã lấy trở lại hộp. Bạn Linh tính xác suất để cả hai bi đều đỏ là 3/5 × 3/5 = 9/25. Em có đồng ý với Linh không? Vì sao?",
+      "tu_khoa": {
+        "M6": [
+          "9/25",
+          "3/5 ?[x*×] ?3/5",
+          "dong y",
+          "(lan|luot) (sau|thu hai|2|hai)[^.]*(van|cung) (la )?3/5",
+          "van (la )?3/5",
+          "nhu cu",
+          "khong (thay doi|anh huong)"
+        ],
+        "M0": [
+          "(con|chi con) (lai )?(2|hai) (bi )?do",
+          "2/4",
+          "3/10",
+          "1/2",
+          "khong (bo lai|hoan lai|tra lai)[^.]*(giam|it hon|thay doi)",
+          "khong dong y",
+          "(4|bon) (bi )?(con lai|trong hop)",
+          "con (lai )?4"
+        ]
+      },
+      "chinh": "bi",
+      "thi_nghiem": {
+        "bi": {
+          "loai": "bi",
+          "hop": [
+            {
+              "ten": "đỏ",
+              "so": 3
+            },
+            {
+              "ten": "xanh",
+              "so": 2
+            }
+          ],
+          "che_do": "phan_phoi",
+          "so_lay": 2,
+          "hoan_lai": false,
+          "mau_muc_tieu": "đỏ",
+          "theo_doi": [
+            "2"
+          ],
+          "so_lan_goi_y": 1000
+        }
+      }
+    },
+    {
+      "id": "bi_lien_tiep",
+      "tieu_de": "Bốn lần liên tiếp bi xanh",
+      "noi_dung": "Hộp có 3 bi đỏ và 7 bi xanh. Mỗi lần lấy ngẫu nhiên 1 bi, xem màu rồi bỏ lại vào hộp. Bạn Thảo lấy 4 lần liên tiếp đều được bi xanh và nói: \"Xanh nhiều lần rồi, lần sau bi đỏ sẽ dễ xuất hiện hơn.\" Em có đồng ý với Thảo không? Vì sao?",
+      "tu_khoa": {
+        "M1": [
+          "(do|bi do) (se|de|chac|phai|sap) (ra|xuat hien|lay)",
+          "lau (chua|khong) (ra|lay)",
+          "den luot",
+          "bu lai",
+          "dong y",
+          "xanh nhieu (lan )?roi"
+        ],
+        "M0": [
+          "doc lap",
+          "khong nho",
+          "khong phu thuoc",
+          "khong lien quan",
+          "khong anh huong",
+          "van (la )?3/10",
+          "van nhu cu",
+          "khong dong y",
+          "bo lai"
+        ]
+      },
+      "chinh": "bi",
+      "thi_nghiem": {
+        "bi": {
+          "loai": "bi",
+          "hop": [
+            {
+              "ten": "đỏ",
+              "so": 3
+            },
+            {
+              "ten": "xanh",
+              "so": 7
+            }
+          ],
+          "che_do": "dieu_kien",
+          "so_lan_truoc": 4,
+          "mau_lap": "xanh",
+          "theo_doi": [
+            "đỏ"
+          ],
+          "so_lan_goi_y": 3000
+        }
+      }
+    },
+    {
+      "id": "the_boi_3",
+      "tieu_de": "Thẻ chia hết cho 3",
+      "noi_dung": "Có 10 thẻ giống hệt nhau, ghi các số từ 1 đến 10, đặt úp xuống bàn. Rút ngẫu nhiên 1 thẻ. Bạn Hà nói: \"Chỉ có 2 khả năng là rút được thẻ chia hết cho 3 hoặc không, nên khả năng rút được thẻ chia hết cho 3 là 1/2.\" Em có đồng ý với Hà không? Vì sao?",
+      "tu_khoa": {
+        "M3": [
+          "nhu nhau",
+          "bang nhau",
+          "(2|hai) (kha nang|truong hop|ket qua)[^.]*(nen|thi) (moi|deu)",
+          "1/2",
+          "dong y"
+        ],
+        "M0": [
+          "3/10",
+          "(3|ba) (the|so)",
+          "3, ?6, ?9",
+          "(10|muoi) the",
+          "khong (nhu nhau|bang nhau|dong y)",
+          "(3|ba) tren (10|muoi)"
+        ]
+      },
+      "chinh": "the",
+      "thi_nghiem": {
+        "the": {
+          "loai": "the",
+          "so_the": 10,
+          "che_do": "bien_co",
+          "bien_co": {
+            "kieu": "boi",
+            "k": 3
+          },
+          "theo_doi": [
+            "co"
+          ],
+          "so_lan_goi_y": 1000
+        }
+      }
+    },
+    {
+      "id": "the_so_dac_biet",
+      "tieu_de": "Thẻ nào khó rút hơn?",
+      "noi_dung": "Có 10 thẻ giống hệt nhau, ghi các số từ 1 đến 10, trộn đều rồi đặt úp. Rút ngẫu nhiên 1 thẻ. Bạn Tú nói: \"Thẻ số 10 và thẻ số 7 trông đặc biệt hơn nên khó rút được hơn thẻ số 1.\" Em có đồng ý với Tú không? Vì sao?",
+      "tu_khoa": {
+        "M4": [
+          "dac biet",
+          "kho (rut|ra|trung|duoc) hon",
+          "hiem",
+          "it khi",
+          "dong y",
+          "(10|7) (kho|hiem|it)"
+        ],
+        "M0": [
+          "nhu nhau",
+          "bang nhau",
+          "1/10",
+          "kha nang nhu nhau",
+          "khong dong y",
+          "giong het"
+        ]
+      },
+      "chinh": "the",
+      "thi_nghiem": {
+        "the": {
+          "loai": "the",
+          "so_the": 10,
+          "che_do": "tung_so",
+          "theo_doi": [
+            "1",
+            "7",
+            "10"
+          ],
+          "so_lan_goi_y": 10000
+        }
+      }
+    },
+    {
+      "id": "the_hai_khong_hoan",
+      "tieu_de": "Rút hai thẻ, không trả lại",
+      "noi_dung": "Có 6 thẻ giống hệt nhau, ghi các số từ 1 đến 6. Rút ngẫu nhiên lần lượt 2 thẻ, không trả thẻ đã rút trở lại. Bạn Vy tính xác suất để cả hai thẻ đều ghi số chẵn là 3/6 × 3/6 = 1/4. Em có đồng ý với Vy không? Vì sao?",
+      "tu_khoa": {
+        "M6": [
+          "1/4",
+          "3/6 ?[x*×] ?3/6",
+          "dong y",
+          "(lan|luot) (sau|thu hai|2|hai)[^.]*(van|cung) (la )?(3/6|1/2)",
+          "van (la )?(3/6|1/2)",
+          "nhu cu",
+          "khong (thay doi|anh huong)"
+        ],
+        "M0": [
+          "(con|chi con) (lai )?(2|hai) (the )?chan",
+          "2/5",
+          "1/5",
+          "3/6 ?[x*×] ?2/5",
+          "khong dong y",
+          "(5|nam) the (con lai|trong)",
+          "con (lai )?5"
+        ]
+      },
+      "chinh": "the",
+      "thi_nghiem": {
+        "the": {
+          "loai": "the",
+          "so_the": 6,
+          "che_do": "hai_the",
+          "hoan_lai": false,
+          "bien_co": {
+            "kieu": "chan"
+          },
+          "theo_doi": [
+            "2"
+          ],
+          "so_lan_goi_y": 1000
+        }
+      }
+    }
+  ]
+}

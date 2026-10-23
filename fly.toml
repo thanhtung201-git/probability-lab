@@ -1,0 +1,32 @@
+# Cấu hình mẫu cho Fly.io. Đổi `app` thành tên riêng (duy nhất trên Fly), xem DEPLOY.md.
+app = "probability-lab-ten-cua-ban"
+primary_region = "sin"
+
+[build]
+
+[env]
+  PORT = "8080"
+  DB_PATH = "/data/probability-lab.db"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  # Đặt 1 trong thời gian thi/chấm để không bị chờ khởi động lại; đặt 0 để tiết kiệm khi không dùng.
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/healthz"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"
+
+[[mounts]]
+  source = "plab_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
