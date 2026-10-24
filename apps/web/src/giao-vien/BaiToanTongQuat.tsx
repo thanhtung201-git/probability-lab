@@ -265,7 +265,7 @@ export function BaiToanTongQuat({ aiBat, onDaLuu }: { aiBat: boolean; onDaLuu: (
             </button>
           ))}
         </div>
-        {form.che_do_vat === "danh_so" && <OSo id="btq-n" nhan="Số vật (đánh số từ 1)" gt={form.n} min={2} max={30} onDoi={(v) => dat("n", v)} />}
+        {form.che_do_vat === "danh_so" && <OSo id="btq-n" nhan="Số vật (đánh số từ 1)" gt={form.n} min={2} max={1000} onDoi={(v) => dat("n", v)} />}
         {form.che_do_vat === "theo_mau" && (
           <div className="truong" style={{ marginTop: "0.6rem" }}>
             <label htmlFor="btq-nhom">Các nhóm (tên và số lượng)</label>
@@ -368,7 +368,7 @@ export function BaiToanTongQuat({ aiBat, onDaLuu }: { aiBat: boolean; onDaLuu: (
         ) : tinh ? (
           <>
             <div className="ct-ket-qua" style={{ marginTop: 0 }}>
-              P = {tinh.p.toString()} ≈ {(tinh.p.soThuc() * 100).toFixed(2).replace(".", ",")}% ({tinh.gs.thoa} kết quả thỏa trên {tinh.gs.tong} kết quả có thể)
+              P = {tinh.p.toString()} ≈ {(tinh.p.soThuc() * 100).toFixed(2).replace(".", ",")}% ({tinh.gs.thoa} kết quả thuận lợi trên {tinh.gs.tong} kết quả có thể)
             </div>
 
             <div className="truong" style={{ marginTop: "0.8rem" }}>
@@ -397,7 +397,7 @@ export function BaiToanTongQuat({ aiBat, onDaLuu }: { aiBat: boolean; onDaLuu: (
 
             {tinh.gs.ds && (
               <div style={{ marginTop: "0.8rem" }}>
-                <div className="nhan-muc">Tất cả {tinh.gs.tong} kết quả (✓ = thỏa biến cố)</div>
+                <div className="nhan-muc">Tất cả {tinh.gs.tong} kết quả (✓ = thuận lợi biến cố)</div>
                 <div className="khong-gian-mau">
                   {tinh.gs.ds.map((k, i) => (
                     <span key={i} className={k.thoa ? "thoa" : ""}>

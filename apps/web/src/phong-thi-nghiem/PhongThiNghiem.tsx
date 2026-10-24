@@ -1,6 +1,6 @@
 // Trang phòng thí nghiệm tự do: giáo viên chọn vật và kiểu thí nghiệm để khám phá trước khi dạy.
 import type { BienCoThe, CauHinhVat, CheDoBi, CheDoDongXuTT, CheDoThe, CheDoXucXac, NhomBi } from "@plab/core";
-import { cacSoThuanLoi, docTapSo } from "@plab/core";
+import { cacSoThuanLoi, docTapSo, GIOI_HAN } from "@plab/core";
 import { useMemo, useState } from "react";
 import { PhongVat } from "./PhongVat";
 
@@ -77,7 +77,7 @@ export function OSo({ id, nhan, gt, min, max, onDoi }: { id: string; nhan: strin
           +
         </button>
       </div>
-      <span className="muted">({min}–{max})</span>
+      <span className="muted">{max >= 100_000 ? `(từ ${min})` : `(${min}–${max})`}</span>
     </div>
   );
 }
@@ -158,7 +158,10 @@ const BIEN_CO: { kieu: BienCoThe["kieu"]; ten: string; coK: boolean; kMacDinh?: 
 const kieuThe = (soThe: number, bienCo: BienCoThe): KieuThiNghiem[] => {
   const goc = { loai: "the" as const, so_the: soThe, so_lan_goi_y: 1000 };
   return [
-    { id: "tung_so", ten: "Rút 1 thẻ – từng số", cauHinh: { ...goc, so_lan_goi_y: 10000, che_do: "tung_so", theo_doi: [...new Set(["1", String(soThe)])] } },
+    // "Từng số" liệt kê mỗi thẻ một lựa chọn nên chỉ dùng cho bộ thẻ vừa phải.
+    ...(soThe <= GIOI_HAN.SO_THE_TUNG_SO_TOI_DA
+      ? [{ id: "tung_so", ten: "Rút 1 thẻ – từng số", cauHinh: { ...goc, so_lan_goi_y: 10000, che_do: "tung_so", theo_doi: [...new Set(["1", String(soThe)])] } } as KieuThiNghiem]
+      : []),
     { id: "bien_co", ten: "Rút 1 thẻ – theo biến cố", cauHinh: { ...goc, che_do: "bien_co", bien_co: bienCo, theo_doi: ["co"] } },
     { id: "hai_hoan", ten: "Rút 2 thẻ – có hoàn lại", cauHinh: { ...goc, che_do: "hai_the", hoan_lai: true, bien_co: bienCo, theo_doi: ["2"] } },
     { id: "hai_khong", ten: "Rút 2 thẻ – không hoàn lại", cauHinh: { ...goc, che_do: "hai_the", hoan_lai: false, bien_co: bienCo, theo_doi: ["2"] } },
@@ -290,7 +293,7 @@ export function PhongThiNghiem() {
 
           {vat === "the" && (
             <div className="truong" style={{ marginTop: "0.8rem" }}>
-              <OSo id="so-the" nhan="Số thẻ" gt={soThe} min={2} max={20} onDoi={setSoThe} />
+              <OSo id="so-the" nhan="Số thẻ" gt={soThe} min={2} max={100_000} onDoi={setSoThe} />
               <div className="hang" style={{ gap: "0.5rem", marginTop: "0.5rem" }}>
                 <label htmlFor="bien-co" style={{ margin: 0 }}>Biến cố</label>
                 <select id="bien-co" value={kieuBienCo} onChange={(e) => { const k = e.target.value as BienCoThe["kieu"]; setKieuBienCo(k); setKBienCo(BIEN_CO.find((b) => b.kieu === k)?.kMacDinh ?? 3); }}>
@@ -312,8 +315,8 @@ export function PhongThiNghiem() {
                   )}
                 </div>
               )}
-              {moBienCo.coK && <OSo id="so-k" nhan="Số k" gt={kBienCo} min={1} max={20} onDoi={setKBienCo} />}
-              {soThuanLoi === 0 && <div className="thong-bao canh-bao" style={{ marginTop: "0.5rem", marginBottom: 0 }}>Không có thẻ nào thỏa biến cố này.</div>}
+              {moBienCo.coK && <OSo id="so-k" nhan="Số k" gt={kBienCo} min={1} max={100_000} onDoi={setKBienCo} />}
+              {soThuanLoi === 0 && <div className="thong-bao canh-bao" style={{ marginTop: "0.5rem", marginBottom: 0 }}>Không có thẻ nào thuận lợi biến cố này.</div>}
             </div>
           )}
 

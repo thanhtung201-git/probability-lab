@@ -2,6 +2,7 @@
 import { loiGiai, type CauHinhVat } from "@plab/core";
 import { useEffect, useMemo, useState } from "react";
 import { api, type GiaiThich } from "../api";
+import { DoanToan, Toan } from "../components/Toan";
 
 interface Khoa {
   khoa: string;
@@ -62,46 +63,66 @@ export function CachTinh({
         </label>
       </div>
 
-      <p className="ct-de">{lg.de}</p>
+      <p className="ct-de">
+        <Toan>{lg.de}</Toan>
+      </p>
       <div className="ct-de-hieu">
         <div className="ct-nhan">
           Hiểu đơn giản <span className="ct-nguon">{daAI ? "· AI giải thích" : dang ? "· AI đang viết…" : "· bản soạn sẵn"}</span>
         </div>
         {daAI ? (
           <>
-            {ai!.nhan_xet && <p>{ai!.nhan_xet}</p>}
-            {ai!.giai_thich.map((c, i) => (
-              <p key={i}>{c}</p>
-            ))}
-            {ai!.vi_du && <p>💡 {ai!.vi_du}</p>}
-            <p style={{ fontWeight: 700 }}>{ai!.cau_chot}</p>
+            {ai!.nhan_xet && (
+              <p>
+                <Toan>{ai!.nhan_xet}</Toan>
+              </p>
+            )}
+            <DoanToan ds={ai!.giai_thich} />
+            {ai!.vi_du && (
+              <p>
+                💡 <Toan>{ai!.vi_du}</Toan>
+              </p>
+            )}
+            <p style={{ fontWeight: 700 }}>
+              <Toan>{ai!.cau_chot}</Toan>
+            </p>
           </>
         ) : (
-          lg.de_hieu.map((c, i) => <p key={i}>{c}</p>)
+          <DoanToan ds={lg.de_hieu} />
         )}
         {!daAI && !dang && ai?.ly_do_mac_dinh && <p className="ct-nguon">{ai.ly_do_mac_dinh}</p>}
       </div>
       <div className="ct-cong-thuc">
         <span>Công thức</span>
-        <strong>{lg.cong_thuc}</strong>
+        <strong className="toan">
+          <Toan>{lg.cong_thuc}</Toan>
+        </strong>
       </div>
 
       <ol className="ct-buoc">
         {lg.buoc.map((b, i) => (
           <li key={i}>
             <div className="ct-tieu-de">{b.tieu_de}</div>
-            <div>{b.loi}</div>
+            <div>
+              <Toan>{b.loi}</Toan>
+            </div>
             {b.phep_tinh?.map((p, j) => (
-              <div key={j} className="ct-phep-tinh">
-                {p}
+              <div key={j} className="ct-phep-tinh toan">
+                <Toan>{p}</Toan>
               </div>
             ))}
           </li>
         ))}
       </ol>
 
-      <div className="ct-ket-qua">{lg.ket_qua}</div>
-      {lg.luu_y && <div className="ct-luu-y">💡 {lg.luu_y}</div>}
+      <div className="ct-ket-qua toan">
+        <Toan>{lg.ket_qua}</Toan>
+      </div>
+      {lg.luu_y && (
+        <div className="ct-luu-y">
+          💡 <Toan>{lg.luu_y}</Toan>
+        </div>
+      )}
     </div>
   );
 }

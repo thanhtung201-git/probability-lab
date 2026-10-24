@@ -6,6 +6,9 @@ import {
   CauHinhDongXuTTSchema,
   CauHinhTheSchema,
   CauHinhXucXacSchema,
+  FORM_BAI_TOAN_MAC_DINH,
+  xayBaiToan,
+  GIOI_HAN,
   TinhHuongSchema,
   type CheDoDongXuTT,
   type CheDoXucXac,
@@ -13,7 +16,7 @@ import {
   type TinhHuong,
 } from "@plab/core";
 import { z } from "zod";
-import { deXuatThiNghiemBangLLM, llmDangBat } from "./llm/groq";
+import { deXuatThiNghiemBangLLM, docDeBangLLM, llmDangBat, loiGroqCuoi, type DocDe } from "./llm/groq";
 import { THU_VIEN_TINH_HUONG } from "./thu-vien";
 
 export const KIEU = ["tu_dong", "mot_con", "hai_con", "dieu_kien", "day"] as const;
@@ -47,13 +50,13 @@ export const DeBaiSchema = z.object({
   su_kien: z.enum(["it_nhat", "cung_mau", "khac_mau"]).optional(),
   /** Hộp bi và thẻ số: lấy/rút 2 lần có hoàn lại hay không. */
   hoan_lai: z.boolean().optional(),
-  /** Thẻ số: số thẻ 2-20 và biến cố cần xét. */
-  so_the: z.number().int().min(2).max(20).optional(),
+  /** Thẻ số: số thẻ (từ 2) và biến cố cần xét. */
+  so_the: z.number().int().min(2).max(GIOI_HAN.SO_THE_TOI_DA).optional(),
   bien_co: z
     .object({
       kieu: z.enum(["chan", "le", "boi", "nguyen_to", "lon_hon", "nho_hon", "tap_hop"]),
-      k: z.number().int().min(1).max(20).optional(),
-      so: z.array(z.number().int().min(1).max(20)).max(20).optional(),
+      k: z.number().int().min(1).max(GIOI_HAN.SO_THE_TOI_DA).optional(),
+      so: z.array(z.number().int().min(1).max(GIOI_HAN.SO_THE_TOI_DA)).max(GIOI_HAN.SO_THE_TOI_DA).optional(),
     })
     .optional(),
 });
@@ -282,19 +285,114 @@ function docHop(text: string | undefined): NhomBi[] {
 
 const tinhHuongMau = (id: string | null) => (id ? THU_VIEN_TINH_HUONG.tinh_huong.find((t) => t.id === id)?.tu_khoa : undefined);
 
+/**
+ * Đối chiếu kết quả AI đọc với chữ trong đề. AI hay hiểu nhầm "không trả lại" thành "có hoàn lại" hoặc thành biến cố phủ định,
+ * nên các điểm này kiểm tra lại bằng chữ trong đề và ghi chú cho giáo viên khi phải sửa.
+ */
+function doiChieuDe(d: DocDe, noiDung: string): { d: DocDe; ghiChu: string[] } {
+  const ghiChu: string[] = [];
+  const t = noiDung.toLowerCase();
+  const KHONG_HOAN = /không\s+(?:được\s+)?(?:trả|hoàn|bỏ|đặt|thay)/;
+  const khongHoan = KHONG_HOAN.test(t);
+  const conLai = t.replace(new RegExp(KHONG_HOAN.source, "g"), " ");
+  const coHoan = /(?:trả lại|hoàn lại|bỏ lại|đặt lại|trả về)/.test(conLai);
+  const kq = { ...d };
+  if (khongHoan && !coHoan && kq.hoan_lai) {
+    kq.hoan_lai = false;
+    ghiChu.push("đề ghi không trả lại nên lấy KHÔNG hoàn lại");
+  } else if (coHoan && !khongHoan && !kq.hoan_lai) {
+    kq.hoan_lai = true;
+    ghiChu.push("đề ghi trả lại nên lấy CÓ hoàn lại");
+  }
+  if (kq.phu_dinh && !/(?:\bkhông\b(?!\s+gian)|\bchưa\b|ngoại trừ)/.test(conLai)) {
+    kq.phu_dinh = false;
+    ghiChu.push("đề không hỏi biến cố “không xảy ra” nên bỏ phủ định");
+  }
+  return { d: kq, ghiChu };
+}
+
+const BIEN_CO_THE: Record<string, "chan" | "le" | "nguyen_to" | "boi" | "lon_hon" | "nho_hon" | "tap_hop"> = {
+  chan: "chan",
+  le: "le",
+  nguyen_to: "nguyen_to",
+  chia_het: "boi",
+  lon_hon: "lon_hon",
+  nho_hon: "nho_hon",
+  bang: "tap_hop",
+};
+
+/** "Để AI chọn theo đề" cho hộp bi và thẻ số: AI đọc đề, điền biểu mẫu bài toán tổng quát, mã dựng cấu hình và kiểm tra lại. */
+async function taoDeBaiTuDongHop(deBai: DeBai): Promise<KetQuaDeBai> {
+  const vat = deBai.vat as "bi" | "the";
+  const tenVat = vat === "bi" ? "hộp bi" : "thẻ số";
+  const huongDan = "Hãy chọn một kiểu thí nghiệm ở ô bên dưới.";
+  if (!llmDangBat()) throw new LoiDeBai(`AI chưa bật nên chưa tự chọn thí nghiệm cho ${tenVat}. ${huongDan}`);
+  const tho = await docDeBangLLM(deBai.noi_dung);
+  if (!tho) throw new LoiDeBai(`AI chưa đọc được đề (${loiGroqCuoi()}). Bạn thử lại, hoặc ${huongDan.toLowerCase()}`);
+  if (!tho.khop) throw new LoiDeBai(`AI thấy đề này không thuộc dạng lấy vật rồi xét một biến cố (${tho.ly_do}). ${huongDan}`);
+  const { d, ghiChu } = doiChieuDe(tho, deBai.noi_dung);
+  const tieuDe = deBai.tieu_de?.trim() || d.tieu_de || "Đề bài tự nhập";
+  const lyDo = `AI đọc đề: ${d.ly_do}`;
+  const canhBao =
+    "Kiểm tra lại dòng “Thí nghiệm” ngay dưới đề; nếu chưa đúng ý, quay lại và chọn kiểu thí nghiệm thủ công." +
+    (ghiChu.length ? ` Đã chỉnh theo chữ trong đề: ${ghiChu.join("; ")}.` : "");
+
+  // Rút 1 thẻ trong bộ thẻ lớn (hơn 30 thẻ): dùng thí nghiệm "rút 1 thẻ theo biến cố" gọn hơn bài toán tổng quát (vốn liệt kê mọi cách lấy).
+  if (vat === "the" && d.che_do_vat === "danh_so" && d.so_lan === 1 && d.loai_bien_co === "so" && d.n && d.n > 30 && d.dieu_kien) {
+    const kieu = BIEN_CO_THE[d.dieu_kien];
+    if (!kieu) throw new LoiDeBai(`Đề có ${d.n} thẻ nhưng biến cố này chưa dùng được với bộ thẻ lớn. ${huongDan}`);
+    const bienCo =
+      kieu === "tap_hop" ? { kieu, so: [d.k ?? 1] } : kieu === "boi" || kieu === "lon_hon" || kieu === "nho_hon" ? { kieu, k: d.k ?? 1 } : { kieu };
+    const cauHinh = { loai: "the", so_the: d.n, che_do: "bien_co", bien_co: bienCo, theo_doi: [d.phu_dinh ? "khong" : "co"], so_lan_goi_y: 1000 };
+    const kq = CauHinhTheSchema.safeParse({ ...cauHinh, seed: 1 });
+    if (!kq.success) throw new LoiDeBai(`AI đọc đề nhưng cấu hình chưa hợp lệ (${kq.error.issues[0]?.message}). ${huongDan}`);
+    const tinhHuong = TinhHuongSchema.parse({
+      id: "tu_nhap",
+      tieu_de: tieuDe,
+      noi_dung: deBai.noi_dung,
+      tu_khoa: tinhHuongMau("the_boi_3"),
+      chinh: "the",
+      thi_nghiem: { the: cauHinh },
+    });
+    return { tinh_huong: tinhHuong, nguon: "ai", ly_do: lyDo, canh_bao: canhBao };
+  }
+
+  const ket = xayBaiToan({
+    ...FORM_BAI_TOAN_MAC_DINH,
+    che_do_vat: d.che_do_vat,
+    n: d.n ?? FORM_BAI_TOAN_MAC_DINH.n,
+    nhom: d.nhom ?? "",
+    ten_vat: d.ten_vat || (vat === "bi" ? "bi" : "thẻ"),
+    so_lan: Math.min(4, Math.max(1, d.so_lan)),
+    hoan_lai: d.hoan_lai,
+    loai_bien_co: d.loai_bien_co,
+    dai_luong: d.dai_luong ?? FORM_BAI_TOAN_MAC_DINH.dai_luong,
+    dieu_kien: d.dieu_kien ?? FORM_BAI_TOAN_MAC_DINH.dieu_kien,
+    k: d.k ?? FORM_BAI_TOAN_MAC_DINH.k,
+    m: d.m ?? FORM_BAI_TOAN_MAC_DINH.m,
+    r: d.r ?? FORM_BAI_TOAN_MAC_DINH.r,
+    mau_loai: d.mau_loai ?? FORM_BAI_TOAN_MAC_DINH.mau_loai,
+    mau: d.mau ?? "",
+    k_mau: d.k_mau ?? FORM_BAI_TOAN_MAC_DINH.k_mau,
+    phu_dinh: d.phu_dinh,
+  });
+  if ("loi" in ket) throw new LoiDeBai(`AI đọc đề nhưng chưa dựng được thí nghiệm (${ket.loi}). ${huongDan}`);
+  try {
+    const kq = taoDeBaiTongQuat({ ...deBai, vat: "bai_toan", mo_hinh: ket.cau_hinh, tieu_de: tieuDe });
+    return { ...kq, nguon: "ai", ly_do: lyDo, canh_bao: canhBao };
+  } catch (e) {
+    if (e instanceof LoiDeBai) throw new LoiDeBai(`AI đọc đề nhưng cấu hình chưa hợp lệ (${e.message}). ${huongDan}`);
+    throw e;
+  }
+}
+
 async function taoDeBaiHop(deBai: DeBai): Promise<KetQuaDeBai> {
+  if (deBai.kieu === "tu_dong") return taoDeBaiTuDongHop(deBai);
   const vat = deBai.vat as "bi" | "the";
   let kieu = deBai.kieu;
   let nguon: KetQuaDeBai["nguon"] = "giao_vien";
   let lyDo = "Giáo viên chọn kiểu thí nghiệm này.";
   let canhBao: string | null = null;
-
-  if (kieu === "tu_dong") {
-    nguon = "mac_dinh";
-    lyDo = "";
-    kieu = vat === "bi" ? "mot_con" : "bien_co";
-    canhBao = `AI chưa tự chọn thí nghiệm cho ${vat === "bi" ? "hộp bi" : "thẻ số"}. Đang dùng ${vat === "bi" ? "lấy 1 bi" : "rút 1 thẻ theo biến cố"}; bạn có thể chọn kiểu khác.`;
-  }
 
   let cauHinh: Record<string, unknown>;
   let mauId: string | null = null;

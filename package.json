@@ -14,6 +14,10 @@
     "test": "vitest run --dir packages",
     "typecheck": "tsc -p packages/core/tsconfig.json && tsc -p apps/server/tsconfig.json && tsc -p apps/web/tsconfig.json",
     "build": "vite build apps/web",
-    "start": "tsx apps/server/src/index.ts"
+    "start": "tsx apps/server/src/index.ts",
+    "build:api": "node scripts/build-vercel.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

@@ -21,20 +21,18 @@ const docBai = (dong: Dong): TinhHuong | null => {
 };
 
 /** Các bài giáo viên đã lưu, cũ trước mới sau. Dòng hỏng thì bỏ qua, không làm hỏng cả thư viện. */
-export const cacBaiTuNhap = (): TinhHuong[] =>
-  layNhieu(`SELECT tinh_huong FROM bai_tu_nhap ORDER BY rowid`)
-    .map(docBai)
-    .filter((t): t is TinhHuong => t !== null);
+export const cacBaiTuNhap = async (): Promise<TinhHuong[]> =>
+  (await layNhieu(`SELECT tinh_huong FROM bai_tu_nhap ORDER BY rowid`)).map(docBai).filter((t): t is TinhHuong => t !== null);
 
 /** Thư viện tình huống gồm bài có sẵn và bài giáo viên đã lưu. */
-export const thuVienTinhHuong = (): ThuVienTinhHuong => ({
+export const thuVienTinhHuong = async (): Promise<ThuVienTinhHuong> => ({
   ...THU_VIEN_TINH_HUONG,
-  tinh_huong: [...THU_VIEN_TINH_HUONG.tinh_huong, ...cacBaiTuNhap()],
+  tinh_huong: [...THU_VIEN_TINH_HUONG.tinh_huong, ...(await cacBaiTuNhap())],
 });
 
-export function timTinhHuong(id: string): TinhHuong | null {
+export async function timTinhHuong(id: string): Promise<TinhHuong | null> {
   const co = THU_VIEN_TINH_HUONG.tinh_huong.find((t) => t.id === id);
   if (co) return co;
-  const dong = lay(`SELECT tinh_huong FROM bai_tu_nhap WHERE id = ?`, id);
+  const dong = await lay(`SELECT tinh_huong FROM bai_tu_nhap WHERE id = ?`, id);
   return dong ? docBai(dong) : null;
 }

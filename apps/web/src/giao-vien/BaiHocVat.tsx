@@ -4,6 +4,7 @@ import { taoPhanHoi, type CauHinhVat, type KetQuaThiNghiem, type MaNgoNhan, type
 import { useEffect, useRef, useState } from "react";
 import type { ThuVien } from "../App";
 import { api, type GiaiThich, type TrangThaiLuot } from "../api";
+import { Toan } from "../components/Toan";
 import { PhongVat, type SoLieuLuu } from "../phong-thi-nghiem/PhongVat";
 import { tenMuc, tenNhom } from "../ten-nhom";
 import { ChanDoanChoGiaoVien, OTraLoi } from "./LuongNhom";
@@ -49,12 +50,20 @@ function TheGiaiThich({ luotId, ten, san, onXong }: { luotId: string; ten: strin
       {loi && <div className="thong-bao loi">{loi}</div>}
       {gt && (
         <>
-          <p className="gt-nhan-xet">{gt.nhan_xet}</p>
+          <p className="gt-nhan-xet">
+            <Toan>{gt.nhan_xet}</Toan>
+          </p>
           {gt.giai_thich.map((c, i) => (
-            <p key={i} className="gt-doan">{c}</p>
+            <p key={i} className="gt-doan">
+              <Toan>{c}</Toan>
+            </p>
           ))}
-          {gt.vi_du && <p className="gt-vi-du">💡 {gt.vi_du}</p>}
-          <p className="gt-chot">{gt.cau_chot}</p>
+          {gt.vi_du && <p className="gt-vi-du">
+              💡 <Toan>{gt.vi_du}</Toan>
+            </p>}
+          <p className="gt-chot">
+            <Toan>{gt.cau_chot}</Toan>
+          </p>
           <p className="muted gt-nguon">
             {gt.nguon === "ai" ? "AI viết dựa trên câu trả lời của nhóm và lời giải đã tính sẵn; mọi con số lấy từ lời giải." : `Bản soạn sẵn (${gt.ly_do_mac_dinh ?? "AI chưa chạy"}).`}{" "}
             <button className="phu nho" type="button" disabled={dangTao} onClick={() => void tao(true)}>

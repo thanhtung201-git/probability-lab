@@ -355,7 +355,7 @@ function giaiBiSuKien(ch: Extract<CauHinhVat, { loai: "bi"; che_do: "phan_phoi" 
     buoc.push(
       {
         tieu_de: "Dùng phần bù",
-        loi: `“Ít nhất 1 bi ${g.ten}” gồm nhiều trường hợp (đúng 1 bi, đúng 2 bi…). Đếm hết sẽ rối, nên làm ngược lại: chỉ có MỘT trường hợp không thỏa là “không có bi ${g.ten} nào”. Tính xác suất của nó rồi lấy 1 trừ đi.`,
+        loi: `“Ít nhất 1 bi ${g.ten}” gồm nhiều trường hợp (đúng 1 bi, đúng 2 bi…). Đếm hết sẽ rối, nên làm ngược lại: chỉ có MỘT trường hợp không thuận lợi là “không có bi ${g.ten} nào”. Tính xác suất của nó rồi lấy 1 trừ đi.`,
         phep_tinh: [`Bi ${g.ten}: ${a}; bi khác màu ${g.ten}: ${T} − ${a} = ${b}`],
       },
       hl
@@ -457,6 +457,10 @@ function giaiBi(ch: Extract<CauHinhVat, { loai: "bi" }>, khoa: string): Phan {
 
 // ---------------------------------------------------------------- thẻ số
 
+/** Liệt kê các số trên thẻ; bộ thẻ lớn thì rút gọn để lời giải vẫn đọc được. */
+const dsSo = (ds: number[], toiDa = 40) =>
+  ds.length <= toiDa ? ds.join(", ") : `${ds.slice(0, toiDa).join(", ")}, … (tổng cộng ${ds.length} số)`;
+
 function giaiThe(ch: Extract<CauHinhVat, { loai: "the" }>, khoa: string): Phan {
   const N = ch.so_the;
   const bo = `${N} thẻ ghi các số từ 1 đến ${N}`;
@@ -478,7 +482,8 @@ function giaiThe(ch: Extract<CauHinhVat, { loai: "the" }>, khoa: string): Phan {
   const a = thuan.length;
   if (ch.che_do === "bien_co") {
     const co = khoa === "co";
-    const dsKhong = Array.from({ length: N }, (_, i) => i + 1).filter((x) => !thuan.includes(x));
+    const laThuan = new Set(thuan);
+    const dsKhong = Array.from({ length: N }, (_, i) => i + 1).filter((x) => !laThuan.has(x));
     const tu = BigInt(co ? a : N - a);
     return {
       de: `Rút 1 thẻ, tính xác suất ${co ? "" : "KHÔNG "}được thẻ ${ten}.`,
@@ -487,8 +492,8 @@ function giaiThe(ch: Extract<CauHinhVat, { loai: "the" }>, khoa: string): Phan {
         { tieu_de: "Đếm tất cả thẻ", loi: "Mỗi thẻ có khả năng được rút như nhau.", phep_tinh: [`${bo} → ${N} kết quả`] },
         {
           tieu_de: `Liệt kê thẻ ${co ? "thuận lợi" : "không thuận lợi"}`,
-          loi: `Chọn ra các số ${co ? "thỏa" : "không thỏa"} “${ten}”.`,
-          phep_tinh: [`${(co ? thuan : dsKhong).join(", ") || "(không có số nào)"}`, `Số thẻ thuận lợi = ${tu}`],
+          loi: `Chọn ra các số ${co ? "thuận lợi" : "không thuận lợi"} “${ten}”.`,
+          phep_tinh: [`${dsSo(co ? thuan : dsKhong) || "(không có số nào)"}`, `Số thẻ thuận lợi = ${tu}`],
         },
         { tieu_de: "Áp dụng công thức", loi: "Lấy số thẻ thuận lợi chia cho tổng số thẻ.", phep_tinh: [`P = ${tm(tu, N)} = ${rutGon(tu, BigInt(N))}`] },
       ],
@@ -496,7 +501,7 @@ function giaiThe(ch: Extract<CauHinhVat, { loai: "the" }>, khoa: string): Phan {
       mau: BigInt(N),
     };
   }
-  const phan = giaiDem({ vat: "thẻ", nhom: `thẻ “${ten}”`, moTaTong: `${bo}; số thẻ thỏa “${ten}”: ${thuan.join(", ") || "không có"} → ${a} thẻ`, T: N, a, n: 2, hoanLai: ch.hoan_lai, j: Number(khoa) });
+  const phan = giaiDem({ vat: "thẻ", nhom: `thẻ “${ten}”`, moTaTong: `${bo}; số thẻ thuận lợi “${ten}”: ${dsSo(thuan) || "không có"} → ${a} thẻ`, T: N, a, n: 2, hoanLai: ch.hoan_lai, j: Number(khoa) });
   return phan;
 }
 
@@ -583,7 +588,7 @@ function deHieu(ch: CauHinhVat, khoa: string): string[] {
         if (ch.su_kien === "it_nhat") {
           return [
             `“Ít nhất 1 bi ${ch.mau_muc_tieu}” nghĩa là có 1 bi, hoặc cả ${ch.so_lay} bi đều là bi ${ch.mau_muc_tieu}. Đếm từng trường hợp rất dễ sót.`,
-            `Mẹo: làm ngược lại. Chỉ có một trường hợp KHÔNG thỏa là “không có bi ${ch.mau_muc_tieu} nào”. Tính xác suất của trường hợp đó rồi lấy 1 trừ đi.`,
+            `Mẹo: làm ngược lại. Chỉ có một trường hợp KHÔNG thuận lợi là “không có bi ${ch.mau_muc_tieu} nào”. Tính xác suất của trường hợp đó rồi lấy 1 trừ đi.`,
             cach,
           ];
         }
@@ -611,7 +616,7 @@ function deHieu(ch: CauHinhVat, khoa: string): string[] {
     }
     case "bai_toan":
       return [
-        "Cách chắc chắn nhất: viết ra HẾT các kết quả có thể, đánh dấu những kết quả thỏa yêu cầu của đề, rồi lấy số kết quả thỏa chia cho tổng số kết quả.",
+        "Cách chắc chắn nhất: viết ra HẾT các kết quả có thể, đánh dấu những kết quả thuận lợi cho yêu cầu của đề, rồi lấy số kết quả thuận lợi chia cho tổng số kết quả.",
         ch.so_lan >= 2 ? "Nhớ xét thứ tự: lấy lần lượt thì (1, 3) và (3, 1) là hai kết quả khác nhau." : "Mỗi vật có cơ hội được lấy như nhau.",
         ch.hoan_lai ? "Lấy xong được trả lại nên các lần lấy giống hệt nhau." : "Vật đã lấy ra không trả lại nên lần sau còn ít vật hơn.",
       ];
@@ -624,7 +629,7 @@ function deHieu(ch: CauHinhVat, khoa: string): string[] {
       if (ch.che_do === "bien_co") {
         return [
           `Bước quan trọng nhất là đếm xem có bao nhiêu thẻ “đạt yêu cầu” (${moTaBienCo(ch.bien_co)}). Hãy viết ra từng số, đừng đoán.`,
-          cuoi(khoa === "co" ? a : N - a, N, "thẻ", khoa === "co" ? "thỏa yêu cầu" : "không thỏa yêu cầu"),
+          cuoi(khoa === "co" ? a : N - a, N, "thẻ", khoa === "co" ? "thuận lợi" : "không thuận lợi"),
         ];
       }
       return ch.hoan_lai
@@ -671,29 +676,29 @@ function giaiBaiToan(ch: Extract<CauHinhVat, { loai: "bai_toan" }>, khoa: string
   if (gs.ds) {
     const chon = gs.ds.filter((x) => x.thoa === co);
     buoc.push({
-      tieu_de: `Liệt kê các kết quả ${co ? "thỏa" : "không thỏa"} “${mo}”`,
+      tieu_de: `Liệt kê các kết quả ${co ? "thuận lợi" : "không thuận lợi"} “${mo}”`,
       loi: bc.kieu === "so" ? `Với mỗi kết quả, tính ${tenDL} rồi kiểm tra điều kiện của đề.` : "Với mỗi kết quả, kiểm tra điều kiện của đề.",
       phep_tinh: [
         chon.map((x) => (x.gia_tri !== undefined ? `${x.nhan} → ${x.gia_tri}` : x.nhan)).join("   ") || "(không có kết quả nào)",
-        `Số kết quả ${co ? "thỏa" : "không thỏa"} = ${can}`,
+        `Số kết quả ${co ? "thuận lợi" : "không thuận lợi"} = ${can}`,
       ],
     });
   } else if (gs.theo_gia_tri) {
     const nhom = gs.theo_gia_tri.filter((g) => g.thoa === co);
     buoc.push({
-      tieu_de: `Đếm các kết quả ${co ? "thỏa" : "không thỏa"} “${mo}”`,
+      tieu_de: `Đếm các kết quả ${co ? "thuận lợi" : "không thuận lợi"} “${mo}”`,
       loi: `Có quá nhiều kết quả để liệt kê hết, nên gom theo giá trị của ${tenDL} rồi cộng số cách.`,
       phep_tinh: [
         ...nhom.slice(0, 24).map((g) => `${tenDL} = ${g.gia_tri}: ${g.so_cach} cách`),
         ...(nhom.length > 24 ? [`… và ${nhom.length - 24} giá trị khác`] : []),
-        `Tổng số kết quả ${co ? "thỏa" : "không thỏa"} = ${can}`,
+        `Tổng số kết quả ${co ? "thuận lợi" : "không thuận lợi"} = ${can}`,
       ],
     });
   } else {
     buoc.push({
-      tieu_de: `Đếm các kết quả ${co ? "thỏa" : "không thỏa"} “${mo}”`,
+      tieu_de: `Đếm các kết quả ${co ? "thuận lợi" : "không thuận lợi"} “${mo}”`,
       loi: "Xét từng kiểu kết quả theo điều kiện của đề rồi cộng số cách (máy đã đếm từng cách lấy).",
-      phep_tinh: [`Số kết quả ${co ? "thỏa" : "không thỏa"} = ${can}`],
+      phep_tinh: [`Số kết quả ${co ? "thuận lợi" : "không thuận lợi"} = ${can}`],
     });
   }
   buoc.push({ tieu_de: "Áp dụng công thức và rút gọn", loi: "Lấy số kết quả thuận lợi chia cho tổng số kết quả.", phep_tinh: [`P = ${tm(can, gs.tong)} = ${rutGon(BigInt(can), BigInt(gs.tong))}`] });

@@ -255,6 +255,7 @@ Cách viết:
 - Nếu có số liệu thí nghiệm của nhóm, nối nó với kết quả lý thuyết (tần suất gần xác suất khi gieo nhiều lượt).
 - Nếu không có câu trả lời của nhóm (lan1 trống): TUYỆT ĐỐI không nói gì về suy nghĩ hay lời của học sinh (không viết “các em đã nghĩ…”). nhan_xet chỉ là một câu dẫn vào bài, ví dụ “Cùng tìm cách tính xác suất của bài này nhé.”; phần còn lại giải thích chung để hiểu bài.
 - Tổng độ dài dưới 180 từ.
+- Dùng từ “thuận lợi” và “không thuận lợi” cho kết quả đúng hoặc không đúng yêu cầu của đề; không dùng “thỏa” hay “không thỏa”.
 
 Quy tắc bắt buộc:
 - KHÔNG tự tính toán mới. Chỉ dùng các con số, phân số, tỷ lệ có trong dữ liệu. Không thêm số nào khác.

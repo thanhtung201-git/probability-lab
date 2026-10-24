@@ -89,20 +89,20 @@ export async function giaiThichBai(cauHinh: unknown, khoa: string): Promise<Giai
 }
 
 export async function taoGiaiThich(luotId: string, lai = false): Promise<GiaiThich> {
-  const luot = lay(`SELECT * FROM luot_lam WHERE id = ?`, luotId);
+  const luot = await lay(`SELECT * FROM luot_lam WHERE id = ?`, luotId);
   if (!luot) throw new LoiNghiepVu("Không tìm thấy lượt làm", 404);
   if (luot.giai_thich && !lai) return JSON.parse(String(luot.giai_thich)) as GiaiThich;
 
-  const traLoi = layNhieu(`SELECT lan, noi_dung FROM tra_loi WHERE luot_id = ? ORDER BY lan`, luotId);
+  const traLoi = await layNhieu(`SELECT lan, noi_dung FROM tra_loi WHERE luot_id = ? ORDER BY lan`, luotId);
   if (traLoi.length < 3) throw new LoiNghiepVu("Nhóm cần hoàn thành cả 3 bước trước khi xem giải thích", 409);
   const lanN = (n: number) => String(traLoi.find((t) => Number(t.lan) === n)?.noi_dung ?? "");
 
-  const cd = lay(
+  const cd = await lay(
     `SELECT c.ma_ngo_nhan, d.ma_sua FROM chan_doan c LEFT JOIN danh_gia_gv d ON d.chan_doan_id = c.id WHERE c.luot_id = ?`,
     luotId,
   );
   const ma = ((cd?.ma_sua ?? cd?.ma_ngo_nhan ?? "KXD") as MaNgoNhan);
-  const tn = lay(`SELECT cau_hinh, tom_tat FROM thi_nghiem WHERE luot_id = ?`, luotId);
+  const tn = await lay(`SELECT cau_hinh, tom_tat FROM thi_nghiem WHERE luot_id = ?`, luotId);
   if (!tn) throw new LoiNghiepVu("Lượt làm chưa có thí nghiệm", 409);
   const ch = JSON.parse(String(tn.cau_hinh)) as CauHinhVat;
   if (!["xuc_xac", "dong_xu", "bi", "the", "bai_toan"].includes(ch.loai)) {
@@ -143,6 +143,6 @@ export async function taoGiaiThich(luotId: string, lai = false): Promise<GiaiThi
   }
   if (!kq) kq = { ...banSoanSan(ma, lanN(1), lg, soLieu), nguon: "mac_dinh", ly_do_mac_dinh: lyDo };
 
-  chay(`UPDATE luot_lam SET giai_thich = ? WHERE id = ?`, JSON.stringify(kq), luotId);
+  await chay(`UPDATE luot_lam SET giai_thich = ? WHERE id = ?`, JSON.stringify(kq), luotId);
   return kq;
 }

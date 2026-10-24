@@ -83,7 +83,7 @@ describe("kiểm tra đầu vào", () => {
   it("báo lỗi tiếng Việt khi nhập sai", () => {
     expect(docVatTongQuat({ che_do_vat: "theo_mau", n: 0, nhom: "đỏ ba" })).toEqual({ loi: "Không hiểu “đỏ ba”. Viết dạng: đỏ 3, xanh 2" });
     expect("loi" in docVatTongQuat({ che_do_vat: "mau_va_so", n: 0, nhom: "đỏ 1 2" })).toBe(true);
-    expect(xayBaiToan({ ...FORM_BAI_TOAN_MAC_DINH, n: 40 })).toEqual({ loi: "Số vật phải từ 2 đến 30" });
+    expect(xayBaiToan({ ...FORM_BAI_TOAN_MAC_DINH, n: 5000 })).toEqual({ loi: "Số vật phải từ 2 đến 1000" });
     expect("loi" in xayBaiToan({ ...FORM_BAI_TOAN_MAC_DINH, so_lan: 5 })).toBe(true);
     expect("loi" in xayBaiToan({ ...FORM_BAI_TOAN_MAC_DINH, n: 30, so_lan: 4, hoan_lai: true })).toBe(true);
     expect("loi" in xayBaiToan({ ...FORM_BAI_TOAN_MAC_DINH, loai_bien_co: "mau", che_do_vat: "danh_so" })).toBe(true);

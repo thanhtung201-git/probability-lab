@@ -198,8 +198,8 @@ export function xacSuatBaiToan(ch: CauHinhBaiToan): PhanSo {
 export const cacKhoaBaiToan = (ch: CauHinhBaiToan): KhoaKetQua[] => {
   const p = xacSuatBaiToan(ch);
   return [
-    { khoa: "co", nhan: `Thỏa: ${moTaBienCoBaiToan(ch)}`, xac_suat: p },
-    { khoa: "khong", nhan: "Không thỏa", xac_suat: PhanSo.MOT.tru(p) },
+    { khoa: "co", nhan: `Thuận lợi: ${moTaBienCoBaiToan(ch)}`, xac_suat: p },
+    { khoa: "khong", nhan: "Không thuận lợi", xac_suat: PhanSo.MOT.tru(p) },
   ];
 };
 
@@ -228,7 +228,7 @@ export function tongHopBaiToan(ch: CauHinhBaiToan, sl: SoLieuXucXac): KetQuaThiN
   const n = sl.so_ghi_nhan;
   const tanSuat = (k: string) => (n ? (sl.dem[k] ?? 0) / n : 0);
   const moTa = ch.theo_doi
-    .map((k) => `${k === "co" ? `biến cố “${moTaBienCoBaiToan(ch)}”` : "không thỏa biến cố"} xuất hiện ${so(sl.dem[k] ?? 0)} lần (${pt(tanSuat(k))})`)
+    .map((k) => `${k === "co" ? `biến cố “${moTaBienCoBaiToan(ch)}”` : "không thuận lợi biến cố"} xuất hiện ${so(sl.dem[k] ?? 0)} lần (${pt(tanSuat(k))})`)
     .join(", ");
   return {
     cau_hinh: ch,

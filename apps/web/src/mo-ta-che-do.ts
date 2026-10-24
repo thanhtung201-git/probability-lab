@@ -17,14 +17,14 @@ export function moTaCheDo(c: CauHinhVat): string {
     }
   }
   if (c.loai === "bai_toan") {
-    return `Có ${c.vat.length} ${c.ten_vat ?? "vật"} (${c.vat.map(nhanVat).join(", ")}). Lấy lần lượt ${c.so_lan} ${c.hoan_lai ? "có" : "không"} hoàn lại, xem có thỏa “${moTaBienCoBaiToan(c)}” không`;
+    return `Có ${c.vat.length} ${c.ten_vat ?? "vật"} (${c.vat.map(nhanVat).join(", ")}). Lấy lần lượt ${c.so_lan} ${c.hoan_lai ? "có" : "không"} hoàn lại, xem có phải kết quả thuận lợi cho “${moTaBienCoBaiToan(c)}” không`;
   }
   if (c.loai === "bi") {
     const hop = c.hop.map((g) => `${g.so} ${g.ten}`).join(", ");
     if (c.che_do === "dieu_kien") {
       return `Hộp ${hop}. Lấy có hoàn lại: sau ${c.so_lan_truoc} lần liên tiếp bi ${c.mau_lap}, xem lần kế tiếp lấy được bi màu nào`;
     }
-    if (laSuKienBi(c)) return `Hộp ${hop}. Lấy ${c.so_lay} bi ${c.hoan_lai ? "có" : "không"} hoàn lại, xem có thỏa “${moTaSuKienBi(c)}” không`;
+    if (laSuKienBi(c)) return `Hộp ${hop}. Lấy ${c.so_lay} bi ${c.hoan_lai ? "có" : "không"} hoàn lại, xem có phải kết quả thuận lợi cho “${moTaSuKienBi(c)}” không`;
     return c.so_lay === 1
       ? `Hộp ${hop}. Lấy 1 bi, theo dõi bi ${c.theo_doi.join(", ")}`
       : `Hộp ${hop}. Lấy ${c.so_lay} bi ${c.hoan_lai ? "có" : "không"} hoàn lại, đếm số bi ${c.mau_muc_tieu} (theo dõi ${c.theo_doi.join(", ")} bi)`;
@@ -35,7 +35,7 @@ export function moTaCheDo(c: CauHinhVat): string {
       case "tung_so":
         return `${bo}. Rút 1 thẻ, theo dõi thẻ số ${c.theo_doi.join(", ")}`;
       case "bien_co":
-        return `${bo}. Rút 1 thẻ, xem có thỏa biến cố “${moTaBienCo(c.bien_co)}” không`;
+        return `${bo}. Rút 1 thẻ, xem có thuận lợi cho biến cố “${moTaBienCo(c.bien_co)}” không`;
       case "hai_the":
         return `${bo}. Rút 2 thẻ ${c.hoan_lai ? "có" : "không"} hoàn lại, đếm số thẻ “${moTaBienCo(c.bien_co)}” (theo dõi ${c.theo_doi.join(", ")} thẻ)`;
     }

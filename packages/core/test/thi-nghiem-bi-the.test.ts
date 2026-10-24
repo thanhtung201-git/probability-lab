@@ -3,6 +3,7 @@ import {
   cacKhoaVat,
   cacSoThuanLoi,
   chayThiNghiem,
+  loiGiai,
   moTaBienCo,
   motLuotVat,
   PhanSo,
@@ -13,6 +14,7 @@ import {
   toHop,
   type CauHinhBi,
   type CauHinhThe,
+  type CauHinhVat,
 } from "../src";
 
 const bi = (che: object, hop = [{ ten: "đỏ", so: 3 }, { ten: "xanh", so: 2 }]): CauHinhBi =>
@@ -149,10 +151,24 @@ describe("thẻ số", () => {
   it("từ chối cấu hình sai", () => {
     const sai: object[] = [
       the({ che_do: "bien_co", bien_co: { kieu: "boi" }, theo_doi: ["co"] }),
-      the({ che_do: "bien_co", bien_co: { kieu: "chan" }, theo_doi: ["co"] }, 50),
+      the({ che_do: "bien_co", bien_co: { kieu: "chan" }, theo_doi: ["co"] }, 100_001),
       the({ che_do: "hai_the", hoan_lai: true, bien_co: { kieu: "chan" }, theo_doi: ["3"] }),
       the({ che_do: "tung_so", theo_doi: ["abc"] }),
     ];
     for (const ch of sai) expect(() => chayThiNghiem(ch as CauHinhThe)).toThrow();
+  });
+});
+
+describe("thẻ số: bộ thẻ lớn", () => {
+  it("chạy được với 50 thẻ và 5.000 thẻ, lời giải liệt kê rút gọn", () => {
+    for (const n of [50, 5000]) {
+      const ch = the({ che_do: "bien_co", bien_co: { kieu: "nguyen_to" }, theo_doi: ["co"] }, n) as CauHinhThe;
+      const r = chayThiNghiem(ch);
+      expect(r.chi_tiet.so_luot).toBeGreaterThan(0);
+    }
+    const lg = loiGiai(the({ che_do: "bien_co", bien_co: { kieu: "chan" }, theo_doi: ["co"] }, 5000) as CauHinhVat, "co");
+    const dong = lg.buoc.flatMap((b) => b.phep_tinh ?? []).join(" | ");
+    expect(dong).toContain("tổng cộng 2500 số");
+    expect(lg.xac_suat).toBe("1/2");
   });
 });

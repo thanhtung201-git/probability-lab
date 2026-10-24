@@ -3,3 +3,10 @@ dist/
 .env
 *.db
 eval/ket-qua/
+
+.vercel
+
+.vercel/
+*.db-shm
+*.db-wal
+.env.local

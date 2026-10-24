@@ -34,7 +34,7 @@ export async function chanDoanLan1(luot: Dong, th: TinhHuong, noiDung: string) {
   const bd = bienDich(cd, th, THU_VIEN_NGO_NHAN, Number(luot.seed));
   const id = randomUUID();
 
-  chay(
+  await chay(
     `INSERT INTO chan_doan (id, luot_id, ma_ngo_nhan, can_cu, gia_thuyet, do_tin_cay, cau_hoi_goi_mo, nguon, can_duyet, ly_do_duyet, ket_qua_luat)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
@@ -49,7 +49,7 @@ export async function chanDoanLan1(luot: Dong, th: TinhHuong, noiDung: string) {
     cd.ly_do_duyet,
     JSON.stringify(luat),
   );
-  chay(`INSERT INTO thi_nghiem (luot_id, cau_hinh, ly_do) VALUES (?, ?, ?)`, String(luot.id), JSON.stringify(bd.cau_hinh), bd.ly_do);
+  await chay(`INSERT INTO thi_nghiem (luot_id, cau_hinh, ly_do) VALUES (?, ?, ?)`, String(luot.id), JSON.stringify(bd.cau_hinh), bd.ly_do);
   return { chan_doan: { id, ...cd }, thi_nghiem: { cau_hinh: bd.cau_hinh, ly_do: bd.ly_do } };
 }
 
@@ -65,15 +65,15 @@ export async function chamRubric(th: TinhHuong, noiDung: string) {
   return { muc: null, nhan_xet: "Chưa chấm được, chờ giáo viên", nguon: "luat" };
 }
 
-export function trangThaiLuot(luotId: string) {
-  const luot = lay(`SELECT * FROM luot_lam WHERE id = ?`, luotId);
+export async function trangThaiLuot(luotId: string) {
+  const luot = await lay(`SELECT * FROM luot_lam WHERE id = ?`, luotId);
   if (!luot) throw new LoiNghiepVu("Không tìm thấy lượt làm", 404);
-  const traLoi = layNhieu(`SELECT * FROM tra_loi WHERE luot_id = ? ORDER BY lan`, luotId);
-  const cd = lay(
+  const traLoi = await layNhieu(`SELECT * FROM tra_loi WHERE luot_id = ? ORDER BY lan`, luotId);
+  const cd = await lay(
     `SELECT c.*, d.ket_luan, d.ma_sua FROM chan_doan c LEFT JOIN danh_gia_gv d ON d.chan_doan_id = c.id WHERE c.luot_id = ?`,
     luotId,
   );
-  const tn = lay(`SELECT * FROM thi_nghiem WHERE luot_id = ?`, luotId);
+  const tn = await lay(`SELECT * FROM thi_nghiem WHERE luot_id = ?`, luotId);
   return {
     luot: { ...luot, giai_thich: undefined } as Dong,
     giai_thich: luot.giai_thich ? JSON.parse(String(luot.giai_thich)) : null,
@@ -88,8 +88,8 @@ export function trangThaiLuot(luotId: string) {
 /** Mã cuối cùng của một chẩn đoán: mã giáo viên sửa nếu có, ngược lại mã của hệ thống. */
 const maCuoi = (r: Dong) => (r.ma_sua ? String(r.ma_sua) : r.ma_ngo_nhan ? String(r.ma_ngo_nhan) : null) as MaNgoNhan | null;
 
-export function tongQuanPhien(phienId: string) {
-  const nhom = layNhieu(
+export async function tongQuanPhien(phienId: string) {
+  const nhom = await layNhieu(
     `SELECT l.id, l.ma_nhom, c.id AS chan_doan_id, c.ma_ngo_nhan, c.do_tin_cay, c.nguon, c.can_duyet, c.ly_do_duyet,
             c.can_cu, d.ket_luan, d.ma_sua,
             (SELECT noi_dung FROM tra_loi WHERE luot_id = l.id AND lan = 1) AS lan1,
@@ -128,8 +128,8 @@ const oCsv = (v: unknown) => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-export function xuatCsv(phienId: string): string {
-  const { nhom } = tongQuanPhien(phienId);
+export async function xuatCsv(phienId: string): Promise<string> {
+  const { nhom } = await tongQuanPhien(phienId);
   const cot = ["ma_nhom", "lan1", "ma_he_thong", "nguon", "do_tin_cay", "danh_gia_gv", "ma_gv_sua", "ma_cuoi", "lan2", "lan3", "muc1", "muc2", "muc3"];
   const dong = nhom.map((n) =>
     [n.ma_nhom, n.lan1, n.ma_ngo_nhan, n.nguon, n.do_tin_cay, n.ket_luan, n.ma_sua, n.ma_cuoi, n.lan2, n.lan3, n.muc1, n.muc2, n.muc3]

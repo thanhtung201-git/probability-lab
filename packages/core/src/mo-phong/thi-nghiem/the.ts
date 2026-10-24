@@ -4,6 +4,7 @@
 //   hai_the  – rút 2 thẻ có/không hoàn lại, ghi số thẻ thỏa biến cố      → so sánh có/không hoàn lại
 // Số trên thẻ chính là giá trị "mặt" của mỗi lần rút.
 import type { BienCoThe, CauHinhThe, KetQuaThiNghiem } from "../../types";
+import { GIOI_HAN } from "../../schema";
 import { PhanSo } from "../phan-so";
 import { taoRng, type Rng } from "../rng";
 import { phanPhoiDem } from "../to-hop";
@@ -38,18 +39,18 @@ export function thoaBienCo(bc: BienCoThe, x: number): boolean {
 
 /**
  * Đọc danh sách số giáo viên gõ cho biến cố tự chọn: "2, 5, 7", "2 5 7" hay có khoảng "3-6, 9".
- * Trả về các số 1-20 đã sắp xếp, không trùng; null khi gõ sai hoặc trống.
+ * Trả về các số từ 1 đến GIOI_HAN.SO_THE_TOI_DA đã sắp xếp, không trùng; null khi gõ sai hoặc trống.
  */
 export function docTapSo(text: string): number[] | null {
   const phan = text.split(/[,;\s]+/).filter(Boolean);
   if (!phan.length) return null;
   const kq = new Set<number>();
   for (const p of phan) {
-    const m = p.match(/^(\d{1,2})(?:-(\d{1,2}))?$/);
+    const m = p.match(/^(\d{1,6})(?:-(\d{1,6}))?$/);
     if (!m) return null;
     const a = Number(m[1]);
     const b = m[2] === undefined ? a : Number(m[2]);
-    if (a < 1 || b > 20 || a > b) return null;
+    if (a < 1 || b > GIOI_HAN.SO_THE_TOI_DA || a > b) return null;
     for (let x = a; x <= b; x++) kq.add(x);
   }
   return [...kq].sort((x, y) => x - y);

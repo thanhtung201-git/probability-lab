@@ -1,5 +1,5 @@
 // Biểu mẫu nhập bài toán tổng quát (giáo viên điền hoặc AI điền sẵn) và hàm dựng cấu hình thí nghiệm từ biểu mẫu.
-import { CauHinhBaiToanSchema } from "../../schema";
+import { CauHinhBaiToanSchema, GIOI_HAN } from "../../schema";
 import type { BienCoBaiToan, CauHinhBaiToan, DieuKienBaiToan, VatTongQuat } from "../../types";
 
 export interface FormBaiToan {
@@ -61,7 +61,7 @@ export function docDaySo(text: string): number[] | null {
 export function docVatTongQuat(f: Pick<FormBaiToan, "che_do_vat" | "n" | "nhom">): { vat: VatTongQuat[] } | { loi: string } {
   if (f.che_do_vat === "danh_so") {
     const n = Math.round(f.n);
-    if (!(n >= 2 && n <= 30)) return { loi: "Số vật phải từ 2 đến 30" };
+    if (!(n >= 2 && n <= GIOI_HAN.SO_VAT_TOI_DA)) return { loi: `Số vật phải từ 2 đến ${GIOI_HAN.SO_VAT_TOI_DA}` };
     return { vat: Array.from({ length: n }, (_, i) => ({ so: i + 1 })) };
   }
   const vat: VatTongQuat[] = [];
@@ -72,7 +72,7 @@ export function docVatTongQuat(f: Pick<FormBaiToan, "che_do_vat" | "n" | "nhom">
       const ten = a ? a[1]!.trim() : b?.[2]?.trim();
       const dem = a ? Number(a[2]) : b ? Number(b[1]) : NaN;
       if (!ten || !Number.isFinite(dem)) return { loi: `Không hiểu “${p}”. Viết dạng: đỏ 3, xanh 2` };
-      if (dem < 1 || dem > 30) return { loi: "Mỗi màu có từ 1 đến 30 vật" };
+      if (dem < 1 || dem > GIOI_HAN.SO_VAT_TOI_DA) return { loi: `Mỗi màu có từ 1 đến ${GIOI_HAN.SO_VAT_TOI_DA} vật` };
       for (let i = 0; i < dem; i++) vat.push({ mau: ten });
     }
   } else {
@@ -86,7 +86,7 @@ export function docVatTongQuat(f: Pick<FormBaiToan, "che_do_vat" | "n" | "nhom">
     }
   }
   if (vat.length < 2) return { loi: "Cần ít nhất 2 vật" };
-  if (vat.length > 30) return { loi: "Tối đa 30 vật" };
+  if (vat.length > GIOI_HAN.SO_VAT_TOI_DA) return { loi: `Tối đa ${GIOI_HAN.SO_VAT_TOI_DA} vật` };
   return { vat };
 }
 

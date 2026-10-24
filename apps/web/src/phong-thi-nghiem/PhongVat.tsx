@@ -45,7 +45,20 @@ const XANH_DAM = "#1e2a4a";
 const XAM = "#c7cbd6";
 const DO = "#dc2626";
 const CO_CHU = 15;
-const LO = [10, 100, 1_000];
+/** Số lượt tối đa cho một lần chạy tùy chỉnh (đủ lớn để thấy hội tụ, vẫn mượt trên máy học sinh). */
+const LO_TOI_DA = 100_000;
+
+/**
+ * Tốc độ chạy một lô lượt: số đợt cập nhật biểu đồ và thời gian giữa hai đợt (ms).
+ * "msLe" dùng cho lô nhỏ (tối đa 10 lượt): mỗi lượt một nhịp để cả lớp kịp nhìn.
+ * Chậm: lô 1.000 lượt mất khoảng 10 giây, biểu đồ lớn dần qua 80 đợt.
+ */
+const TOC_DO = {
+  cham: { ten: "Chậm", dot: 80, ms: 130, msLe: 450 },
+  vua: { ten: "Vừa", dot: 40, ms: 70, msLe: 250 },
+  nhanh: { ten: "Nhanh", dot: 30, ms: 35, msLe: 150 },
+} as const;
+type TocDo = keyof typeof TOC_DO;
 
 const pt = (x: number, so = 1) => `${(x * 100).toFixed(so).replace(".", ",")}%`;
 const so = (x: number) => x.toLocaleString("vi-VN");
@@ -101,7 +114,7 @@ function moTaLuotBi(ch: Extract<CauHinhVat, { loai: "bi" }>, mat: number[], khoa
     return `${ch.so_lan_truoc} lần đầu đều bi ${ch.mau_lap} → lần kế tiếp lấy được bi ${ten(mat[mat.length - 1]!)}`;
   }
   if (ch.so_lay === 1) return `Lấy được bi ${ten(mat[0]!)}`;
-  if (laSuKienBi(ch)) return `${mat.map(ten).join(", ")} → ${khoa === "co" ? "thỏa" : "không thỏa"}: ${moTaSuKienBi(ch)}`;
+  if (laSuKienBi(ch)) return `${mat.map(ten).join(", ")} → ${khoa === "co" ? "thuận lợi" : "không thuận lợi"}: ${moTaSuKienBi(ch)}`;
   const dem = mat.filter((m) => ten(m) === ch.mau_muc_tieu).length;
   return `${mat.map(ten).join(", ")} → ${dem} bi ${ch.mau_muc_tieu}`;
 }
@@ -109,7 +122,7 @@ function moTaLuotBi(ch: Extract<CauHinhVat, { loai: "bi" }>, mat: number[], khoa
 function moTaLuotThe(ch: Extract<CauHinhVat, { loai: "the" }>, mat: number[], khoa: string | null | undefined): string {
   if (ch.che_do === "tung_so") return `Rút được thẻ số ${mat[0]}`;
   const ten = moTaBienCo(ch.bien_co);
-  if (ch.che_do === "bien_co") return `Rút được thẻ ${mat[0]} – ${khoa === "co" ? "thỏa" : "không thỏa"} biến cố (${ten})`;
+  if (ch.che_do === "bien_co") return `Rút được thẻ ${mat[0]} – ${khoa === "co" ? "thuận lợi" : "không thuận lợi"} biến cố (${ten})`;
   return `Rút thẻ ${mat[0]} và ${mat[1]} → ${khoa} thẻ ${ten}`;
 }
 
@@ -170,7 +183,7 @@ function moTaLuot(ch: CauHinhVat, mat: number[], khoa: string | null | undefined
   if (ch.loai === "dong_xu") return moTaLuotDongXu(ch, mat, khoa);
   if (ch.loai === "bi") return moTaLuotBi(ch, mat, khoa);
   if (ch.loai === "the") return moTaLuotThe(ch, mat, khoa);
-  if (ch.loai === "bai_toan") return `(${mat.map((m) => nhanVat(ch.vat[m - 1]!)).join(", ")}) → ${khoa === "co" ? "thỏa" : "không thỏa"}: ${moTaBienCoBaiToan(ch)}`;
+  if (ch.loai === "bai_toan") return `(${mat.map((m) => nhanVat(ch.vat[m - 1]!)).join(", ")}) → ${khoa === "co" ? "thuận lợi" : "không thuận lợi"}: ${moTaBienCoBaiToan(ch)}`;
   switch (ch.che_do) {
     case "phan_phoi":
       return ch.so_xuc_xac === 1 ? `Ra mặt ${mat[0]}` : `${mat.join(" + ")} = ${mat.reduce((a, b) => a + b, 0)}`;
@@ -224,7 +237,11 @@ export function PhongVat({
   const [dangLac, setDangLac] = useState(false);
   const [dangChay, setDangChay] = useState(false);
   const [hoatHinh, setHoatHinh] = useState(true);
-  const [loVuaChon, setLoVuaChon] = useState<number | null>(null);
+  const [soTuyChinh, setSoTuyChinh] = useState("100");
+  const [tocDo, setTocDo] = useState<TocDo>("cham");
+  const dungRef = useRef(false);
+  const henGio = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(henGio.current), []);
   const [theoDoi, setTheoDoi] = useState(theoDoiMacDinh);
   const [thongBao, setThongBao] = useState<string | null>(null);
   const bieuDoCot = useRef<ChartJS<"bar"> | null>(null);
@@ -241,7 +258,6 @@ export function PhongVat({
     setSoLieu(soLieuRong());
     setMat(Array(soMat).fill(matBanDau));
     setKhoaCuoi(undefined);
-    setLoVuaChon(null);
     setThongBao(null);
   }
 
@@ -274,7 +290,6 @@ export function PhongVat({
 
   function gieoMotLan() {
     if (dangChay) return;
-    setLoVuaChon(null);
     setThongBao(null);
     if (!hoatHinh) return apDung(chayLuot(1, soLieu));
     setDangChay(true);
@@ -292,31 +307,41 @@ export function PhongVat({
 
   function gieoLo(n: number) {
     if (dangChay) return;
-    setLoVuaChon(n);
     if (!hoatHinh) {
       apDung(chayLuot(n, soLieu));
       setThongBao(`Đã ${dongTu} thêm ${so(n)} lượt`);
       return;
     }
-    // Chia thành nhiều đợt nhỏ để biểu đồ lớn dần trước mắt cả lớp.
+    // Chia thành nhiều đợt nhỏ để biểu đồ lớn dần trước mắt cả lớp; tốc độ do giáo viên chọn.
+    const td = TOC_DO[tocDo];
     setDangChay(true);
+    dungRef.current = false;
     setThongBao(`Đang ${dongTu} ${so(n)} lượt…`);
-    const soDot = Math.min(n, 30);
+    const soDot = n <= 10 ? n : Math.min(n, td.dot);
     const moiDot = Math.ceil(n / soDot);
     let conLai = n;
     let sl = soLieu;
     const buoc = () => {
+      if (dungRef.current) {
+        setDangChay(false);
+        setThongBao(`Đã dừng: ${dongTu} thêm ${so(n - conLai)} lượt`);
+        return;
+      }
       const r = chayLuot(Math.min(moiDot, conLai), sl);
       sl = r.sl;
       conLai -= Math.min(moiDot, conLai);
       apDung(r);
-      if (conLai > 0) window.setTimeout(buoc, n <= 10 ? 150 : 35);
+      if (conLai > 0) henGio.current = window.setTimeout(buoc, n <= 10 ? td.msLe : td.ms);
       else {
         setDangChay(false);
         setThongBao(`Đã ${dongTu} thêm ${so(n)} lượt`);
       }
     };
     buoc();
+  }
+
+  function dungChay() {
+    dungRef.current = true;
   }
 
   function taiPng() {
@@ -328,6 +353,8 @@ export function PhongVat({
     a.click();
   }
 
+  const soTuyChinhN = Number(soTuyChinh);
+  const soHopLe = Number.isInteger(soTuyChinhN) && soTuyChinhN >= 1 && soTuyChinhN <= LO_TOI_DA;
   const n = mauSo(cauHinh, soLieu);
   const tanSuat = (k: string) => (n ? (soLieu.dem[k] ?? 0) / n : 0);
   const laTheoDoi = (k: string) => cauHinh.theo_doi.map(String).includes(k);
@@ -371,14 +398,43 @@ export function PhongVat({
           ▶ {DongTu} 1 lượt{hoatHinh ? " (có hoạt hình)" : ""}
         </button>
         <div className="nut-lo">
-          {LO.map((x) => (
-            <button key={x} className={loVuaChon === x ? "vua-chon" : ""} onClick={() => gieoLo(x)} disabled={dangChay}>
-              {so(x)}
-            </button>
-          ))}
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={LO_TOI_DA}
+            step={1}
+            value={soTuyChinh}
+            onChange={(e) => setSoTuyChinh(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && soHopLe && gieoLo(soTuyChinhN)}
+            disabled={dangChay}
+            aria-label={`Số lượt muốn ${dongTu}`}
+            placeholder="Nhập số lượt"
+          />
+          <button className="vua-chon" onClick={() => gieoLo(soTuyChinhN)} disabled={dangChay || !soHopLe}>
+            ▶ {DongTu}
+          </button>
           <button className="dat-lai" onClick={datLai} disabled={dangChay} title="Đặt lại" aria-label="Đặt lại thí nghiệm">
             ↻
           </button>
+        </div>
+        {soTuyChinh !== "" && !soHopLe && (
+          <p className="muted" style={{ marginTop: "0.4rem", color: "#b91c1c" }}>Nhập số nguyên từ 1 đến {so(LO_TOI_DA)}.</p>
+        )}
+        <div className="toc-do">
+          <label htmlFor="toc-do">Tốc độ</label>
+          <select id="toc-do" value={tocDo} onChange={(e) => setTocDo(e.target.value as TocDo)} disabled={dangChay}>
+            {(Object.keys(TOC_DO) as TocDo[]).map((k) => (
+              <option key={k} value={k}>
+                {TOC_DO[k].ten}
+              </option>
+            ))}
+          </select>
+          {dangChay && !dangLac && (
+            <button type="button" className="phu" onClick={dungChay}>
+              ⏹ Dừng
+            </button>
+          )}
         </div>
         {khoaCauHinh && <p className="muted" style={{ marginTop: "0.6rem" }}>Gợi ý: {dongTu} khoảng {so(cauHinh.so_lan_goi_y)} lượt.</p>}
 

@@ -55,10 +55,13 @@ export function MatVatTQ({ vat, kichThuoc = 90, dangLac }: { vat?: VatTongQuat; 
 
 /** Tập vật của bài toán tổng quát, để cả lớp thấy có những vật nào. */
 export function TapVatTQ({ vat, tenVat }: { vat: VatTongQuat[]; tenVat: string }) {
+  // Tập vật lớn chỉ vẽ và liệt kê phần đầu, tránh vẽ hàng trăm ô làm chậm trang.
+  const toiDa = 60;
+  const hienThi = vat.length > toiDa ? vat.slice(0, toiDa) : vat;
   return (
     <div className="hop-thong-tin">
       <div className="hop-bi" aria-label={`Các ${tenVat} trong tập`}>
-        {vat.map((v, i) =>
+        {hienThi.map((v, i) =>
           v.mau === undefined ? (
             <span key={i} className="the-nho">
               {v.so}
@@ -74,9 +77,11 @@ export function TapVatTQ({ vat, tenVat }: { vat: VatTongQuat[]; tenVat: string }
             </span>
           ),
         )}
+        {vat.length > toiDa && <span className="the-nho">…</span>}
       </div>
       <div className="muted">
-        {vat.length} {tenVat}: {vat.map(nhanVat).join(" · ")}
+        {vat.length} {tenVat}: {hienThi.map(nhanVat).join(" · ")}
+        {vat.length > toiDa && ` · … (còn ${vat.length - toiDa} ${tenVat})`}
       </div>
     </div>
   );
@@ -121,7 +126,7 @@ export function MatThe({
       {so === 0 ? "?" : so}
       {so !== 0 && thuanLoi !== undefined && (
         <span className="dau-the" style={{ fontSize: Math.max(11, kichThuoc * 0.15), whiteSpace: "nowrap" }}>
-          {thuanLoi ? "✓ thỏa" : "✗ không"}
+          {thuanLoi ? "✓ thuận lợi" : "✗ không"}
         </span>
       )}
     </div>
@@ -150,17 +155,26 @@ export function HopBi({ hop }: { hop: NhomBi[] }) {
 /** Bộ thẻ 1..n; nếu có biến cố thì tô các thẻ thỏa biến cố. */
 export function BoThe({ soThe, bienCo, tenBienCo }: { soThe: number; bienCo?: BienCoThe; tenBienCo?: string }) {
   const thuan = bienCo ? new Set(cacSoThuanLoi(soThe, bienCo)) : null;
+  // Bộ thẻ lớn chỉ vẽ một phần đầu và thẻ cuối, tránh vẽ hàng nghìn thẻ làm chậm trang.
+  const toiDaVe = 60;
+  const ve = soThe <= toiDaVe ? Array.from({ length: soThe }, (_, i) => i + 1) : Array.from({ length: toiDaVe - 1 }, (_, i) => i + 1);
   return (
     <div className="hop-thong-tin">
       <div className="hop-the" aria-label="Các thẻ trong bộ">
-        {Array.from({ length: soThe }, (_, i) => i + 1).map((x) => (
+        {ve.map((x) => (
           <span key={x} className={`the-nho${thuan ? (thoaBienCo(bienCo!, x) ? " thuan-loi" : "") : ""}`}>
             {x}
           </span>
         ))}
+        {soThe > toiDaVe && (
+          <>
+            <span className="the-nho">…</span>
+            <span className={`the-nho${thuan ? (thoaBienCo(bienCo!, soThe) ? " thuan-loi" : "") : ""}`}>{soThe}</span>
+          </>
+        )}
       </div>
       <div className="muted">
-        {soThe} thẻ ghi các số từ 1 đến {soThe}
+        {soThe.toLocaleString("vi-VN")} thẻ ghi các số từ 1 đến {soThe.toLocaleString("vi-VN")}
         {thuan && ` · biến cố “${tenBienCo}”: ${thuan.size}/${soThe} thẻ`}
       </div>
     </div>

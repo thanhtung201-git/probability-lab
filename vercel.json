@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "outputDirectory": "apps/web/dist",
+  "functions": {
+    "api/index.mjs": { "includeFiles": "data/**", "maxDuration": 30 }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.mjs" },
+    { "source": "/healthz", "destination": "/api/index.mjs" },
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+  ]
+}

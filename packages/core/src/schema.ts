@@ -7,6 +7,14 @@ export const GIOI_HAN = {
   SO_LAN_TRUOC_TOI_DA: 10,
   DO_DAI_DAY_TOI_DA: 12,
   SO_MOC_TOI_DA: 10,
+  /** Số thẻ tối đa: đủ lớn để không vướng đề thực tế; chỉ là chốt an toàn cho bộ nhớ. */
+  SO_THE_TOI_DA: 100_000,
+  /** Chế độ "từng số" liệt kê mỗi thẻ một lựa chọn nên giữ nhỏ hơn. */
+  SO_THE_TUNG_SO_TOI_DA: 1_000,
+  /** Bài toán tổng quát: số vật tối đa (còn bị giới hạn thêm bởi số cách lấy, xem SO_CACH_LAY_TOI_DA). */
+  SO_VAT_TOI_DA: 1_000,
+  /** Bài toán tổng quát liệt kê mọi cách lấy để tính xác suất chính xác nên cần chặn số cách. */
+  SO_CACH_LAY_TOI_DA: 500_000,
 } as const;
 
 const MatDongXu = z.enum(["N", "S"]);
@@ -178,8 +186,8 @@ export const CauHinhBiSchema = z
 const BienCoTheSchema = z
   .object({
     kieu: z.enum(["chan", "le", "boi", "nguyen_to", "lon_hon", "nho_hon", "tap_hop"]),
-    k: z.number().int().min(1).max(20).optional(),
-    so: z.array(z.number().int().min(1).max(20)).min(1).max(20).optional(),
+    k: z.number().int().min(1).max(GIOI_HAN.SO_THE_TOI_DA).optional(),
+    so: z.array(z.number().int().min(1).max(GIOI_HAN.SO_THE_TOI_DA)).min(1).max(GIOI_HAN.SO_THE_TOI_DA).optional(),
   })
   .refine((b) => !["boi", "lon_hon", "nho_hon"].includes(b.kieu) || b.k !== undefined, { message: "Biến cố cần có số k" })
   .refine((b) => b.kieu !== "tap_hop" || (b.so !== undefined && new Set(b.so).size === b.so.length), {
@@ -190,15 +198,15 @@ export const CauHinhTheSchema = z.discriminatedUnion("che_do", [
   z.object({
     loai: z.literal("the"),
     che_do: z.literal("tung_so"),
-    so_the: z.number().int().min(2).max(20),
-    theo_doi: z.array(z.string().regex(/^\d{1,2}$/)).min(1).max(4),
+    so_the: z.number().int().min(2).max(GIOI_HAN.SO_THE_TUNG_SO_TOI_DA),
+    theo_doi: z.array(z.string().regex(/^\d{1,4}$/)).min(1).max(4),
     so_lan_goi_y: SoLanGoiY,
     seed: Seed,
   }),
   z.object({
     loai: z.literal("the"),
     che_do: z.literal("bien_co"),
-    so_the: z.number().int().min(2).max(20),
+    so_the: z.number().int().min(2).max(GIOI_HAN.SO_THE_TOI_DA),
     bien_co: BienCoTheSchema,
     theo_doi: z.array(z.enum(["co", "khong"])).min(1),
     so_lan_goi_y: SoLanGoiY,
@@ -207,7 +215,7 @@ export const CauHinhTheSchema = z.discriminatedUnion("che_do", [
   z.object({
     loai: z.literal("the"),
     che_do: z.literal("hai_the"),
-    so_the: z.number().int().min(2).max(20),
+    so_the: z.number().int().min(2).max(GIOI_HAN.SO_THE_TOI_DA),
     hoan_lai: z.boolean(),
     bien_co: BienCoTheSchema,
     theo_doi: z.array(z.enum(["0", "1", "2"])).min(1),
@@ -240,7 +248,7 @@ export const CauHinhBaiToanSchema = z
   .object({
     loai: z.literal("bai_toan"),
     che_do: z.literal("bai_toan"),
-    vat: z.array(VatTongQuatSchema).min(2, "Cần ít nhất 2 vật").max(30, "Tối đa 30 vật"),
+    vat: z.array(VatTongQuatSchema).min(2, "Cần ít nhất 2 vật").max(GIOI_HAN.SO_VAT_TOI_DA, `Tối đa ${GIOI_HAN.SO_VAT_TOI_DA} vật`),
     ten_vat: z.string().trim().min(1).max(12).optional(),
     so_lan: z.number().int().min(1, "Số lần lấy từ 1 đến 4").max(4, "Số lần lấy từ 1 đến 4"),
     hoan_lai: z.boolean(),
@@ -256,7 +264,7 @@ export const CauHinhBaiToanSchema = z
     if (!c.hoan_lai && c.so_lan > N) loi("Không hoàn lại thì không thể lấy nhiều vật hơn số vật có");
     let cach = 1;
     for (let i = 0; i < c.so_lan; i++) cach *= c.hoan_lai ? N : Math.max(1, N - i);
-    if (cach > 100_000) loi(`Số cách lấy là ${cach.toLocaleString("vi-VN")}, quá lớn (tối đa 100.000). Hãy giảm số vật hoặc số lần lấy`);
+    if (cach > GIOI_HAN.SO_CACH_LAY_TOI_DA) loi(`Số cách lấy là ${cach.toLocaleString("vi-VN")}, quá lớn (tối đa ${GIOI_HAN.SO_CACH_LAY_TOI_DA.toLocaleString("vi-VN")}). Hãy giảm số vật hoặc số lần lấy`);
     const bc = c.bien_co;
     if (bc.kieu === "so") {
       if (c.vat.some((v) => v.so === undefined)) loi("Biến cố trên số cần mọi vật đều có số");

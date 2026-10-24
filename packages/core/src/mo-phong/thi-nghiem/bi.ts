@@ -79,8 +79,8 @@ export function cacKhoaBi(ch: CauHinhBi): KhoaKetQua[] {
   if (laSuKienBi(ch)) {
     const p = xacSuatSuKienBi(ch);
     return [
-      { khoa: "co", nhan: `Thỏa: ${moTaSuKienBi(ch)}`, xac_suat: p },
-      { khoa: "khong", nhan: "Không thỏa", xac_suat: PhanSo.MOT.tru(p) },
+      { khoa: "co", nhan: `Thuận lợi: ${moTaSuKienBi(ch)}`, xac_suat: p },
+      { khoa: "khong", nhan: "Không thuận lợi", xac_suat: PhanSo.MOT.tru(p) },
     ];
   }
   const mau = ch.hop.find((g) => g.ten === ch.mau_muc_tieu)!;

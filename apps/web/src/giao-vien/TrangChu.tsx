@@ -50,16 +50,16 @@ const KIEU: Record<Vat, { id: KieuThiNghiem; ten: string; mo_ta: string }[]> = {
     { id: "day", ten: "So sánh hai dãy kết quả", mo_ta: "Hợp với đề hỏi dãy nào dễ xuất hiện hơn, ví dụ NNNNNN và NSNSSN" },
   ],
   bi: [
-    { id: "tu_dong", ten: "Để AI chọn theo đề", mo_ta: "AI chưa tự chọn thí nghiệm cho hộp bi, hãy chọn một kiểu bên dưới" },
+    { id: "tu_dong", ten: "Để AI chọn theo đề", mo_ta: "AI đọc đề, tự lấy số bi từng màu, số lần lấy, có hoàn lại hay không và biến cố cần tính (cần bật Groq)" },
     { id: "mot_con", ten: "Lấy 1 bi", mo_ta: "Hợp với đề hỏi xác suất lấy được một màu, hoặc “có 2 màu nên mỗi màu 1/2”" },
     { id: "hai_con", ten: "Lấy 2 bi, đếm số bi một màu", mo_ta: "Hợp với đề lấy 2 bi liên tiếp; chọn có hoặc không hoàn lại" },
     { id: "dieu_kien", ten: "Sau k lần liên tiếp cùng một màu", mo_ta: "Có hoàn lại; hợp với đề “nhiều lần ra màu này rồi, lần sau có khác đi không”" },
   ],
   the: [
-    { id: "tu_dong", ten: "Để AI chọn theo đề", mo_ta: "AI chưa tự chọn thí nghiệm cho thẻ số, hãy chọn một kiểu bên dưới" },
+    { id: "tu_dong", ten: "Để AI chọn theo đề", mo_ta: "AI đọc đề, tự lấy số thẻ, số lần rút, có hoàn lại hay không và biến cố cần tính (cần bật Groq)" },
     { id: "bien_co", ten: "Rút 1 thẻ, theo biến cố", mo_ta: "Hợp với đề tính xác suất của một biến cố, ví dụ “số chia hết cho 3”" },
     { id: "mot_con", ten: "Rút 1 thẻ, theo từng số", mo_ta: "Hợp với đề hỏi thẻ nào dễ rút hơn, ví dụ “thẻ số 10 khó rút hơn”" },
-    { id: "hai_con", ten: "Rút 2 thẻ, đếm số thẻ thỏa biến cố", mo_ta: "Hợp với đề rút 2 thẻ liên tiếp; chọn có hoặc không hoàn lại" },
+    { id: "hai_con", ten: "Rút 2 thẻ, đếm số thẻ thuận lợi biến cố", mo_ta: "Hợp với đề rút 2 thẻ liên tiếp; chọn có hoặc không hoàn lại" },
   ],
 };
 
@@ -137,7 +137,7 @@ export function FormTuNhap({
   function doiVat(v: Vat) {
     onDoiVat(v);
     // Các kiểu có ý nghĩa riêng theo từng vật nên đưa về mặc định hợp lý khi đổi vật.
-    const macDinh: KieuThiNghiem = v === "the" ? "bien_co" : v === "bi" ? "mot_con" : aiBat && (v === "xuc_xac" || v === "dong_xu") ? "tu_dong" : "hai_con";
+    const macDinh: KieuThiNghiem = aiBat ? "tu_dong" : v === "the" ? "bien_co" : v === "bi" ? "mot_con" : "hai_con";
     setKieu(macDinh);
     setTheoDoi("");
     setSoLanTruoc(v === "bi" ? "4" : "5");
@@ -159,7 +159,9 @@ export function FormTuNhap({
     const deBai: DeBaiTuNhap = { noi_dung: noiDung.trim(), kieu, vat };
     if (tieuDe.trim()) deBai.tieu_de = tieuDe.trim();
 
-    if (vat === "bi") {
+    if (kieu === "tu_dong" && (vat === "bi" || vat === "the")) {
+      // Hộp bi và thẻ số: AI tự đọc cấu hình từ đề, không gửi các ô nhập tay.
+    } else if (vat === "bi") {
       deBai.hop = hop;
       const mauChon = mau || tenMauTrongHop(hop)[0];
       if (mauChon) deBai.mau = mauChon;
@@ -172,7 +174,7 @@ export function FormTuNhap({
       if (kieuBienCo === "tap_hop") {
         const ds = docTapSo(tapSo);
         if (!ds) {
-          setLoi("Biến cố tự chọn: gõ các số từ 1 đến 20, ví dụ “2, 5, 7” hoặc “1-4, 9”");
+          setLoi("Biến cố tự chọn: gõ các số từ 1 trở lên, ví dụ “2, 5, 7” hoặc “1-4, 9”");
           return;
         }
         deBai.bien_co = { kieu: "tap_hop", so: ds };
@@ -223,7 +225,7 @@ export function FormTuNhap({
   const moTaKieu = kieuHienTai?.mo_ta ?? "";
   const soNho = { width: 90 };
   const thongTinVat = VAT.find((v) => v.id === vat)!;
-  const aiDung = (k: KieuThiNghiem) => k !== "tu_dong" || ((vat === "xuc_xac" || vat === "dong_xu") && aiBat);
+  const aiDung = (k: KieuThiNghiem) => k !== "tu_dong" || aiBat;
   const dsMau = tenMauTrongHop(hop);
   const moBienCo = BIEN_CO.find((b) => b.kieu === kieuBienCo)!;
 
@@ -279,7 +281,7 @@ export function FormTuNhap({
             {ds.map((k) => (
               <option key={k.id} value={k.id} disabled={k.id === "tu_dong" && !aiDung(k.id)}>
                 {k.ten}
-                {k.id === "tu_dong" && !aiDung(k.id) ? (vat === "bi" || vat === "the" ? " (chưa hỗ trợ)" : " (AI chưa bật)") : ""}
+                {k.id === "tu_dong" && !aiDung(k.id) ? " (AI chưa bật)" : ""}
               </option>
             ))}
           </select>
@@ -336,7 +338,7 @@ export function FormTuNhap({
       )}
 
       {/* Hộp bi */}
-      {vat === "bi" && (
+      {vat === "bi" && kieu !== "tu_dong" && (
         <>
           <div className="truong">
             <label htmlFor="hop-bi">Trong hộp có</label>
@@ -383,11 +385,11 @@ export function FormTuNhap({
       )}
 
       {/* Thẻ số */}
-      {vat === "the" && (
+      {vat === "the" && kieu !== "tu_dong" && (
         <>
           <div className="hang truong">
             <label htmlFor="so-the" style={{ margin: 0 }}>Số thẻ (ghi từ 1 đến)</label>
-            <input id="so-the" style={soNho} type="number" min={2} max={20} value={soThe} onChange={(e) => setSoThe(e.target.value)} />
+            <input id="so-the" style={soNho} type="number" min={2} max={kieu === "mot_con" ? 1000 : undefined} value={soThe} onChange={(e) => setSoThe(e.target.value)} />
             {kieu !== "mot_con" && (
               <>
                 <label htmlFor="bien-co-the" style={{ margin: 0 }}>Biến cố</label>
@@ -408,7 +410,7 @@ export function FormTuNhap({
                   ))}
                 </select>
                 {kieuBienCo === "tap_hop" && <input aria-label="Các số thuận lợi" style={{ width: 160 }} value={tapSo} onChange={(e) => setTapSo(e.target.value)} placeholder="2, 3, 5, 7" />}
-                {moBienCo.coK && <input aria-label="Số k" style={soNho} type="number" min={1} max={20} value={kBienCo} onChange={(e) => setKBienCo(e.target.value)} />}
+                {moBienCo.coK && <input aria-label="Số k" style={soNho} type="number" min={1} value={kBienCo} onChange={(e) => setKBienCo(e.target.value)} />}
               </>
             )}
             {kieu === "hai_con" && (

@@ -52,21 +52,21 @@ type XuLy = (req: Request, res: Response) => unknown;
 const bocLoi = (fn: XuLy) => (req: Request, res: Response, next: NextFunction) =>
   Promise.resolve(fn(req, res)).catch(next);
 
-const laySoPhien = (id: string) => {
-  const phien = lay(`SELECT * FROM phien WHERE id = ?`, id.toUpperCase());
+const laySoPhien = async (id: string) => {
+  const phien = await lay(`SELECT * FROM phien WHERE id = ?`, id.toUpperCase());
   if (!phien) throw new LoiNghiepVu("Không tìm thấy phiên. Kiểm tra lại mã phiên.", 404);
   // Phiên có đề tự nhập lưu nguyên tình huống trong cột de_bai; phiên thường tra trong thư viện.
-  const th = phien.de_bai ? TinhHuongSchema.parse(JSON.parse(String(phien.de_bai))) : timTinhHuong(String(phien.tinh_huong_id));
+  const th = phien.de_bai ? TinhHuongSchema.parse(JSON.parse(String(phien.de_bai))) : await timTinhHuong(String(phien.tinh_huong_id));
   if (!th) throw new LoiNghiepVu("Tình huống của phiên không còn trong thư viện", 500);
   return { phien, th };
 };
 
 /** Mã phiên 6 ký tự, bỏ các ký tự dễ nhầm (0/O, 1/I). */
-function taoMaPhien(): string {
+async function taoMaPhien(): Promise<string> {
   const kyTu = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   for (;;) {
     const ma = Array.from({ length: 6 }, () => kyTu[Math.floor(Math.random() * kyTu.length)]).join("");
-    if (!lay(`SELECT 1 FROM phien WHERE id = ?`, ma)) return ma;
+    if (!await lay(`SELECT 1 FROM phien WHERE id = ?`, ma)) return ma;
   }
 }
 
@@ -87,9 +87,12 @@ app.get("/api/trang-thai", (_req, res) => {
   res.json({ llm_bat: llmDangBat(), mo_hinh: llmDangBat() ? CONFIG.groqModel : null });
 });
 
-app.get("/api/thu-vien", (_req, res) => {
-  res.json({ ngo_nhan: THU_VIEN_NGO_NHAN, tinh_huong: thuVienTinhHuong() });
-});
+app.get(
+  "/api/thu-vien",
+  bocLoi(async (_req, res) => {
+    res.json({ ngo_nhan: THU_VIEN_NGO_NHAN, tinh_huong: await thuVienTinhHuong() });
+  }),
+);
 
 // Bài toán giáo viên soạn và lưu lại: dựng cùng cách với đề tự nhập, rồi lưu để dùng cho nhiều phiên.
 app.post(
@@ -102,17 +105,17 @@ app.post(
     });
     const id = `${TIEN_TO_BAI_TU_NHAP}${randomUUID().slice(0, 8)}`;
     const tinhHuong = { ...kq.tinh_huong, id };
-    chay(`INSERT INTO bai_tu_nhap (id, tinh_huong) VALUES (?, ?)`, id, JSON.stringify(tinhHuong));
+    await chay(`INSERT INTO bai_tu_nhap (id, tinh_huong) VALUES (?, ?)`, id, JSON.stringify(tinhHuong));
     res.status(201).json({ id, tinh_huong: tinhHuong, nguon: kq.nguon, ly_do: kq.ly_do, canh_bao: kq.canh_bao });
   }),
 );
 
 app.delete(
   "/api/bai-tu-nhap/:id",
-  bocLoi((req, res) => {
+  bocLoi(async (req, res) => {
     const id = String(req.params.id);
-    if (!lay(`SELECT 1 FROM bai_tu_nhap WHERE id = ?`, id)) throw new LoiNghiepVu("Không tìm thấy bài đã lưu", 404);
-    chay(`DELETE FROM bai_tu_nhap WHERE id = ?`, id);
+    if (!await lay(`SELECT 1 FROM bai_tu_nhap WHERE id = ?`, id)) throw new LoiNghiepVu("Không tìm thấy bài đã lưu", 404);
+    await chay(`DELETE FROM bai_tu_nhap WHERE id = ?`, id);
     res.json({ ok: true });
   }),
 );
@@ -127,19 +130,19 @@ app.post(
         if (e instanceof LoiDeBai) throw new LoiNghiepVu(e.message);
         throw e;
       });
-      const id = taoMaPhien();
-      chay(`INSERT INTO phien (id, tinh_huong_id, de_bai) VALUES (?, ?, ?)`, id, "tu_nhap", JSON.stringify(kq.tinh_huong));
+      const id = await taoMaPhien();
+      await chay(`INSERT INTO phien (id, tinh_huong_id, de_bai) VALUES (?, ?, ?)`, id, "tu_nhap", JSON.stringify(kq.tinh_huong));
       return res.status(201).json({ id, tinh_huong_id: "tu_nhap", tinh_huong: kq.tinh_huong, nguon: kq.nguon, ly_do: kq.ly_do, canh_bao: kq.canh_bao });
     }
     const { tinh_huong_id } = z.object({ tinh_huong_id: z.string() }).parse(req.body);
-    const th = timTinhHuong(tinh_huong_id);
+    const th = await timTinhHuong(tinh_huong_id);
     if (!th) throw new LoiNghiepVu("Tình huống không tồn tại");
-    const id = taoMaPhien();
+    const id = await taoMaPhien();
     // Bài giáo viên đã lưu thì chép nguyên đề vào phiên, để xóa bài sau này không làm hỏng phiên đã mở.
     if (tinh_huong_id.startsWith(TIEN_TO_BAI_TU_NHAP)) {
-      chay(`INSERT INTO phien (id, tinh_huong_id, de_bai) VALUES (?, ?, ?)`, id, tinh_huong_id, JSON.stringify(th));
+      await chay(`INSERT INTO phien (id, tinh_huong_id, de_bai) VALUES (?, ?, ?)`, id, tinh_huong_id, JSON.stringify(th));
     } else {
-      chay(`INSERT INTO phien (id, tinh_huong_id) VALUES (?, ?)`, id, tinh_huong_id);
+      await chay(`INSERT INTO phien (id, tinh_huong_id) VALUES (?, ?)`, id, tinh_huong_id);
     }
     res.status(201).json({ id, tinh_huong_id });
   }),
@@ -147,61 +150,61 @@ app.post(
 
 app.get(
   "/api/phien/:id",
-  bocLoi((req, res) => {
-    const { phien, th } = laySoPhien(String(req.params.id));
+  bocLoi(async (req, res) => {
+    const { phien, th } = await laySoPhien(String(req.params.id));
     res.json({ phien, tinh_huong: th });
   }),
 );
 
 app.get(
   "/api/phien/:id/tong-quan",
-  bocLoi((req, res) => {
-    const { phien } = laySoPhien(String(req.params.id));
-    res.json(tongQuanPhien(String(phien.id)));
+  bocLoi(async (req, res) => {
+    const { phien } = await laySoPhien(String(req.params.id));
+    res.json(await tongQuanPhien(String(phien.id)));
   }),
 );
 
 app.get(
   "/api/phien/:id/xuat-csv",
-  bocLoi((req, res) => {
-    const { phien } = laySoPhien(String(req.params.id));
+  bocLoi(async (req, res) => {
+    const { phien } = await laySoPhien(String(req.params.id));
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="phien-${phien.id}.csv"`);
-    res.send(xuatCsv(String(phien.id)));
+    res.send(await xuatCsv(String(phien.id)));
   }),
 );
 
 app.post(
   "/api/luot",
-  bocLoi((req, res) => {
+  bocLoi(async (req, res) => {
     const body = z
       .object({ phien_id: z.string(), ma_nhom: z.string().trim().min(1).max(20).regex(/^[\p{L}\p{N} _-]+$/u) })
       .parse(req.body);
-    const { phien } = laySoPhien(body.phien_id);
-    const daCo = lay(`SELECT id FROM luot_lam WHERE phien_id = ? AND ma_nhom = ?`, String(phien.id), body.ma_nhom);
+    const { phien } = await laySoPhien(body.phien_id);
+    const daCo = await lay(`SELECT id FROM luot_lam WHERE phien_id = ? AND ma_nhom = ?`, String(phien.id), body.ma_nhom);
     const id = daCo ? String(daCo.id) : randomUUID();
-    if (!daCo) chay(`INSERT INTO luot_lam (id, phien_id, ma_nhom, seed) VALUES (?, ?, ?, ?)`, id, String(phien.id), body.ma_nhom, taoSeed());
-    res.status(daCo ? 200 : 201).json(trangThaiLuot(id));
+    if (!daCo) await chay(`INSERT INTO luot_lam (id, phien_id, ma_nhom, seed) VALUES (?, ?, ?, ?)`, id, String(phien.id), body.ma_nhom, taoSeed());
+    res.status(daCo ? 200 : 201).json(await trangThaiLuot(id));
   }),
 );
 
 app.get(
   "/api/luot/:id",
-  bocLoi((req, res) => res.json(trangThaiLuot(String(req.params.id)))),
+  bocLoi(async (req, res) => res.json(await trangThaiLuot(String(req.params.id)))),
 );
 
 app.post(
   "/api/luot/:id/tra-loi",
   bocLoi(async (req, res) => {
     const body = z.object({ lan: z.union([z.literal(1), z.literal(2), z.literal(3)]), noi_dung: z.string().trim().min(3).max(1000) }).parse(req.body);
-    const tt = trangThaiLuot(String(req.params.id));
-    const { th } = laySoPhien(String(tt.luot.phien_id));
+    const tt = await trangThaiLuot(String(req.params.id));
+    const { th } = await laySoPhien(String(tt.luot.phien_id));
     const daTraLoi = new Set(tt.tra_loi.map((t) => Number(t.lan)));
     if (daTraLoi.has(body.lan)) throw new LoiNghiepVu(`Nhóm đã gửi câu trả lời lần ${body.lan}`, 409);
     if (body.lan > 1 && !daTraLoi.has(body.lan - 1)) throw new LoiNghiepVu(`Cần gửi lần ${body.lan - 1} trước`, 409);
 
     const cham = await chamRubric(th, body.noi_dung);
-    chay(
+    await chay(
       `INSERT INTO tra_loi (luot_id, lan, noi_dung, muc_rubric, nhan_xet, nguon_cham) VALUES (?, ?, ?, ?, ?, ?)`,
       String(tt.luot.id),
       body.lan,
@@ -242,12 +245,12 @@ app.post(
 
 app.post(
   "/api/luot/:id/ket-qua",
-  bocLoi((req, res) => {
+  bocLoi(async (req, res) => {
     const { tom_tat } = z.object({ tom_tat: z.record(z.string(), z.unknown()) }).parse(req.body);
     const json = JSON.stringify(tom_tat);
     // Từ chối thay vì cắt bớt: cắt chuỗi JSON sẽ làm hỏng dữ liệu khi đọc lại.
     if (json.length > 200_000) throw new LoiNghiepVu("Số liệu thí nghiệm quá lớn", 413);
-    const r = chay(`UPDATE thi_nghiem SET tom_tat = ? WHERE luot_id = ?`, json, String(req.params.id));
+    const r = await chay(`UPDATE thi_nghiem SET tom_tat = ? WHERE luot_id = ?`, json, String(req.params.id));
     if (r.changes === 0) throw new LoiNghiepVu("Lượt làm chưa có thí nghiệm", 404);
     res.json({ ok: true });
   }),
@@ -255,7 +258,7 @@ app.post(
 
 app.post(
   "/api/chan-doan/:id/danh-gia",
-  bocLoi((req, res) => {
+  bocLoi(async (req, res) => {
     const body = z
       .object({
         ket_luan: z.enum(["dung", "chua_phu_hop", "sai"]),
@@ -264,8 +267,8 @@ app.post(
       })
       .parse(req.body);
     const id = String(req.params.id);
-    if (!lay(`SELECT 1 FROM chan_doan WHERE id = ?`, id)) throw new LoiNghiepVu("Không tìm thấy chẩn đoán", 404);
-    chay(
+    if (!await lay(`SELECT 1 FROM chan_doan WHERE id = ?`, id)) throw new LoiNghiepVu("Không tìm thấy chẩn đoán", 404);
+    await chay(
       `INSERT INTO danh_gia_gv (chan_doan_id, ket_luan, ma_sua, ghi_chu) VALUES (?, ?, ?, ?)
        ON CONFLICT (chan_doan_id) DO UPDATE SET ket_luan = excluded.ket_luan, ma_sua = excluded.ma_sua,
          ghi_chu = excluded.ghi_chu, tao_luc = datetime('now')`,
@@ -291,7 +294,8 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ loi: "Lỗi máy chủ" });
 });
 
-app.listen(CONFIG.port, () => {
+// Trên Vercel không tự mở cổng: nền tảng gọi thẳng vào app đã xuất ra ở cuối tệp.
+if (!process.env.VERCEL) app.listen(CONFIG.port, () => {
   console.log(`Probability Lab AI – máy chủ chạy tại http://localhost:${CONFIG.port}`);
   console.log(
     coGiaoDien
@@ -301,3 +305,5 @@ app.listen(CONFIG.port, () => {
   if (CONFIG.basicAuth) console.log("Đang bật mật khẩu chung (PLAB_BASIC_AUTH).");
   console.log(llmDangBat() ? `AI: Groq, mô hình ${CONFIG.groqModel}` : "AI: CHƯA BẬT (chưa có GROQ_API_KEY) – dùng bộ luật dự phòng");
 });
+
+export default app;

@@ -49,15 +49,21 @@
   font-size: 1.1rem; padding: 0.8rem 1rem; border-radius: 12px;
 }
 .ptn .nut-gieo:hover:not(:disabled) { background: var(--ptn-do-dam); }
-.ptn .nut-lo { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 0.5rem; margin-top: 0.6rem; }
+.ptn .nut-lo { display: grid; grid-template-columns: 1fr auto auto; gap: 0.5rem; margin-top: 0.6rem; }
 .ptn .nut-lo button {
   justify-content: center; background: #fff; color: var(--ptn-xanh-dam); border: 1.5px solid var(--ptn-vien);
   padding: 0.6rem 0.2rem; border-radius: 10px;
 }
 .ptn .nut-lo button:hover:not(:disabled) { border-color: var(--ptn-xanh-dam); background: #fff; }
 .ptn .nut-lo button.vua-chon { background: var(--ptn-xanh-dam); color: #fff; border-color: var(--ptn-xanh-dam); }
+.ptn .nut-lo input { min-width: 0; margin: 0; padding: 0.6rem 0.7rem; border-radius: 10px; font-size: 1rem; }
+.ptn .nut-lo button { padding-left: 0.9rem; padding-right: 0.9rem; }
 .ptn .nut-lo .dat-lai { border: 0; font-size: 1.3rem; padding: 0.4rem 0.6rem; }
 
+.ptn .toc-do { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.7rem; }
+.ptn .toc-do label { margin: 0; font-weight: 600; }
+.ptn .toc-do select { width: auto; min-width: 6.5rem; }
+.ptn .toc-do button { padding: 0.35rem 0.8rem; }
 .ptn .dem { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 1.1rem; }
 .ptn .dem .so { font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--ptn-xanh-dam); }
 .ptn .dem label { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-weight: 600; cursor: pointer; }
@@ -109,8 +115,6 @@
 .ptn.mot-cot .san-khau { min-height: 100%; }
 .ptn.mot-cot > div:last-child > .the:first-child { display: flex; }
 .ptn.mot-cot > div:last-child > .the:first-child .san-khau { flex: 1; }
-.ptn.mot-cot .nut-lo { grid-template-columns: repeat(2, 1fr) auto; }
-.ptn.mot-cot .nut-lo .dat-lai { grid-row: 1 / span 2; grid-column: 3; }
 @media (max-width: 1000px) { .ptn.mot-cot { grid-template-columns: 1fr; } }
 
 /* Chế độ có điều kiện: xúc xắc cuối là "lần kế tiếp" */
@@ -251,7 +255,7 @@
 .cach-tinh .ct-buoc li { counter-increment: buoc; position: relative; padding-left: 2.3rem; }
 .cach-tinh .ct-buoc li::before { content: counter(buoc); position: absolute; left: 0; top: 0; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #dc2626; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
 .cach-tinh .ct-tieu-de { font-weight: 700; color: #1e2a4a; }
-.cach-tinh .ct-phep-tinh { margin-top: 0.3rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.35rem 0.7rem; font-family: ui-monospace, Consolas, monospace; font-size: 0.95rem; overflow-wrap: anywhere; }
+.cach-tinh .ct-phep-tinh { margin-top: 0.3rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.4rem 0.8rem; font-size: 1.05rem; line-height: 1.7; overflow-wrap: anywhere; }
 .cach-tinh .ct-ket-qua { margin-top: 1rem; background: #fef2f2; border-radius: 10px; padding: 0.7rem 1rem; font-size: 1.15rem; font-weight: 800; color: #b91c1c; }
 .cach-tinh .ct-luu-y { margin-top: 0.7rem; background: #fffbeb; border-radius: 10px; padding: 0.6rem 0.9rem; color: #78350f; }
 .cach-tinh .ct-de-hieu { background: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 8px; padding: 0.6rem 0.9rem; margin-bottom: 0.9rem; color: #14532d; }
@@ -266,3 +270,11 @@
 .khong-gian-mau span { padding: 0.15rem 0.5rem; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; }
 .khong-gian-mau span.thoa { background: #dcfce7; border-color: #86efac; color: #166534; font-weight: 700; }
 .ket-qua-bt .ct-ket-qua { margin-top: 0; background: #fef2f2; border-radius: 10px; padding: 0.7rem 1rem; font-size: 1.1rem; font-weight: 800; color: #b91c1c; }
+
+/* Trình bày công thức: chữ có chân như soạn bằng MathType, phân số xếp chồng, danh sách kết quả dạng lưới */
+.toan { font-family: "Cambria Math", "STIX Two Math", "Latin Modern Math", Cambria, "Times New Roman", serif; }
+.phan-so { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 0.2em; line-height: 1.15; font-size: 0.95em; }
+.phan-so > span:first-child { border-bottom: 1.5px solid currentColor; padding: 0 0.3em 0.05em; }
+.phan-so > span:last-child { padding: 0.05em 0.3em 0; }
+.luoi-ket-qua { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.2rem, 1fr)); gap: 0.35rem; margin: 0.3rem 0; }
+.luoi-ket-qua > span { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.15rem 0.5rem; text-align: center; white-space: nowrap; }
