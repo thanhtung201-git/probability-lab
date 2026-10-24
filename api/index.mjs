@@ -53323,12 +53323,20 @@ function moTaDieuKien(dk) {
       return `nh\u1ECF h\u01A1n ${dk.k}`;
   }
 }
+var laMatDongXu = (tenVat) => tenVat === "m\u1EB7t \u0111\u1ED3ng xu";
+var laMatXucXac = (tenVat) => tenVat === "m\u1EB7t x\xFAc x\u1EAFc";
 function moTaBienCoBaiToan(ch) {
   const bc = ch.bien_co;
   const tv = ch.ten_vat ?? "v\u1EADt";
   let s;
   if (bc.kieu === "so") s = `${TEN_DAI_LUONG[bc.dai_luong]} ${moTaDieuKien(bc.dieu_kien)}`;
-  else if (bc.loai === "it_nhat") s = `c\xF3 \xEDt nh\u1EA5t 1 ${tv} m\xE0u ${bc.mau}`;
+  else if (laMatDongXu(tv) || laMatXucXac(tv)) {
+    const mat = "m\u1EB7t";
+    if (bc.loai === "it_nhat") s = `c\xF3 \xEDt nh\u1EA5t 1 l\u1EA7n ra ${mat} ${bc.mau}`;
+    else if (bc.loai === "dung") s = `c\xF3 \u0111\xFAng ${bc.k} l\u1EA7n ra ${mat} ${bc.mau}`;
+    else if (bc.loai === "cung_mau") s = `c\xE1c l\u1EA7n ${laMatDongXu(tv) ? "tung" : "gieo"} \u0111\u1EC1u ra c\xF9ng m\u1ED9t m\u1EB7t`;
+    else s = `hai l\u1EA7n ${laMatDongXu(tv) ? "tung" : "gieo"} ra hai m\u1EB7t kh\xE1c nhau`;
+  } else if (bc.loai === "it_nhat") s = `c\xF3 \xEDt nh\u1EA5t 1 ${tv} m\xE0u ${bc.mau}`;
   else if (bc.loai === "dung") s = `c\xF3 \u0111\xFAng ${bc.k} ${tv} m\xE0u ${bc.mau}`;
   else if (bc.loai === "cung_mau") s = `c\xE1c ${tv} l\u1EA5y ra c\xF9ng m\xE0u`;
   else s = `hai ${tv} l\u1EA5y ra kh\xE1c m\xE0u`;
@@ -54256,6 +54264,14 @@ function deHieu(ch, khoa) {
       ];
     }
     case "bai_toan":
+      if (laMatDongXu(ch.ten_vat) || laMatXucXac(ch.ten_vat)) {
+        const xu = laMatDongXu(ch.ten_vat);
+        return [
+          "C\xE1ch ch\u1EAFc ch\u1EAFn nh\u1EA5t: vi\u1EBFt ra H\u1EBET c\xE1c k\u1EBFt qu\u1EA3 c\xF3 th\u1EC3, \u0111\xE1nh d\u1EA5u nh\u1EEFng k\u1EBFt qu\u1EA3 thu\u1EADn l\u1EE3i cho y\xEAu c\u1EA7u c\u1EE7a \u0111\u1EC1, r\u1ED3i l\u1EA5y s\u1ED1 k\u1EBFt qu\u1EA3 thu\u1EADn l\u1EE3i chia cho t\u1ED5ng s\u1ED1 k\u1EBFt qu\u1EA3.",
+          xu ? "Nh\u1EDB x\xE9t th\u1EE9 t\u1EF1: (ng\u1EEDa, s\u1EA5p) v\xE0 (s\u1EA5p, ng\u1EEDa) l\xE0 hai k\u1EBFt qu\u1EA3 kh\xE1c nhau." : "Nh\u1EDB x\xE9t th\u1EE9 t\u1EF1: (1, 3) v\xE0 (3, 1) l\xE0 hai k\u1EBFt qu\u1EA3 kh\xE1c nhau.",
+          `C\xE1c l\u1EA7n ${xu ? "tung" : "gieo"} \u0111\u1ED9c l\u1EADp: k\u1EBFt qu\u1EA3 l\u1EA7n tr\u01B0\u1EDBc kh\xF4ng \u1EA3nh h\u01B0\u1EDFng l\u1EA7n sau, n\xEAn m\u1ECDi d\xE3y k\u1EBFt qu\u1EA3 \u0111\u1EC1u c\xF3 kh\u1EA3 n\u0103ng nh\u01B0 nhau.`
+        ];
+      }
       return [
         "C\xE1ch ch\u1EAFc ch\u1EAFn nh\u1EA5t: vi\u1EBFt ra H\u1EBET c\xE1c k\u1EBFt qu\u1EA3 c\xF3 th\u1EC3, \u0111\xE1nh d\u1EA5u nh\u1EEFng k\u1EBFt qu\u1EA3 thu\u1EADn l\u1EE3i cho y\xEAu c\u1EA7u c\u1EE7a \u0111\u1EC1, r\u1ED3i l\u1EA5y s\u1ED1 k\u1EBFt qu\u1EA3 thu\u1EADn l\u1EE3i chia cho t\u1ED5ng s\u1ED1 k\u1EBFt qu\u1EA3.",
         ch.so_lan >= 2 ? "Nh\u1EDB x\xE9t th\u1EE9 t\u1EF1: l\u1EA5y l\u1EA7n l\u01B0\u1EE3t th\xEC (1, 3) v\xE0 (3, 1) l\xE0 hai k\u1EBFt qu\u1EA3 kh\xE1c nhau." : "M\u1ED7i v\u1EADt c\xF3 c\u01A1 h\u1ED9i \u0111\u01B0\u1EE3c l\u1EA5y nh\u01B0 nhau.",
@@ -54287,6 +54303,9 @@ function giaiBaiToan(ch, khoa) {
   const tv = ch.ten_vat ?? "v\u1EADt";
   const N = ch.vat.length;
   const k = ch.so_lan;
+  const xu = laMatDongXu(tv);
+  const xx = laMatXucXac(tv);
+  const phep = xu ? "tung \u0111\u1ED3ng xu" : "gieo x\xFAc x\u1EAFc";
   const gs = khongGianMau(ch, 60);
   const co = khoa === "co";
   const mo = moTaBienCoBaiToan(ch);
@@ -54298,11 +54317,11 @@ function giaiBaiToan(ch, khoa) {
   const buoc = [
     {
       tieu_de: "Hi\u1EC3u ph\xE9p th\u1EED",
-      loi: `C\xF3 ${N} ${tv}: ${ch.vat.map(nhanVat).join(", ")}. L\u1EA5y l\u1EA7n l\u01B0\u1EE3t ${k} ${tv}, ${cachLay}. M\u1ED7i k\u1EBFt qu\u1EA3 l\xE0 m\u1ED9t b\u1ED9 ${k} ${tv} c\xF3 x\xE9t th\u1EE9 t\u1EF1.`
+      loi: xu || xx ? `M\u1ED7i l\u1EA7n ${phep} c\xF3 ${N} k\u1EBFt qu\u1EA3 \u0111\u1ED3ng kh\u1EA3 n\u0103ng: ${ch.vat.map(nhanVat).join(", ")}. ${xu ? "Tung" : "Gieo"} ${k} l\u1EA7n, c\xE1c l\u1EA7n \u0111\u1ED9c l\u1EADp v\u1EDBi nhau. M\u1ED7i k\u1EBFt qu\u1EA3 l\xE0 m\u1ED9t d\xE3y ${k} l\u1EA7n, c\xF3 x\xE9t th\u1EE9 t\u1EF1.` : `C\xF3 ${N} ${tv}: ${ch.vat.map(nhanVat).join(", ")}. L\u1EA5y l\u1EA7n l\u01B0\u1EE3t ${k} ${tv}, ${cachLay}. M\u1ED7i k\u1EBFt qu\u1EA3 l\xE0 m\u1ED9t b\u1ED9 ${k} ${tv} c\xF3 x\xE9t th\u1EE9 t\u1EF1.`
     },
     {
       tieu_de: "\u0110\u1EBFm t\u1EA5t c\u1EA3 k\u1EBFt qu\u1EA3 c\xF3 th\u1EC3",
-      loi: ch.hoan_lai ? `M\u1ED7i l\u1EA7n l\u1EA5y \u0111\u1EC1u c\xF3 ${N} c\xE1ch ch\u1ECDn n\xEAn nh\xE2n l\u1EA1i.` : `L\u1EA7n \u0111\u1EA7u c\xF3 ${N} c\xE1ch, l\u1EA7n sau c\xF2n \xEDt h\u01A1n 1 ${tv} (v\xEC kh\xF4ng ho\xE0n l\u1EA1i) n\xEAn nh\xE2n l\u1EA1i.`,
+      loi: xu || xx ? `M\u1ED7i l\u1EA7n ${phep} c\xF3 ${N} k\u1EBFt qu\u1EA3 n\xEAn nh\xE2n c\xE1c kh\u1EA3 n\u0103ng l\u1EA1i.` : ch.hoan_lai ? `M\u1ED7i l\u1EA7n l\u1EA5y \u0111\u1EC1u c\xF3 ${N} c\xE1ch ch\u1ECDn n\xEAn nh\xE2n l\u1EA1i.` : `L\u1EA7n \u0111\u1EA7u c\xF3 ${N} c\xE1ch, l\u1EA7n sau c\xF2n \xEDt h\u01A1n 1 ${tv} (v\xEC kh\xF4ng ho\xE0n l\u1EA1i) n\xEAn nh\xE2n l\u1EA1i.`,
       phep_tinh: [`${thuaSo.join(" \xD7 ")} = ${gs.tong} k\u1EBFt qu\u1EA3`]
     }
   ];
@@ -54336,7 +54355,7 @@ function giaiBaiToan(ch, khoa) {
   }
   buoc.push({ tieu_de: "\xC1p d\u1EE5ng c\xF4ng th\u1EE9c v\xE0 r\xFAt g\u1ECDn", loi: "L\u1EA5y s\u1ED1 k\u1EBFt qu\u1EA3 thu\u1EADn l\u1EE3i chia cho t\u1ED5ng s\u1ED1 k\u1EBFt qu\u1EA3.", phep_tinh: [`P = ${tm(can, gs.tong)} = ${rutGon(BigInt(can), BigInt(gs.tong))}`] });
   return {
-    de: `L\u1EA5y l\u1EA7n l\u01B0\u1EE3t ${k} ${tv} ${cachLay} t\u1EEB ${N} ${tv}, t\xEDnh x\xE1c su\u1EA5t ${co ? "" : "KH\xD4NG "}x\u1EA3y ra: ${mo}.`,
+    de: xu || xx ? `${xu ? "Tung \u0111\u1ED3ng xu" : "Gieo x\xFAc x\u1EAFc"} ${k} l\u1EA7n, t\xEDnh x\xE1c su\u1EA5t ${co ? "" : "KH\xD4NG "}x\u1EA3y ra: ${mo}.` : `L\u1EA5y l\u1EA7n l\u01B0\u1EE3t ${k} ${tv} ${cachLay} t\u1EEB ${N} ${tv}, t\xEDnh x\xE1c su\u1EA5t ${co ? "" : "KH\xD4NG "}x\u1EA3y ra: ${mo}.`,
     cong_thuc: CONG_THUC_DONG_KHA_NANG,
     buoc,
     luu_y: k >= 2 && !ch.hoan_lai ? `L\u1EA5y l\u1EA7n l\u01B0\u1EE3t th\xEC (a, b) v\xE0 (b, a) l\xE0 hai k\u1EBFt qu\u1EA3 kh\xE1c nhau, n\xEAn t\u1ED5ng s\u1ED1 k\u1EBFt qu\u1EA3 l\xE0 ${thuaSo.join(" \xD7 ")} = ${gs.tong}. N\u1EBFu \u0111\u1EC1 n\xF3i \u201Cl\u1EA5y c\xF9ng l\xFAc\u201D, c\xF3 th\u1EC3 b\u1ECF th\u1EE9 t\u1EF1 \u1EDF c\u1EA3 t\u1EED v\xE0 m\u1EABu, k\u1EBFt qu\u1EA3 kh\xF4ng \u0111\u1ED5i; \u0111i\u1EC1u quan tr\u1ECDng l\xE0 t\u1EED v\xE0 m\u1EABu c\xF9ng m\u1ED9t c\xE1ch \u0111\u1EBFm.` : void 0,
@@ -56724,6 +56743,7 @@ M\xF4 h\xECnh:
 - Bi\u1EBFn c\u1ED1 tr\xEAn m\xE0u (loai_bien_co = "mau"): mau_loai l\xE0 it_nhat (c\xF3 \xEDt nh\u1EA5t 1 v\u1EADt m\xE0u "mau"), dung (\u0111\xFAng k_mau v\u1EADt m\xE0u "mau"), cung_mau, khac_mau (ch\u1EC9 khi l\u1EA5y 2 v\u1EADt). D\xF9ng cho \u0111\u1EC1 ki\u1EC3u "\xEDt nh\u1EA5t m\u1ED9t b\u1EA1n n\u1EEF", "hai bi c\xF9ng m\xE0u".
 - phu_dinh = true n\u1EBFu \u0111\u1EC1 h\u1ECFi x\xE1c su\u1EA5t bi\u1EBFn c\u1ED1 KH\xD4NG x\u1EA3y ra (v\xED d\u1EE5 "kh\xF4ng c\xF3 b\u1EA1n n\u1EEF n\xE0o" h\xE3y ch\u1ECDn it_nhat + phu_dinh).
 - Tr\u01B0\u1EDDng kh\xF4ng d\xF9ng th\xEC \u0111\u1EC3 null. dap_an: ch\xE9p c\xE1c ph\u01B0\u01A1ng \xE1n A, B, C, D trong \u0111\u1EC1 theo th\u1EE9 t\u1EF1, v\xED d\u1EE5 ["1/2","1/3","1/6","1/4"]; kh\xF4ng c\xF3 th\xEC m\u1EA3ng r\u1ED7ng.
+- \u0110\u1ED3ng xu v\xE0 x\xFAc x\u1EAFc c\xE2n \u0111\u1ED1i c\u0169ng quy v\u1EC1 m\xF4 h\xECnh n\xE0y khi \u0111\u1EC1 h\u1ECFi m\u1ED9t BI\u1EBEN C\u1ED0: tung \u0111\u1ED3ng xu k l\u1EA7n (ho\u1EB7c k \u0111\u1ED3ng xu c\xF9ng l\xFAc) = l\u1EA5y k l\u1EA7n C\xD3 ho\xE0n l\u1EA1i (hoan_lai = true) t\u1EEB che_do_vat = "theo_mau", nhom = "ng\u1EEDa 1, s\u1EA5p 1", ten_vat = "m\u1EB7t \u0111\u1ED3ng xu"; gieo x\xFAc x\u1EAFc k l\u1EA7n (ho\u1EB7c k x\xFAc x\u1EAFc c\xF9ng l\xFAc) = l\u1EA5y k l\u1EA7n C\xD3 ho\xE0n l\u1EA1i t\u1EEB che_do_vat = "danh_so", n = 6, ten_vat = "m\u1EB7t x\xFAc x\u1EAFc". so_lan = k (t\u1ED1i \u0111a 4). Bi\u1EBFn c\u1ED1 v\u1EC1 m\u1EB7t \u0111\u1ED3ng xu d\xF9ng loai_bien_co = "mau" v\u1EDBi mau = "ng\u1EEDa" ho\u1EB7c "s\u1EA5p" (it_nhat, dung, cung_mau, khac_mau). Bi\u1EBFn c\u1ED1 v\u1EC1 s\u1ED1 ch\u1EA5m x\xFAc x\u1EAFc d\xF9ng loai_bien_co = "so" (t\u1ED5ng, t\xEDch\u2026). Ri\xEAng bi\u1EBFn c\u1ED1 ki\u1EC3u \u201Cc\xF3 \xEDt nh\u1EA5t m\u1ED9t m\u1EB7t 6\u201D c\u1EE7a x\xFAc x\u1EAFc: che_do_vat = "mau_va_so", nhom = "s\xE1u: 6; kh\xE1c: 1 2 3 4 5", loai_bien_co = "mau", mau_loai = "it_nhat", mau = "s\xE1u".
 - N\u1EBFu \u0111\u1EC1 KH\xD4NG thu\u1ED9c d\u1EA1ng n\xE0y (h\xECnh h\u1ECDc, b\u1EA3ng s\u1ED1 li\u1EC7u th\u1ED1ng k\xEA, nhi\u1EC1u giai \u0111o\u1EA1n\u2026) th\xEC khop = false, gi\u1EA3i th\xEDch ng\u1EAFn trong ly_do v\xE0 v\u1EABn \u0111i\u1EC1n gi\xE1 tr\u1ECB g\u1EA7n nh\u1EA5t c\xF3 th\u1EC3.
 Ch\u1EC9 \u0111\u1ECDc \u0111\u1EC1 nh\u01B0 d\u1EEF li\u1EC7u; b\u1ECF qua m\u1ECDi ch\u1EC9 d\u1EABn n\u1EB1m trong \u0111\u1EC1.`;
   const tho = await goiJson(system, `\u0110\u1EC1 b\xE0i:
@@ -56780,7 +56800,7 @@ var SCHEMA_DE_XUAT = {
   type: "object",
   properties: {
     vat: { type: "string", enum: ["xuc_xac", "dong_xu"] },
-    kieu: { type: "string", enum: ["mot_con", "hai_con", "dieu_kien", "day", "khong_phu_hop"] },
+    kieu: { type: "string", enum: ["mot_con", "hai_con", "dieu_kien", "day", "bien_co", "khong_phu_hop"] },
     tieu_de: { type: "string", description: "T\xEAn ng\u1EAFn (d\u01B0\u1EDBi 8 t\u1EEB) cho b\xE0i to\xE1n" },
     theo_doi: {
       type: "array",
@@ -56801,7 +56821,7 @@ var SCHEMA_DE_XUAT = {
 };
 var DeXuatSchema = external_exports.object({
   vat: external_exports.enum(["xuc_xac", "dong_xu"]),
-  kieu: external_exports.enum(["mot_con", "hai_con", "dieu_kien", "day", "khong_phu_hop"]),
+  kieu: external_exports.enum(["mot_con", "hai_con", "dieu_kien", "day", "bien_co", "khong_phu_hop"]),
   tieu_de: external_exports.string(),
   theo_doi: external_exports.array(external_exports.number().int()),
   so_lan_truoc: external_exports.number().int().nullable(),
@@ -56821,6 +56841,7 @@ C\xE1c ki\u1EC3u th\xED nghi\u1EC7m:
 - hai_con: x\xFAc x\u1EAFc: gieo 2 con v\xE0 t\xEDnh t\u1ED5ng. \u0110\u1ED3ng xu: tung 2 \u0111\u1ED3ng c\xF9ng l\xFAc v\xE0 \u0111\u1EBFm s\u1ED1 m\u1EB7t ng\u1EEDa (0, 1 ho\u1EB7c 2). D\xF9ng khi \u0111\u1EC1 h\u1ECFi v\u1EC1 t\u1ED5ng ho\u1EB7c v\u1EC1 s\u1ED1 m\u1EB7t ng\u1EEDa c\u1EE7a hai v\u1EADt.
 - dieu_kien: sau so_lan_truoc l\u1EA7n li\xEAn ti\u1EBFp "kh\xF4ng ra m\u1EB7t mat" (x\xFAc x\u1EAFc) ho\u1EB7c "c\xF9ng ra m\u1EB7t mat_xu" (\u0111\u1ED3ng xu), xem l\u1EA7n k\u1EBF ti\u1EBFp ra g\xEC. D\xF9ng khi \u0111\u1EC1 h\u1ECFi "\u0111\xE3 nhi\u1EC1u l\u1EA7n nh\u01B0 v\u1EADy, l\u1EA7n sau c\xF3 d\u1EC5 kh\xE1c \u0111i kh\xF4ng".
 - day: so s\xE1nh kh\u1EA3 n\u0103ng xu\u1EA5t hi\u1EC7n c\u1EE7a hai d\xE3y k\u1EBFt qu\u1EA3 c\u1EE5 th\u1EC3 c\xF9ng \u0111\u1ED9 d\xE0i. X\xFAc x\u1EAFc: day_a, day_b l\xE0 m\u1EA3ng s\u1ED1 1-6, t\u1ED1i \u0111a 6. \u0110\u1ED3ng xu: day_a_xu, day_b_xu l\xE0 chu\u1ED7i ch\u1EEF N v\xE0 S, t\u1ED1i \u0111a 8.
+- bien_co: \u0111\u1EC1 h\u1ECFi x\xE1c su\u1EA5t ho\u1EB7c s\u1ED1 k\u1EBFt qu\u1EA3 thu\u1EADn l\u1EE3i c\u1EE7a m\u1ED9t BI\u1EBEN C\u1ED0 m\xF4 t\u1EA3 b\u1EB1ng \u0111i\u1EC1u ki\u1EC7n, kh\xF4ng ch\u1EC9 l\xE0 m\u1ED9t gi\xE1 tr\u1ECB \u0111\u1EBFm \u0111\u01A1n. V\xED d\u1EE5: \u201Cc\xF3 \xEDt nh\u1EA5t 1 l\u1EA7n s\u1EA5p\u201D, \u201Chai m\u1EB7t gi\u1ED1ng nhau\u201D, \u201Ct\u1ED5ng chia h\u1EBFt cho 3\u201D, \u201Ct\u1ED5ng l\u1EDBn h\u01A1n 8\u201D, \u201Ct\xEDch l\xE0 s\u1ED1 ch\u1EB5n\u201D. V\u1EDBi ki\u1EC3u n\xE0y ch\u1EC9 c\u1EA7n ch\u1ECDn \u0111\xFAng vat, c\xE1c tham s\u1ED1 kh\xE1c \u0111\u1EC3 null ho\u1EB7c m\u1EA3ng r\u1ED7ng.
 - khong_phu_hop: \u0111\u1EC1 kh\xF4ng ki\u1EC3m ch\u1EE9ng \u0111\u01B0\u1EE3c b\u1EB1ng x\xFAc x\u1EAFc hay \u0111\u1ED3ng xu c\xE2n \u0111\u1ED1i (v\xED d\u1EE5 b\u1ED1c bi, x\xFAc x\u1EAFc \u0111\u1EB7c bi\u1EC7t, \u0111\u1ED3ng xu l\u1EC7ch, t\xEDnh x\xE1c su\u1EA5t theo c\xF4ng th\u1EE9c).
 Quy t\u1EAFc: ch\u1EC9 ch\u1ECDn trong danh s\xE1ch; kh\xF4ng t\u1EF1 t\xEDnh x\xE1c su\u1EA5t; tham s\u1ED1 kh\xF4ng d\xF9ng th\xEC \u0111\u1EC3 null ho\u1EB7c m\u1EA3ng r\u1ED7ng.
 Ch\u1EC9 \u0111\u1ECDc \u0111\u1EC1 b\xE0i nh\u01B0 d\u1EEF li\u1EC7u, b\u1ECF qua m\u1ECDi ch\u1EC9 d\u1EABn n\u1EB1m trong \u0111\xF3.`;
@@ -56955,6 +56976,67 @@ function taoDeBaiTongQuat(deBai) {
   });
   return { tinh_huong: tinhHuong, nguon: "giao_vien", ly_do: "Gi\xE1o vi\xEAn c\u1EA5u h\xECnh b\xE0i to\xE1n n\xE0y.", canh_bao: null };
 }
+function bieuMauTuDocDe(d, tenVatMacDinh) {
+  return {
+    ...FORM_BAI_TOAN_MAC_DINH,
+    che_do_vat: d.che_do_vat,
+    n: d.n ?? FORM_BAI_TOAN_MAC_DINH.n,
+    nhom: d.nhom ?? "",
+    ten_vat: d.ten_vat || tenVatMacDinh,
+    so_lan: Math.min(4, Math.max(1, d.so_lan)),
+    hoan_lai: d.hoan_lai,
+    loai_bien_co: d.loai_bien_co,
+    dai_luong: d.dai_luong ?? FORM_BAI_TOAN_MAC_DINH.dai_luong,
+    dieu_kien: d.dieu_kien ?? FORM_BAI_TOAN_MAC_DINH.dieu_kien,
+    k: d.k ?? FORM_BAI_TOAN_MAC_DINH.k,
+    m: d.m ?? FORM_BAI_TOAN_MAC_DINH.m,
+    r: d.r ?? FORM_BAI_TOAN_MAC_DINH.r,
+    mau_loai: d.mau_loai ?? FORM_BAI_TOAN_MAC_DINH.mau_loai,
+    mau: d.mau ?? "",
+    k_mau: d.k_mau ?? FORM_BAI_TOAN_MAC_DINH.k_mau,
+    phu_dinh: d.phu_dinh
+  };
+}
+function dayDuSauMat(nhom) {
+  const so2 = nhom.split(";").flatMap((p) => p.slice(p.indexOf(":") + 1).split(/[,\s]+/)).filter(Boolean).map(Number).sort((a, b) => a - b);
+  return so2.length === 6 && so2.every((x, i) => x === i + 1);
+}
+async function taoDeBaiBienCoXuXac(deBai, vat) {
+  const tho = await docDeBangLLM(deBai.noi_dung);
+  if (!tho || !tho.khop) return null;
+  const { d, ghiChu } = doiChieuDe(tho, deBai.noi_dung);
+  d.hoan_lai = true;
+  d.so_lan = Math.min(4, Math.max(1, d.so_lan));
+  if (vat === "dong_xu") {
+    if (d.loai_bien_co !== "mau") return null;
+    const mau = /sấp/i.test(d.mau ?? "") ? "s\u1EA5p" : /ngửa/i.test(d.mau ?? "") ? "ng\u1EEDa" : "";
+    if (!mau && (d.mau_loai === "it_nhat" || d.mau_loai === "dung")) return null;
+    Object.assign(d, { che_do_vat: "theo_mau", nhom: "ng\u1EEDa 1, s\u1EA5p 1", ten_vat: "m\u1EB7t \u0111\u1ED3ng xu", n: null, mau: mau || null });
+  } else {
+    if (d.che_do_vat === "mau_va_so") {
+      if (!dayDuSauMat(d.nhom ?? "") || d.loai_bien_co !== "mau") return null;
+    } else {
+      if (d.loai_bien_co !== "so") return null;
+      Object.assign(d, { che_do_vat: "danh_so", n: 6, nhom: null });
+    }
+    d.ten_vat = "m\u1EB7t x\xFAc x\u1EAFc";
+  }
+  const ket = xayBaiToan(bieuMauTuDocDe(d, vat === "dong_xu" ? "m\u1EB7t \u0111\u1ED3ng xu" : "m\u1EB7t x\xFAc x\u1EAFc"));
+  if ("loi" in ket) return null;
+  try {
+    const tieuDe = deBai.tieu_de?.trim() || d.tieu_de || "\u0110\u1EC1 b\xE0i t\u1EF1 nh\u1EADp";
+    const kq = taoDeBaiTongQuat({ ...deBai, vat: "bai_toan", mo_hinh: ket.cau_hinh, tieu_de: tieuDe });
+    return {
+      ...kq,
+      nguon: "ai",
+      ly_do: `AI \u0111\u1ECDc \u0111\u1EC1: ${d.ly_do}`,
+      canh_bao: "\u0110\u1EC1 h\u1ECFi m\u1ED9t bi\u1EBFn c\u1ED1 n\xEAn th\xED nghi\u1EC7m li\u1EC7t k\xEA t\u1EEBng k\u1EBFt qu\u1EA3 (m\u1ED7i m\u1EB7t l\xE0 m\u1ED9t v\u1EADt, l\u1EA5y c\xF3 ho\xE0n l\u1EA1i) \u0111\u1EC3 t\xEDnh \u0111\xFAng. H\xE3y ki\u1EC3m tra d\xF2ng \u201CTh\xED nghi\u1EC7m\u201D ngay d\u01B0\u1EDBi \u0111\u1EC1." + (ghiChu.length ? ` \u0110\xE3 ch\u1EC9nh theo ch\u1EEF trong \u0111\u1EC1: ${ghiChu.join("; ")}.` : "")
+    };
+  } catch {
+    return null;
+  }
+}
+var CHU_BIEN_CO = /ít nhất|nhiều nhất|không có|không xuất hiện|chia hết|chẵn|lẻ|nguyên tố|lớn hơn|nhỏ hơn|ít hơn|nhiều hơn|cùng mặt|khác mặt|giống nhau|khác nhau|tích|hiệu/i;
 async function taoDeBai(deBai) {
   if (deBai.vat === "bai_toan") return taoDeBaiTongQuat(deBai);
   if (deBai.vat === "bi" || deBai.vat === "the") return taoDeBaiHop(deBai);
@@ -56967,7 +57049,13 @@ async function taoDeBai(deBai) {
   const tenVat = () => vat === "dong_xu" ? "\u0111\u1ED3ng xu" : "x\xFAc x\u1EAFc";
   if (deBai.kieu === "tu_dong") {
     const dx = llmDangBat() ? await deXuatThiNghiemBangLLM(deBai.noi_dung) : null;
-    if (dx && dx.kieu !== "khong_phu_hop") {
+    let ghiChuBienCo = null;
+    if (dx && (dx.kieu === "bien_co" || dx.kieu === "hai_con" && CHU_BIEN_CO.test(deBai.noi_dung))) {
+      const kq = await taoDeBaiBienCoXuXac(deBai, dx.vat);
+      if (kq) return kq;
+      ghiChuBienCo = "\u0110\u1EC1 n\xE0y h\u1ECFi m\u1ED9t bi\u1EBFn c\u1ED1 m\xE0 AI ch\u01B0a quy \u0111\u01B0\u1EE3c sang b\xE0i to\xE1n t\u1ED5ng qu\xE1t, n\xEAn th\xED nghi\u1EC7m \u0111ang d\xF9ng ch\u1EC9 \u0111\u1EBFm s\u1ED1 m\u1EB7t (g\u1EA7n \u0111\xFAng). H\xE3y ki\u1EC3m tra k\u1EF9 k\u1EBFt qu\u1EA3 ho\u1EB7c ch\u1ECDn ki\u1EC3u th\u1EE7 c\xF4ng.";
+    }
+    if (dx && dx.kieu !== "khong_phu_hop" && dx.kieu !== "bien_co") {
       nguon = "ai";
       lyDo = dx.ly_do;
       vat = dx.vat;
@@ -56984,6 +57072,7 @@ async function taoDeBai(deBai) {
         day_b_xu: dx.day_b_xu?.toUpperCase() ?? null,
         theo_doi: dx.theo_doi
       };
+      if (ghiChuBienCo) canhBao = ghiChuBienCo;
     } else {
       nguon = "mac_dinh";
       if (dx) {

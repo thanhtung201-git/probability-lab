@@ -8,6 +8,7 @@ import {
   CauHinhXucXacSchema,
   FORM_BAI_TOAN_MAC_DINH,
   xayBaiToan,
+  type FormBaiToan,
   GIOI_HAN,
   TinhHuongSchema,
   type CheDoDongXuTT,
@@ -171,6 +172,86 @@ function taoDeBaiTongQuat(deBai: DeBai): KetQuaDeBai {
   return { tinh_huong: tinhHuong, nguon: "giao_vien", ly_do: "Giáo viên cấu hình bài toán này.", canh_bao: null };
 }
 
+/** Điền biểu mẫu bài toán tổng quát từ kết quả AI đọc đề (dùng chung cho hộp bi, thẻ số, đồng xu, xúc xắc). */
+function bieuMauTuDocDe(d: DocDe, tenVatMacDinh: string): FormBaiToan {
+  return {
+    ...FORM_BAI_TOAN_MAC_DINH,
+    che_do_vat: d.che_do_vat,
+    n: d.n ?? FORM_BAI_TOAN_MAC_DINH.n,
+    nhom: d.nhom ?? "",
+    ten_vat: d.ten_vat || tenVatMacDinh,
+    so_lan: Math.min(4, Math.max(1, d.so_lan)),
+    hoan_lai: d.hoan_lai,
+    loai_bien_co: d.loai_bien_co,
+    dai_luong: d.dai_luong ?? FORM_BAI_TOAN_MAC_DINH.dai_luong,
+    dieu_kien: d.dieu_kien ?? FORM_BAI_TOAN_MAC_DINH.dieu_kien,
+    k: d.k ?? FORM_BAI_TOAN_MAC_DINH.k,
+    m: d.m ?? FORM_BAI_TOAN_MAC_DINH.m,
+    r: d.r ?? FORM_BAI_TOAN_MAC_DINH.r,
+    mau_loai: d.mau_loai ?? FORM_BAI_TOAN_MAC_DINH.mau_loai,
+    mau: d.mau ?? "",
+    k_mau: d.k_mau ?? FORM_BAI_TOAN_MAC_DINH.k_mau,
+    phu_dinh: d.phu_dinh,
+  };
+}
+
+/** Các số 1..6 có đúng một lần trong mô tả "sáu: 6; khác: 1 2 3 4 5"? (mỗi mặt xúc xắc là một vật). */
+function dayDuSauMat(nhom: string): boolean {
+  const so = nhom
+    .split(";")
+    .flatMap((p) => p.slice(p.indexOf(":") + 1).split(/[,\s]+/))
+    .filter(Boolean)
+    .map(Number)
+    .sort((a, b) => a - b);
+  return so.length === 6 && so.every((x, i) => x === i + 1);
+}
+
+/**
+ * Đồng xu / xúc xắc mà đề hỏi một BIẾN CỐ (ít nhất 1 lần sấp, tổng chia hết cho 3…): các kiểu "đếm một giá trị" không biểu diễn được,
+ * nên quy về bài toán tổng quát (mỗi mặt là một vật, lấy có hoàn lại) để liệt kê đủ kết quả và tính chính xác.
+ * Trả null khi AI không đọc được hoặc đề không quy được, để nơi gọi dùng cách khác.
+ */
+async function taoDeBaiBienCoXuXac(deBai: DeBai, vat: Vat): Promise<KetQuaDeBai | null> {
+  const tho = await docDeBangLLM(deBai.noi_dung);
+  if (!tho || !tho.khop) return null;
+  const { d, ghiChu } = doiChieuDe(tho, deBai.noi_dung);
+  d.hoan_lai = true; // tung / gieo nhiều lần: các lần độc lập, không trả lại hay không đều không ảnh hưởng
+  d.so_lan = Math.min(4, Math.max(1, d.so_lan));
+  if (vat === "dong_xu") {
+    if (d.loai_bien_co !== "mau") return null;
+    const mau = /sấp/i.test(d.mau ?? "") ? "sấp" : /ngửa/i.test(d.mau ?? "") ? "ngửa" : "";
+    if (!mau && (d.mau_loai === "it_nhat" || d.mau_loai === "dung")) return null;
+    Object.assign(d, { che_do_vat: "theo_mau", nhom: "ngửa 1, sấp 1", ten_vat: "mặt đồng xu", n: null, mau: mau || null });
+  } else {
+    if (d.che_do_vat === "mau_va_so") {
+      if (!dayDuSauMat(d.nhom ?? "") || d.loai_bien_co !== "mau") return null;
+    } else {
+      if (d.loai_bien_co !== "so") return null;
+      Object.assign(d, { che_do_vat: "danh_so", n: 6, nhom: null });
+    }
+    d.ten_vat = "mặt xúc xắc";
+  }
+  const ket = xayBaiToan(bieuMauTuDocDe(d, vat === "dong_xu" ? "mặt đồng xu" : "mặt xúc xắc"));
+  if ("loi" in ket) return null;
+  try {
+    const tieuDe = deBai.tieu_de?.trim() || d.tieu_de || "Đề bài tự nhập";
+    const kq = taoDeBaiTongQuat({ ...deBai, vat: "bai_toan", mo_hinh: ket.cau_hinh, tieu_de: tieuDe });
+    return {
+      ...kq,
+      nguon: "ai",
+      ly_do: `AI đọc đề: ${d.ly_do}`,
+      canh_bao:
+        "Đề hỏi một biến cố nên thí nghiệm liệt kê từng kết quả (mỗi mặt là một vật, lấy có hoàn lại) để tính đúng. Hãy kiểm tra dòng “Thí nghiệm” ngay dưới đề." +
+        (ghiChu.length ? ` Đã chỉnh theo chữ trong đề: ${ghiChu.join("; ")}.` : ""),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Gợi ý chữ trong đề cho thấy đây là một biến cố, không phải đếm một giá trị đơn. */
+const CHU_BIEN_CO = /ít nhất|nhiều nhất|không có|không xuất hiện|chia hết|chẵn|lẻ|nguyên tố|lớn hơn|nhỏ hơn|ít hơn|nhiều hơn|cùng mặt|khác mặt|giống nhau|khác nhau|tích|hiệu/i;
+
 export async function taoDeBai(deBai: DeBai): Promise<KetQuaDeBai> {
   if (deBai.vat === "bai_toan") return taoDeBaiTongQuat(deBai);
   if (deBai.vat === "bi" || deBai.vat === "the") return taoDeBaiHop(deBai);
@@ -184,7 +265,16 @@ export async function taoDeBai(deBai: DeBai): Promise<KetQuaDeBai> {
 
   if (deBai.kieu === "tu_dong") {
     const dx = llmDangBat() ? await deXuatThiNghiemBangLLM(deBai.noi_dung) : null;
-    if (dx && dx.kieu !== "khong_phu_hop") {
+    // Đề hỏi một biến cố (ít nhất 1 lần sấp, tổng chia hết cho 3…): thử dựng bằng bài toán tổng quát trước.
+    // AI hay gán nhầm biến cố kiểu này vào "đếm số mặt ngửa" nên "hai_con" kèm chữ báo biến cố cũng được kiểm tra lại.
+    let ghiChuBienCo: string | null = null;
+    if (dx && (dx.kieu === "bien_co" || (dx.kieu === "hai_con" && CHU_BIEN_CO.test(deBai.noi_dung)))) {
+      const kq = await taoDeBaiBienCoXuXac(deBai, dx.vat);
+      if (kq) return kq;
+      ghiChuBienCo =
+        "Đề này hỏi một biến cố mà AI chưa quy được sang bài toán tổng quát, nên thí nghiệm đang dùng chỉ đếm số mặt (gần đúng). Hãy kiểm tra kỹ kết quả hoặc chọn kiểu thủ công.";
+    }
+    if (dx && dx.kieu !== "khong_phu_hop" && dx.kieu !== "bien_co") {
       nguon = "ai";
       lyDo = dx.ly_do;
       vat = dx.vat;
@@ -201,6 +291,7 @@ export async function taoDeBai(deBai: DeBai): Promise<KetQuaDeBai> {
         day_b_xu: dx.day_b_xu?.toUpperCase() ?? null,
         theo_doi: dx.theo_doi,
       };
+      if (ghiChuBienCo) canhBao = ghiChuBienCo;
     } else {
       nguon = "mac_dinh";
       if (dx) {

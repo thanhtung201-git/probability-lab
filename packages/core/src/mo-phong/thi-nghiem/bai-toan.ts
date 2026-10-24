@@ -113,12 +113,22 @@ export function moTaDieuKien(dk: DieuKienBaiToan): string {
 }
 
 /** Biến cố bằng lời, ví dụ "tổng các số chia 3 dư 1" hoặc "có ít nhất 1 bi màu đỏ". */
+/** Đồng xu / xúc xắc được quy về bài toán tổng quát: mỗi mặt là một vật, mỗi lần tung / gieo là một lần lấy có hoàn lại. */
+export const laMatDongXu = (tenVat?: string) => tenVat === "mặt đồng xu";
+export const laMatXucXac = (tenVat?: string) => tenVat === "mặt xúc xắc";
+
 export function moTaBienCoBaiToan(ch: Pick<CauHinhBaiToan, "bien_co" | "phu_dinh" | "ten_vat" | "so_lan">): string {
   const bc = ch.bien_co;
   const tv = ch.ten_vat ?? "vật";
   let s: string;
   if (bc.kieu === "so") s = `${TEN_DAI_LUONG[bc.dai_luong]} ${moTaDieuKien(bc.dieu_kien)}`;
-  else if (bc.loai === "it_nhat") s = `có ít nhất 1 ${tv} màu ${bc.mau}`;
+  else if (laMatDongXu(tv) || laMatXucXac(tv)) {
+    const mat = "mặt";
+    if (bc.loai === "it_nhat") s = `có ít nhất 1 lần ra ${mat} ${bc.mau}`;
+    else if (bc.loai === "dung") s = `có đúng ${bc.k} lần ra ${mat} ${bc.mau}`;
+    else if (bc.loai === "cung_mau") s = `các lần ${laMatDongXu(tv) ? "tung" : "gieo"} đều ra cùng một mặt`;
+    else s = `hai lần ${laMatDongXu(tv) ? "tung" : "gieo"} ra hai mặt khác nhau`;
+  } else if (bc.loai === "it_nhat") s = `có ít nhất 1 ${tv} màu ${bc.mau}`;
   else if (bc.loai === "dung") s = `có đúng ${bc.k} ${tv} màu ${bc.mau}`;
   else if (bc.loai === "cung_mau") s = `các ${tv} lấy ra cùng màu`;
   else s = `hai ${tv} lấy ra khác màu`;

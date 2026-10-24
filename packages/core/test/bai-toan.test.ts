@@ -26,6 +26,30 @@ describe("hai đề mẫu: túi 4 bi đánh số 1-4, lấy lần lượt 2 bi k
   });
 });
 
+describe("đồng xu và xúc xắc quy về bài toán tổng quát (mỗi mặt là một vật, lấy có hoàn lại)", () => {
+  const dongXu = { che_do_vat: "theo_mau" as const, nhom: "ngửa 1, sấp 1", ten_vat: "mặt đồng xu", so_lan: 2, hoan_lai: true, loai_bien_co: "mau" as const };
+  it("gieo đồng xu 2 lần, ít nhất 1 lần sấp → 3 kết quả thuận lợi, P = 3/4", () => {
+    const ch = dung({ ...dongXu, mau_loai: "it_nhat", mau: "sấp" });
+    expect(p(ch)).toBe("3/4");
+    const lg = loiGiai(ch, "co");
+    expect(lg.buoc.flatMap((b) => b.phep_tinh ?? []).join(" | ")).toContain("= 3");
+    expect(lg.xac_suat).toBe("3/4");
+  });
+  it("cả hai lần cùng mặt → 1/2; đúng 1 lần ngửa → 1/2", () => {
+    expect(p(dung({ ...dongXu, mau_loai: "cung_mau" }))).toBe("1/2");
+    expect(p(dung({ ...dongXu, mau_loai: "dung", mau: "ngửa", k_mau: 1 }))).toBe("1/2");
+  });
+  it("gieo 2 xúc xắc, tổng chia hết cho 3 → 1/3; tích là số chẵn → 3/4", () => {
+    const xx = { che_do_vat: "danh_so" as const, n: 6, ten_vat: "mặt xúc xắc", so_lan: 2, hoan_lai: true, loai_bien_co: "so" as const };
+    expect(p(dung({ ...xx, dai_luong: "tong", dieu_kien: "chia_het", k: 3 }))).toBe("1/3");
+    expect(p(dung({ ...xx, dai_luong: "tich", dieu_kien: "chan" }))).toBe("3/4");
+  });
+  it("có ít nhất một mặt 6 khi gieo 2 xúc xắc → 11/36", () => {
+    const ch = dung({ che_do_vat: "mau_va_so", nhom: "sáu: 6; khác: 1 2 3 4 5", ten_vat: "mặt xúc xắc", so_lan: 2, hoan_lai: true, loai_bien_co: "mau", mau_loai: "it_nhat", mau: "sáu" });
+    expect(p(ch)).toBe("11/36");
+  });
+});
+
 describe("các dạng biến cố khác", () => {
   it("ít nhất 1 bạn nữ trong nhóm 3 nam 4 nữ, chọn 2 → 6/7", () => {
     expect(p(dung({ che_do_vat: "theo_mau", nhom: "nam 3, nữ 4", loai_bien_co: "mau", mau_loai: "it_nhat", mau: "nữ", ten_vat: "học sinh" }))).toBe("6/7");

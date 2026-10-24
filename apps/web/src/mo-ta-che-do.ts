@@ -17,6 +17,11 @@ export function moTaCheDo(c: CauHinhVat): string {
     }
   }
   if (c.loai === "bai_toan") {
+    // Đồng xu / xúc xắc quy về bài toán tổng quát: mỗi mặt là một vật, mỗi lần tung / gieo là một lần lấy có hoàn lại.
+    if (c.ten_vat === "mặt đồng xu" || c.ten_vat === "mặt xúc xắc") {
+      const xu = c.ten_vat === "mặt đồng xu";
+      return `${xu ? "Tung đồng xu" : "Gieo xúc xắc"} ${c.so_lan} lần (mỗi lần ra ${xu ? "ngửa hoặc sấp" : "một trong 6 mặt"}), xem có phải kết quả thuận lợi cho “${moTaBienCoBaiToan(c)}” không`;
+    }
     return `Có ${c.vat.length} ${c.ten_vat ?? "vật"} (${c.vat.map(nhanVat).join(", ")}). Lấy lần lượt ${c.so_lan} ${c.hoan_lai ? "có" : "không"} hoàn lại, xem có phải kết quả thuận lợi cho “${moTaBienCoBaiToan(c)}” không`;
   }
   if (c.loai === "bi") {

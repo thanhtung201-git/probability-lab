@@ -3,7 +3,7 @@
 import { PhanSo } from "./mo-phong/phan-so";
 import { phanPhoiDem, toHop } from "./mo-phong/to-hop";
 import { phanPhoiLyThuyet } from "./mo-phong/xuc-xac";
-import { khongGianMau, moTaBienCoBaiToan, nhanVat, TEN_DAI_LUONG } from "./mo-phong/thi-nghiem/bai-toan";
+import { khongGianMau, laMatDongXu, laMatXucXac, moTaBienCoBaiToan, nhanVat, TEN_DAI_LUONG } from "./mo-phong/thi-nghiem/bai-toan";
 import { laSuKienBi, moTaSuKienBi, tongBi } from "./mo-phong/thi-nghiem/bi";
 import { cacSoThuanLoi, moTaBienCo } from "./mo-phong/thi-nghiem/the";
 import { cacKhoaVat, type CauHinhVat } from "./mo-phong/thi-nghiem/vat";
@@ -615,6 +615,14 @@ function deHieu(ch: CauHinhVat, khoa: string): string[] {
           ];
     }
     case "bai_toan":
+      if (laMatDongXu(ch.ten_vat) || laMatXucXac(ch.ten_vat)) {
+        const xu = laMatDongXu(ch.ten_vat);
+        return [
+          "Cách chắc chắn nhất: viết ra HẾT các kết quả có thể, đánh dấu những kết quả thuận lợi cho yêu cầu của đề, rồi lấy số kết quả thuận lợi chia cho tổng số kết quả.",
+          xu ? "Nhớ xét thứ tự: (ngửa, sấp) và (sấp, ngửa) là hai kết quả khác nhau." : "Nhớ xét thứ tự: (1, 3) và (3, 1) là hai kết quả khác nhau.",
+          `Các lần ${xu ? "tung" : "gieo"} độc lập: kết quả lần trước không ảnh hưởng lần sau, nên mọi dãy kết quả đều có khả năng như nhau.`,
+        ];
+      }
       return [
         "Cách chắc chắn nhất: viết ra HẾT các kết quả có thể, đánh dấu những kết quả thuận lợi cho yêu cầu của đề, rồi lấy số kết quả thuận lợi chia cho tổng số kết quả.",
         ch.so_lan >= 2 ? "Nhớ xét thứ tự: lấy lần lượt thì (1, 3) và (3, 1) là hai kết quả khác nhau." : "Mỗi vật có cơ hội được lấy như nhau.",
@@ -652,6 +660,9 @@ function giaiBaiToan(ch: Extract<CauHinhVat, { loai: "bai_toan" }>, khoa: string
   const tv = ch.ten_vat ?? "vật";
   const N = ch.vat.length;
   const k = ch.so_lan;
+  const xu = laMatDongXu(tv);
+  const xx = laMatXucXac(tv);
+  const phep = xu ? "tung đồng xu" : "gieo xúc xắc";
   const gs = khongGianMau(ch, 60);
   const co = khoa === "co";
   const mo = moTaBienCoBaiToan(ch);
@@ -664,11 +675,14 @@ function giaiBaiToan(ch: Extract<CauHinhVat, { loai: "bai_toan" }>, khoa: string
   const buoc: BuocGiai[] = [
     {
       tieu_de: "Hiểu phép thử",
-      loi: `Có ${N} ${tv}: ${ch.vat.map(nhanVat).join(", ")}. Lấy lần lượt ${k} ${tv}, ${cachLay}. Mỗi kết quả là một bộ ${k} ${tv} có xét thứ tự.`,
+      loi:
+        xu || xx
+          ? `Mỗi lần ${phep} có ${N} kết quả đồng khả năng: ${ch.vat.map(nhanVat).join(", ")}. ${xu ? "Tung" : "Gieo"} ${k} lần, các lần độc lập với nhau. Mỗi kết quả là một dãy ${k} lần, có xét thứ tự.`
+          : `Có ${N} ${tv}: ${ch.vat.map(nhanVat).join(", ")}. Lấy lần lượt ${k} ${tv}, ${cachLay}. Mỗi kết quả là một bộ ${k} ${tv} có xét thứ tự.`,
     },
     {
       tieu_de: "Đếm tất cả kết quả có thể",
-      loi: ch.hoan_lai ? `Mỗi lần lấy đều có ${N} cách chọn nên nhân lại.` : `Lần đầu có ${N} cách, lần sau còn ít hơn 1 ${tv} (vì không hoàn lại) nên nhân lại.`,
+      loi: xu || xx ? `Mỗi lần ${phep} có ${N} kết quả nên nhân các khả năng lại.` : ch.hoan_lai ? `Mỗi lần lấy đều có ${N} cách chọn nên nhân lại.` : `Lần đầu có ${N} cách, lần sau còn ít hơn 1 ${tv} (vì không hoàn lại) nên nhân lại.`,
       phep_tinh: [`${thuaSo.join(" × ")} = ${gs.tong} kết quả`],
     },
   ];
@@ -704,7 +718,10 @@ function giaiBaiToan(ch: Extract<CauHinhVat, { loai: "bai_toan" }>, khoa: string
   buoc.push({ tieu_de: "Áp dụng công thức và rút gọn", loi: "Lấy số kết quả thuận lợi chia cho tổng số kết quả.", phep_tinh: [`P = ${tm(can, gs.tong)} = ${rutGon(BigInt(can), BigInt(gs.tong))}`] });
 
   return {
-    de: `Lấy lần lượt ${k} ${tv} ${cachLay} từ ${N} ${tv}, tính xác suất ${co ? "" : "KHÔNG "}xảy ra: ${mo}.`,
+    de:
+      xu || xx
+        ? `${xu ? "Tung đồng xu" : "Gieo xúc xắc"} ${k} lần, tính xác suất ${co ? "" : "KHÔNG "}xảy ra: ${mo}.`
+        : `Lấy lần lượt ${k} ${tv} ${cachLay} từ ${N} ${tv}, tính xác suất ${co ? "" : "KHÔNG "}xảy ra: ${mo}.`,
     cong_thuc: CONG_THUC_DONG_KHA_NANG,
     buoc,
     luu_y:
