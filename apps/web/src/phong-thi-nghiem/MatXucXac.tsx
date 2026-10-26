@@ -1,4 +1,6 @@
 // Mặt xúc xắc vẽ bằng chấm tròn trên lưới 3x3.
+import { useRef } from "react";
+import { useDapXuong } from "../hieu-ung";
 
 // Vị trí chấm theo ô lưới (0..8, đọc từ trái sang phải, trên xuống dưới).
 const CHAM: Record<number, number[]> = {
@@ -12,8 +14,11 @@ const CHAM: Record<number, number[]> = {
 
 export function MatXucXac({ mat, dangLac, kichThuoc = 120 }: { mat: number; dangLac: boolean; kichThuoc?: number }) {
   const cham = new Set(CHAM[mat] ?? []);
+  const goc = useRef<HTMLDivElement>(null);
+  useDapXuong(goc, dangLac, mat, "xuc-xac");
   return (
     <div
+      ref={goc}
       className={`xuc-xac${dangLac ? " dang-lac" : ""}`}
       style={{ width: kichThuoc, height: kichThuoc, opacity: mat === 0 ? 0.3 : 1 }}
       role="img"

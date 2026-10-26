@@ -35,6 +35,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { CachTinh } from "./CachTinh";
 import { Bar, Line } from "react-chartjs-2";
 import { BoThe, HopBi, MatBi, MatThe, MatVatTQ, TapVatTQ } from "./MatBiThe";
+import { SoChay } from "../hieu-ung";
 import { MatDongXu } from "./MatDongXu";
 import { MatXucXac } from "./MatXucXac";
 import "./phong-thi-nghiem.css";
@@ -440,7 +441,9 @@ export function PhongVat({
 
         <div className="dem">
           <div>
-            <div className="so">{so(soLieu.so_luot)}</div>
+            <div className="so">
+              <SoChay gia={soLieu.so_luot} />
+            </div>
             <div className="muted">
               lượt đã {dongTu}
               {cauHinh.che_do === "dieu_kien" && ` · ${so(soLieu.so_ghi_nhan)} lượt thỏa điều kiện`}

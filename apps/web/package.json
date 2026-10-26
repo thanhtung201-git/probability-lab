@@ -8,8 +8,10 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@plab/core": "*",
     "chart.js": "^4.5.1",
+    "gsap": "^3.15.0",
     "react": "^19.3.1",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.3.1"

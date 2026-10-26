@@ -1,8 +1,9 @@
 // Một giao diện duy nhất cho giáo viên, trình chiếu trên máy chiếu.
 // Điều hướng bằng hash: #/ (trang chủ) và #/phien/<MÃ PHIÊN>.
 import type { ThuVienNgoNhan, ThuVienTinhHuong } from "@plab/core";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "./api";
+import { Banner, NenDong, useMoDauTrang, useNghiengSanKhau, useNoPhao, useThanhDieuHuong, useVaoTrang } from "./hieu-ung";
 import { BaiMo } from "./giao-vien/BaiMo";
 import { Phien } from "./giao-vien/Phien";
 import { PhongThiNghiem } from "./phong-thi-nghiem/PhongThiNghiem";
@@ -22,6 +23,13 @@ function useHash() {
   }, []);
   return hash;
 }
+
+const GIOI_THIEU = {
+  phong: { tieuDe: "Phòng thí nghiệm xác suất", moTa: "Gieo hàng nghìn lần trong vài giây và xem tần suất tiến dần về xác suất lý thuyết." },
+  "tiet-hoc": { tieuDe: "Tiết học với AI", moTa: "Nêu tình huống, để học sinh dự đoán, thử nghiệm rồi cùng AI giải thích kết quả." },
+  "bai-mo": { tieuDe: "Bài toán mở", moTa: "Nhập đề bài bất kỳ: hệ thống dựng thí nghiệm, giải chi tiết và chẩn đoán lỗi sai." },
+  phien: { tieuDe: "Phiên học trên lớp", moTa: "Theo dõi từng nhóm làm bài và chốt kiến thức ngay khi cả lớp đã thử." },
+} as const;
 
 export function App() {
   const hash = useHash();
@@ -45,14 +53,30 @@ export function App() {
         ? "tiet-hoc"
         : "phong";
 
+  const dauTrang = useRef<HTMLElement>(null);
+  const dieuHuong = useRef<HTMLElement>(null);
+  const noiDung = useRef<HTMLElement>(null);
+  useMoDauTrang(dauTrang);
+  useThanhDieuHuong(dieuHuong, trang);
+  // Đổi trang, đổi phiên hoặc dữ liệu vừa tải xong thì các thẻ vào lại lần lượt.
+  useVaoTrang(noiDung, [trang, maPhien, !!thuVien]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [trang, maPhien]);
+  useNghiengSanKhau(noiDung);
+  useNoPhao();
+  const gioiThieu = GIOI_THIEU[trang];
+
   return (
     <>
-      <header className="dau-trang">
+      <NenDong />
+      <header className="dau-trang" ref={dauTrang}>
         <div className="hang" style={{ gap: "1.5rem" }}>
           <a className="ten" href="#/">
             Probability Lab AI
           </a>
-          <nav className="dieu-huong">
+          <nav className="dieu-huong" ref={dieuHuong}>
+            <span className="vet-nav" aria-hidden="true" />
             <a href="#/" className={trang === "phong" ? "dang-o" : ""}>
               Phòng thí nghiệm
             </a>
@@ -70,7 +94,8 @@ export function App() {
           </span>
         )}
       </header>
-      <main className="khung">
+      <Banner khoa={trang} tieuDe={gioiThieu.tieuDe} moTa={gioiThieu.moTa} />
+      <main className="khung" ref={noiDung}>
         {trang === "phong" ? (
           // Phòng thí nghiệm chạy hoàn toàn trên trình duyệt, không cần máy chủ.
           <PhongThiNghiem />
