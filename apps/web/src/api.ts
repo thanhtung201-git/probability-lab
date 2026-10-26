@@ -129,7 +129,47 @@ export interface DocDe {
   dap_an: string[];
 }
 
+export interface DkMo {
+  loai: "chan" | "le" | "nguyen_to" | "chinh_phuong" | "doi_xung" | "chu_so_khac_nhau" | "co_chu_so" | "chia_het" | "du" | "bang" | "lon_hon" | "nho_hon";
+  k: number | null;
+  m: number | null;
+  r: number | null;
+  d: number | null;
+  khong: boolean;
+}
+
+/** Kết quả AI đọc đề cho tab "Bài toán mở" (chỉ là các khối điền sẵn, chưa có con số xác suất). */
+export interface DocDeMo {
+  khop: boolean;
+  ly_do: string;
+  tieu_de: string;
+  ten_vat: string;
+  nguon_kieu: "day_so" | "ds_so" | "danh_so" | "theo_mau" | "mau_va_so";
+  tu: number | null;
+  den: number | null;
+  buoc: number | null;
+  loc: DkMo[];
+  text: string | null;
+  n: number | null;
+  nhom: string | null;
+  so_lan: number;
+  hoan_lai: boolean;
+  phep: "va" | "hoac";
+  bien_co: {
+    kieu: "so" | "mau";
+    dai_luong: "tong" | "tich" | "lon_nhat" | "nho_nhat" | "ghep" | null;
+    dk: DkMo | null;
+    mau_loai: "it_nhat" | "dung" | "cung_mau" | "khac_mau" | null;
+    mau: string | null;
+    k_mau: number | null;
+    khong: boolean;
+  }[];
+  phu_dinh: boolean;
+  dap_an: string[];
+}
+
 export const api = {
+  docDeMo: (noi_dung: string) => post<DocDeMo>("/doc-de-mo", { noi_dung }),
   docDe: (noi_dung: string) => post<DocDe>("/doc-de", { noi_dung }),
   trangThai: () => goi<{ llm_bat: boolean; mo_hinh: string | null }>("/trang-thai"),
   thuVien: () => goi<{ ngo_nhan: ThuVienNgoNhan; tinh_huong: ThuVienTinhHuong }>("/thu-vien"),

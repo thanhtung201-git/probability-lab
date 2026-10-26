@@ -40,6 +40,21 @@ export function thoaDieuKien(dk: DieuKienBaiToan, v: number): boolean {
       return v > dk.k;
     case "nho_hon":
       return v < dk.k;
+    case "chinh_phuong": {
+      if (v < 0) return false;
+      const c = Math.round(Math.sqrt(v));
+      return c * c === v;
+    }
+    case "chu_so_khac_nhau": {
+      const cs = String(Math.abs(v));
+      return new Set(cs).size === cs.length;
+    }
+    case "doi_xung": {
+      const cs = String(Math.abs(v));
+      return cs === [...cs].reverse().join("");
+    }
+    case "co_chu_so":
+      return String(Math.abs(v)).includes(String(dk.d));
   }
 }
 
@@ -60,11 +75,12 @@ export function giaTriDaiLuong(dl: Extract<BienCoBaiToan, { kieu: "so" }>["dai_l
   }
 }
 
-/** Bộ vật đã lấy có thỏa biến cố không (đã tính cả "phủ định"). */
-export function thoaBienCoBaiToan(ch: Pick<CauHinhBaiToan, "bien_co" | "phu_dinh">, vs: VatTongQuat[]): boolean {
-  const bc = ch.bien_co;
+/** Một biến cố (có thể ghép nhiều tầng) có xảy ra với bộ vật đã lấy không, đã tính cả `khong` của nó. */
+function thoaMotBienCo(bc: BienCoBaiToan, vs: VatTongQuat[]): boolean {
   let thoa: boolean;
-  if (bc.kieu === "so") {
+  if (bc.kieu === "gop") {
+    thoa = bc.phep === "va" ? bc.cac.every((c) => thoaMotBienCo(c, vs)) : bc.cac.some((c) => thoaMotBienCo(c, vs));
+  } else if (bc.kieu === "so") {
     thoa = thoaDieuKien(bc.dieu_kien, giaTriDaiLuong(bc.dai_luong, vs));
   } else {
     const dem = vs.filter((v) => v.mau === bc.mau).length;
@@ -83,6 +99,12 @@ export function thoaBienCoBaiToan(ch: Pick<CauHinhBaiToan, "bien_co" | "phu_dinh
         break;
     }
   }
+  return bc.khong ? !thoa : thoa;
+}
+
+/** Bộ vật đã lấy có thỏa biến cố không (đã tính cả "phủ định"). */
+export function thoaBienCoBaiToan(ch: Pick<CauHinhBaiToan, "bien_co" | "phu_dinh">, vs: VatTongQuat[]): boolean {
+  const thoa = thoaMotBienCo(ch.bien_co, vs);
   return ch.phu_dinh ? !thoa : thoa;
 }
 
@@ -109,6 +131,14 @@ export function moTaDieuKien(dk: DieuKienBaiToan): string {
       return `lớn hơn ${dk.k}`;
     case "nho_hon":
       return `nhỏ hơn ${dk.k}`;
+    case "chinh_phuong":
+      return "là số chính phương";
+    case "chu_so_khac_nhau":
+      return "có các chữ số khác nhau";
+    case "doi_xung":
+      return "là số đối xứng (đọc xuôi ngược như nhau)";
+    case "co_chu_so":
+      return `có chữ số ${dk.d}`;
   }
 }
 
@@ -117,11 +147,12 @@ export function moTaDieuKien(dk: DieuKienBaiToan): string {
 export const laMatDongXu = (tenVat?: string) => tenVat === "mặt đồng xu";
 export const laMatXucXac = (tenVat?: string) => tenVat === "mặt xúc xắc";
 
-export function moTaBienCoBaiToan(ch: Pick<CauHinhBaiToan, "bien_co" | "phu_dinh" | "ten_vat" | "so_lan">): string {
-  const bc = ch.bien_co;
-  const tv = ch.ten_vat ?? "vật";
+function moTaMotBienCo(bc: BienCoBaiToan, tv: string, soLan: number): string {
   let s: string;
-  if (bc.kieu === "so") s = `${TEN_DAI_LUONG[bc.dai_luong]} ${moTaDieuKien(bc.dieu_kien)}`;
+  if (bc.kieu === "gop") {
+    const noi = bc.phep === "va" ? " và " : " hoặc ";
+    s = bc.cac.map((c) => (c.kieu === "gop" ? `(${moTaMotBienCo(c, tv, soLan)})` : moTaMotBienCo(c, tv, soLan))).join(noi);
+  } else if (bc.kieu === "so") s = `${soLan === 1 ? `${tv} được chọn` : TEN_DAI_LUONG[bc.dai_luong]} ${moTaDieuKien(bc.dieu_kien)}`;
   else if (laMatDongXu(tv) || laMatXucXac(tv)) {
     const mat = "mặt";
     if (bc.loai === "it_nhat") s = `có ít nhất 1 lần ra ${mat} ${bc.mau}`;
@@ -132,6 +163,11 @@ export function moTaBienCoBaiToan(ch: Pick<CauHinhBaiToan, "bien_co" | "phu_dinh
   else if (bc.loai === "dung") s = `có đúng ${bc.k} ${tv} màu ${bc.mau}`;
   else if (bc.loai === "cung_mau") s = `các ${tv} lấy ra cùng màu`;
   else s = `hai ${tv} lấy ra khác màu`;
+  return bc.khong ? `không xảy ra: ${s}` : s;
+}
+
+export function moTaBienCoBaiToan(ch: Pick<CauHinhBaiToan, "bien_co" | "phu_dinh" | "ten_vat" | "so_lan">): string {
+  const s = moTaMotBienCo(ch.bien_co, ch.ten_vat ?? "vật", ch.so_lan);
   return ch.phu_dinh ? `không xảy ra: ${s}` : s;
 }
 
@@ -177,6 +213,7 @@ export function khongGianMau(ch: CauHinhBaiToan, gioiHanLietKe = 60): KhongGianM
   const nho = soCachLay(ch.vat.length, ch.so_lan, ch.hoan_lai) <= gioiHanLietKe;
   const theo = new Map<number, number>();
   const bc = ch.bien_co;
+  const khongThoa = bc.kieu === "so" ? (bc.khong ?? false) : false;
   duyet(ch, (chiSo) => {
     const vs = chiSo.map((i) => ch.vat[i]!);
     const ok = thoaBienCoBaiToan(ch, vs);
@@ -194,7 +231,7 @@ export function khongGianMau(ch: CauHinhBaiToan, gioiHanLietKe = 60): KhongGianM
       bc.kieu === "so"
         ? [...theo.entries()]
             .sort((a, b) => a[0] - b[0])
-            .map(([gia_tri, so_cach]) => ({ gia_tri, so_cach, thoa: thoaDieuKien(bc.dieu_kien, gia_tri) !== (ch.phu_dinh ?? false) }))
+            .map(([gia_tri, so_cach]) => ({ gia_tri, so_cach, thoa: (thoaDieuKien(bc.dieu_kien, gia_tri) !== khongThoa) !== (ch.phu_dinh ?? false) }))
         : undefined,
   };
 }

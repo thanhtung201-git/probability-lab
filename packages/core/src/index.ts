@@ -67,6 +67,18 @@ export {
   type KetQuaLietKe,
 } from "./mo-phong/thi-nghiem/bai-toan";
 export { FORM_BAI_TOAN_MAC_DINH, docDaySo, docVatTongQuat, xayBaiToan, type FormBaiToan } from "./mo-phong/thi-nghiem/bai-toan-form";
+export {
+  FORM_MO_MAC_DINH,
+  NGUON_MO_MAC_DINH,
+  taoVatTuNguon,
+  xayBaiMo,
+  moTaNguon,
+  moTaBaiMo,
+  type FormMo,
+  type NguonMo,
+  type LocSo,
+} from "./mo-phong/thi-nghiem/bai-mo";
+export { loiGiaiHocSinh, giaiThichDieuKien, type LoiGiaiHocSinh, type BuocHocSinh } from "./loi-giai-hoc-sinh";
 export { loiGiai, type LoiGiai, type BuocGiai } from "./loi-giai";
 export {
   cacKhoaVat,

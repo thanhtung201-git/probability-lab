@@ -150,3 +150,11 @@ tr.cho-duyet td { background: var(--canh-bao-nhat); }
 .giai-thich-nhom .gt-vi-du { background: #fffbeb; border-radius: 8px; padding: 0.5rem 0.8rem; color: #78350f; }
 .giai-thich-nhom .gt-chot { background: #f0fdf4; border-radius: 8px; padding: 0.5rem 0.8rem; font-weight: 700; color: #166534; }
 .giai-thich-nhom .gt-nguon { margin-top: 0.6rem; }
+
+/* Tab "Bài toán mở": ô chọn và hộp đánh dấu nằm gọn trên một hàng. */
+.bai-mo select { width: auto; max-width: 100%; }
+.bai-mo input[type="checkbox"] { width: 1.1rem; height: 1.1rem; padding: 0; flex: none; }
+.bai-mo label.hang { display: flex; font-weight: 600; margin: 0; }
+.loi-giai-hs .buoc-hs { margin-top: 0.9rem; }
+.loi-giai-hs .buoc-hs h3 { margin: 0 0 0.3rem; font-size: 1.05rem; }
+.loi-giai-hs .buoc-hs p { margin: 0.25rem 0; line-height: 1.55; }

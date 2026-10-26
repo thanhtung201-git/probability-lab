@@ -9,7 +9,7 @@ import { chay, lay } from "./db";
 import { DeBaiSchema, LoiDeBai, taoDeBai } from "./de-bai";
 import { chamRubric, chanDoanLan1, LoiNghiepVu, tongQuanPhien, trangThaiLuot, xuatCsv } from "./dich-vu";
 import { giaiThichBai, taoGiaiThich } from "./giai-thich";
-import { docDeBangLLM, llmDangBat, loiGroqCuoi } from "./llm/groq";
+import { docDeBangLLM, docDeMoBangLLM, llmDangBat, loiGroqCuoi } from "./llm/groq";
 import { THU_VIEN_NGO_NHAN, thuVienTinhHuong, TIEN_TO_BAI_TU_NHAP, timTinhHuong } from "./thu-vien";
 
 const app = express();
@@ -45,7 +45,7 @@ const gioiHanAI = (req: Request, res: Response, next: NextFunction) => {
   lanGoiAI.set(ip, gan);
   next();
 };
-app.use(["/api/doc-de", "/api/giai-thich-bai"], gioiHanAI);
+app.use(["/api/doc-de", "/api/doc-de-mo", "/api/giai-thich-bai"], gioiHanAI);
 app.use("/api/luot", (req, res, next) => (req.method === "POST" && /\/(giai-thich|tra-loi)$/.test(req.path) ? gioiHanAI(req, res, next) : next()));
 
 type XuLy = (req: Request, res: Response) => unknown;
@@ -223,6 +223,16 @@ app.post(
   bocLoi(async (req, res) => {
     const { noi_dung } = z.object({ noi_dung: z.string().trim().min(10, "Đề bài quá ngắn").max(1500) }).parse(req.body);
     const kq = await docDeBangLLM(noi_dung);
+    if (!kq) throw new LoiNghiepVu(`AI chưa đọc được đề: ${loiGroqCuoi()}`, 502);
+    res.json(kq);
+  }),
+);
+
+app.post(
+  "/api/doc-de-mo",
+  bocLoi(async (req, res) => {
+    const { noi_dung } = z.object({ noi_dung: z.string().trim().min(10, "Đề bài quá ngắn").max(1500) }).parse(req.body);
+    const kq = await docDeMoBangLLM(noi_dung);
     if (!kq) throw new LoiNghiepVu(`AI chưa đọc được đề: ${loiGroqCuoi()}`, 502);
     res.json(kq);
   }),

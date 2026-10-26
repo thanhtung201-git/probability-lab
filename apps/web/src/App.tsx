@@ -3,9 +3,9 @@
 import type { ThuVienNgoNhan, ThuVienTinhHuong } from "@plab/core";
 import { useEffect, useState } from "react";
 import { api } from "./api";
+import { BaiMo } from "./giao-vien/BaiMo";
 import { Phien } from "./giao-vien/Phien";
 import { PhongThiNghiem } from "./phong-thi-nghiem/PhongThiNghiem";
-import { ThemBai } from "./giao-vien/ThemBai";
 import { TrangChu } from "./giao-vien/TrangChu";
 
 export interface ThuVien {
@@ -37,10 +37,10 @@ export function App() {
   }, []);
 
   const maPhien = hash.match(/^#\/phien\/([A-Za-z0-9]+)/)?.[1]?.toUpperCase();
-  const trang: "phong" | "tiet-hoc" | "them-bai" | "phien" = maPhien
+  const trang: "phong" | "tiet-hoc" | "bai-mo" | "phien" = maPhien
     ? "phien"
-    : hash.startsWith("#/them-bai")
-      ? "them-bai"
+    : hash.startsWith("#/bai-mo") || hash.startsWith("#/them-bai")
+      ? "bai-mo"
       : hash.startsWith("#/tiet-hoc")
         ? "tiet-hoc"
         : "phong";
@@ -59,8 +59,8 @@ export function App() {
             <a href="#/tiet-hoc" className={trang === "tiet-hoc" || trang === "phien" ? "dang-o" : ""}>
               Tiết học với AI
             </a>
-            <a href="#/them-bai" className={trang === "them-bai" ? "dang-o" : ""}>
-              Thêm bài toán
+            <a href="#/bai-mo" className={trang === "bai-mo" ? "dang-o" : ""}>
+              Bài toán mở
             </a>
           </nav>
         </div>
@@ -81,8 +81,8 @@ export function App() {
             {thuVien &&
               (maPhien ? (
                 <Phien key={maPhien} maPhien={maPhien} thuVien={thuVien} />
-              ) : trang === "them-bai" ? (
-                <ThemBai thuVien={thuVien} aiBat={ai?.llm_bat ?? false} onDoi={taiThuVien} />
+              ) : trang === "bai-mo" ? (
+                <BaiMo thuVien={thuVien} aiBat={ai?.llm_bat ?? false} onDaLuu={taiThuVien} />
               ) : (
                 <TrangChu thuVien={thuVien} aiBat={ai?.llm_bat ?? false} />
               ))}

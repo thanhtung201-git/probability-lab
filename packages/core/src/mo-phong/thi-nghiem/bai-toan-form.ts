@@ -100,6 +100,12 @@ const dieuKienTuForm = (f: FormBaiToan): DieuKienBaiToan => {
       return { loai: "chia_het", k: f.k };
     case "du":
       return { loai: "du", m: f.m, r: f.r };
+    case "chinh_phuong":
+    case "chu_so_khac_nhau":
+    case "doi_xung":
+      return { loai: f.dieu_kien };
+    case "co_chu_so":
+      return { loai: "co_chu_so", d: f.k % 10 };
     default:
       return { loai: f.dieu_kien, k: f.k };
   }

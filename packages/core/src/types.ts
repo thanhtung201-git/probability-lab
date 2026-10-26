@@ -150,12 +150,21 @@ export type DieuKienBaiToan =
   | { loai: "du"; m: number; r: number }
   | { loai: "bang"; k: number }
   | { loai: "lon_hon"; k: number }
-  | { loai: "nho_hon"; k: number };
+  | { loai: "nho_hon"; k: number }
+  | { loai: "chinh_phuong" }
+  /** Các chữ số đều khác nhau (11 không thỏa, 12 thỏa). */
+  | { loai: "chu_so_khac_nhau" }
+  /** Số đối xứng, đọc xuôi ngược như nhau (121, 44). */
+  | { loai: "doi_xung" }
+  /** Có chữ số d trong cách viết thập phân. */
+  | { loai: "co_chu_so"; d: number };
 
 /** Biến cố của bài toán tổng quát: trên các số ghi trên vật, hoặc trên màu của vật. */
 export type BienCoBaiToan =
-  | { kieu: "so"; dai_luong: "tong" | "tich" | "lon_nhat" | "nho_nhat" | "ghep"; dieu_kien: DieuKienBaiToan }
-  | { kieu: "mau"; loai: "it_nhat" | "dung" | "cung_mau" | "khac_mau"; mau?: string; k?: number };
+  | { kieu: "so"; dai_luong: "tong" | "tich" | "lon_nhat" | "nho_nhat" | "ghep"; dieu_kien: DieuKienBaiToan; khong?: boolean }
+  | { kieu: "mau"; loai: "it_nhat" | "dung" | "cung_mau" | "khac_mau"; mau?: string; k?: number; khong?: boolean }
+  /** Ghép nhiều biến cố con: "va" = xảy ra đồng thời, "hoac" = ít nhất một. `khong` đảo kết quả của cả nhóm. */
+  | { kieu: "gop"; phep: "va" | "hoac"; cac: BienCoBaiToan[]; khong?: boolean };
 
 /**
  * Bài toán tổng quát (mo-phong/thi-nghiem/bai-toan.ts): lấy lần lượt `so_lan` vật từ `vat`, có hoặc không hoàn lại,
