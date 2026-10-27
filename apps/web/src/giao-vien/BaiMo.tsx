@@ -1,6 +1,9 @@
-// Tab "Bài toán mở": tự ghép nguồn vật + cách lấy + biến cố (có thể ghép bằng và / hoặc / không) từ các khối có sẵn.
+// Tab "Bài toán mở": tự ghép nguồn vật + cách lấy + biến cố (có thể ghép bằng và / hoặc / chỉ một / không) từ các khối có sẵn.
 // Dùng chung bộ máy của bài toán tổng quát: xác suất chính xác, bảng kết quả, thí nghiệm và lời giải luôn khớp nhau.
 import {
+  bienCoTuAI,
+  dieuKienTuAI,
+  nguonTuAI,
   khongGianMau,
   loiGiaiHocSinh,
   moTaBaiMo,
@@ -10,50 +13,93 @@ import {
   type BienCoBaiToan,
   type CauHinhBaiToan,
   type CauHinhVat,
+  type DaiLuongBaiToan,
   type DieuKienBaiToan,
   type FormMo,
   type LocSo,
+  type LocVat,
   type NguonMo,
 } from "@plab/core";
 import { useMemo, useState } from "react";
 import type { ThuVien } from "../App";
-import { api, type DkMo, type DocDeMo } from "../api";
+import { api, type DocDeMo } from "../api";
 import { OSo } from "../phong-thi-nghiem/PhongThiNghiem";
 import { PhongVat } from "../phong-thi-nghiem/PhongVat";
 import { luuPhienGanDay, VAT } from "./TrangChu";
 
-/** Điều kiện trên một số, kèm các tham số k, m, r, d (chỉ dùng tham số mà loại đó cần). */
+/** Điều kiện trên một số, kèm các tham số k, k2, m, r, d (chỉ dùng tham số mà loại đó cần). */
 interface DK {
   loai: DieuKienBaiToan["loai"];
   k: number;
+  k2: number;
   m: number;
   r: number;
   d: number;
 }
 
-const DK_MAC_DINH: DK = { loai: "chinh_phuong", k: 3, m: 3, r: 1, d: 1 };
+const DK_MAC_DINH: DK = { loai: "chinh_phuong", k: 3, k2: 9, m: 3, r: 1, d: 1 };
 
-const LOAI_DK: { id: DieuKienBaiToan["loai"]; ten: string }[] = [
-  { id: "chan", ten: "là số chẵn" },
-  { id: "le", ten: "là số lẻ" },
-  { id: "nguyen_to", ten: "là số nguyên tố" },
-  { id: "chinh_phuong", ten: "là số chính phương" },
-  { id: "doi_xung", ten: "là số đối xứng (121, 44…)" },
-  { id: "chu_so_khac_nhau", ten: "có các chữ số khác nhau" },
-  { id: "co_chu_so", ten: "có chữ số d" },
-  { id: "chia_het", ten: "chia hết cho k" },
-  { id: "du", ten: "chia m dư r" },
-  { id: "bang", ten: "bằng k" },
-  { id: "lon_hon", ten: "lớn hơn k" },
-  { id: "nho_hon", ten: "nhỏ hơn k" },
+const NHOM_DK: { nhom: string; ds: { id: DieuKienBaiToan["loai"]; ten: string }[] }[] = [
+  {
+    nhom: "So sánh giá trị",
+    ds: [
+      { id: "bang", ten: "bằng k" },
+      { id: "khac", ten: "khác k" },
+      { id: "lon_hon", ten: "lớn hơn k" },
+      { id: "nho_hon", ten: "nhỏ hơn k" },
+      { id: "lon_hon_hoac_bang", ten: "lớn hơn hoặc bằng k (ít nhất k)" },
+      { id: "nho_hon_hoac_bang", ten: "nhỏ hơn hoặc bằng k (không quá k)" },
+      { id: "trong_doan", ten: "nằm trong đoạn từ k đến k2" },
+      { id: "ngoai_doan", ten: "nhỏ hơn k hoặc lớn hơn k2" },
+      { id: "duong", ten: "là số dương" },
+      { id: "am", ten: "là số âm" },
+    ],
+  },
+  {
+    nhom: "Tính chất số học",
+    ds: [
+      { id: "chan", ten: "là số chẵn" },
+      { id: "le", ten: "là số lẻ" },
+      { id: "nguyen_to", ten: "là số nguyên tố" },
+      { id: "hop_so", ten: "là hợp số" },
+      { id: "chinh_phuong", ten: "là số chính phương" },
+      { id: "chia_het", ten: "chia hết cho k (bội của k)" },
+      { id: "khong_chia_het", ten: "không chia hết cho k" },
+      { id: "uoc_cua", ten: "là ước của k" },
+      { id: "du", ten: "chia m dư r" },
+    ],
+  },
+  {
+    nhom: "Chữ số",
+    ds: [
+      { id: "tan_cung", ten: "có chữ số tận cùng bằng d" },
+      { id: "hang_chuc", ten: "có chữ số hàng chục bằng d" },
+      { id: "hang_chuc_chan", ten: "có chữ số hàng chục là số chẵn" },
+      { id: "hang_chuc_le", ten: "có chữ số hàng chục là số lẻ" },
+      { id: "tong_chu_so", ten: "có tổng các chữ số bằng k" },
+      { id: "co_chu_so", ten: "có chữ số d" },
+      { id: "chu_so_khac_nhau", ten: "có các chữ số khác nhau" },
+      { id: "doi_xung", ten: "là số đối xứng (121, 44…)" },
+    ],
+  },
 ];
 
-const DAI_LUONG: { id: Extract<BienCoBaiToan, { kieu: "so" }>["dai_luong"]; ten: string }[] = [
-  { id: "tong", ten: "Tổng các số" },
-  { id: "tich", ten: "Tích các số" },
-  { id: "lon_nhat", ten: "Số lớn nhất" },
-  { id: "nho_nhat", ten: "Số nhỏ nhất" },
-  { id: "ghep", ten: "Số ghép theo thứ tự lấy" },
+const CAN_K = new Set<DieuKienBaiToan["loai"]>(["chia_het", "khong_chia_het", "uoc_cua", "bang", "khac", "lon_hon", "nho_hon", "lon_hon_hoac_bang", "nho_hon_hoac_bang", "trong_doan", "ngoai_doan", "tong_chu_so"]);
+const CAN_K2 = new Set<DieuKienBaiToan["loai"]>(["trong_doan", "ngoai_doan"]);
+const CAN_D = new Set<DieuKienBaiToan["loai"]>(["co_chu_so", "tan_cung", "hang_chuc"]);
+const K_DUONG = new Set<DieuKienBaiToan["loai"]>(["chia_het", "khong_chia_het", "uoc_cua"]);
+
+const DAI_LUONG: { id: DaiLuongBaiToan; ten: string; can: (soLan: number) => boolean }[] = [
+  { id: "tong", ten: "Tổng các số", can: () => true },
+  { id: "tich", ten: "Tích các số", can: () => true },
+  { id: "hieu", ten: "Hiệu (lần 1 trừ lần 2)", can: (n) => n === 2 },
+  { id: "hieu_tuyet_doi", ten: "Hiệu hai số (số lớn trừ số bé)", can: (n) => n >= 2 },
+  { id: "thuong", ten: "Thương (lần 1 chia lần 2)", can: (n) => n === 2 },
+  { id: "tong_binh_phuong", ten: "Tổng bình phương", can: () => true },
+  { id: "binh_phuong_tong", ten: "Bình phương của tổng", can: () => true },
+  { id: "lon_nhat", ten: "Số lớn nhất", can: () => true },
+  { id: "nho_nhat", ten: "Số nhỏ nhất", can: () => true },
+  { id: "ghep", ten: "Số ghép theo thứ tự lấy", can: () => true },
 ];
 
 const MAU_LOAI: { id: Extract<BienCoBaiToan, { kieu: "mau" }>["loai"]; ten: string }[] = [
@@ -63,20 +109,48 @@ const MAU_LOAI: { id: Extract<BienCoBaiToan, { kieu: "mau" }>["loai"]; ten: stri
   { id: "khac_mau", ten: "Hai vật khác màu (lấy 2)" },
 ];
 
+const QUAN_HE: { id: Extract<BienCoBaiToan, { kieu: "quan_he" }>["loai"]; ten: string }[] = [
+  { id: "bang_nhau", ten: "Các số bằng nhau" },
+  { id: "khac_nhau", ten: "Các số đôi một khác nhau" },
+  { id: "cung_chan_le", ten: "Cùng chẵn hoặc cùng lẻ" },
+  { id: "nguyen_to_cung_nhau", ten: "Nguyên tố cùng nhau (ƯCLN = 1)" },
+  { id: "tang_dan", ten: "Tăng dần theo thứ tự lấy" },
+  { id: "giam_dan", ten: "Giảm dần theo thứ tự lấy" },
+];
+
+const SO_SANH: { id: Extract<BienCoBaiToan, { kieu: "dem" }>["so_sanh"]; ten: string }[] = [
+  { id: "bang", ten: "đúng" },
+  { id: "it_nhat", ten: "ít nhất" },
+  { id: "nhieu_nhat", ten: "nhiều nhất" },
+  { id: "trong_doan", ten: "từ … đến …" },
+  { id: "tat_ca", ten: "tất cả các vật lấy ra đều thuộc loại" },
+];
+
+type La = Exclude<BienCoBaiToan, { kieu: "gop" }>;
+type KieuLa = La["kieu"];
+
+const KIEU_LA: { id: KieuLa; ten: string }[] = [
+  { id: "so", ten: "Giá trị tính từ các số (tổng, tích, hiệu …)" },
+  { id: "mau", ten: "Theo màu / nhóm (ít nhất, đúng k, cùng màu …)" },
+  { id: "dem", ten: "Đếm số vật thuộc một loại (ít nhất, đúng, nhiều nhất …)" },
+  { id: "dem_bang", ten: "Hai loại vật có số lượng bằng nhau" },
+  { id: "vi_tri", ten: "Vật được lấy ở lần thứ … (đầu tiên, cuối cùng)" },
+  { id: "truoc_sau", ten: "Vật này được lấy trước vật kia" },
+  { id: "dung_thu_tu", ten: "Các lần lấy đúng theo một dãy cho trước" },
+  { id: "lien_tiep", ten: "Có k lần lấy liên tiếp cùng loại" },
+  { id: "quan_he", ten: "Quan hệ giữa các số (bằng nhau, tăng dần …)" },
+];
+
+/** Thông tin về tập vật hiện tại, để các ô chọn biết màu và số nào đang có. */
+interface Ngu {
+  mau: string[];
+  coMau: boolean;
+  coSo: boolean;
+  soDau: number;
+}
+
 function dkTuForm(f: DK): DieuKienBaiToan {
-  switch (f.loai) {
-    case "chia_het":
-    case "bang":
-    case "lon_hon":
-    case "nho_hon":
-      return { loai: f.loai, k: f.k };
-    case "du":
-      return { loai: "du", m: f.m, r: f.r };
-    case "co_chu_so":
-      return { loai: "co_chu_so", d: f.d };
-    default:
-      return { loai: f.loai };
-  }
+  return dieuKienTuAI({ loai: f.loai, k: f.k, k2: f.k2, m: f.m, r: f.r, d: f.d, khong: false });
 }
 
 /** Dựng lại các ô nhập từ một điều kiện đã gọn. */
@@ -84,6 +158,7 @@ const dkTuDieuKien = (dk: DieuKienBaiToan): DK => ({
   ...DK_MAC_DINH,
   loai: dk.loai,
   ...("k" in dk ? { k: dk.k } : {}),
+  ...("k2" in dk ? { k2: dk.k2 } : {}),
   ...("m" in dk ? { m: dk.m, r: dk.r } : {}),
   ...("d" in dk ? { d: dk.d } : {}),
 });
@@ -91,45 +166,241 @@ const dkTuDieuKien = (dk: DieuKienBaiToan): DK => ({
 /** Ô chọn điều kiện trên một số và các ô tham số đi kèm. */
 function ChonDieuKien({ id, gt, doi }: { id: string; gt: DK; doi: (v: DK) => void }) {
   const dat = <K extends keyof DK>(k: K, v: DK[K]) => doi({ ...gt, [k]: v });
-  const coK = ["chia_het", "bang", "lon_hon", "nho_hon"].includes(gt.loai);
   return (
     <>
       <select aria-label="Điều kiện" value={gt.loai} onChange={(e) => dat("loai", e.target.value as DK["loai"])}>
-        {LOAI_DK.map((d) => (
-          <option key={d.id} value={d.id}>
-            {d.ten}
-          </option>
+        {NHOM_DK.map((n) => (
+          <optgroup key={n.nhom} label={n.nhom}>
+            {n.ds.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.ten}
+              </option>
+            ))}
+          </optgroup>
         ))}
       </select>
-      {coK && <OSo id={`${id}-k`} nhan="k" gt={gt.k} min={gt.loai === "chia_het" ? 1 : 0} max={gt.loai === "chia_het" ? 99 : 999} onDoi={(v) => dat("k", v)} />}
+      {CAN_K.has(gt.loai) && (
+        <OSo id={`${id}-k`} nhan="k" gt={gt.k} min={K_DUONG.has(gt.loai) ? 1 : gt.loai === "tong_chu_so" ? 0 : -999} max={999} onDoi={(v) => dat("k", v)} />
+      )}
+      {CAN_K2.has(gt.loai) && <OSo id={`${id}-k2`} nhan="k2" gt={gt.k2} min={-999} max={999} onDoi={(v) => dat("k2", v)} />}
       {gt.loai === "du" && (
         <>
           <OSo id={`${id}-m`} nhan="Số chia m" gt={gt.m} min={2} max={20} onDoi={(v) => dat("m", v)} />
           <OSo id={`${id}-r`} nhan="Số dư r" gt={gt.r} min={0} max={19} onDoi={(v) => dat("r", v)} />
         </>
       )}
-      {gt.loai === "co_chu_so" && <OSo id={`${id}-d`} nhan="Chữ số d" gt={gt.d} min={0} max={9} onDoi={(v) => dat("d", v)} />}
+      {CAN_D.has(gt.loai) && <OSo id={`${id}-d`} nhan="Chữ số d" gt={gt.d} min={0} max={9} onDoi={(v) => dat("d", v)} />}
     </>
   );
 }
 
-/** Một biến cố con trong danh sách (chưa ghép). */
-interface La {
-  kieu: "so" | "mau";
-  dai_luong: Extract<BienCoBaiToan, { kieu: "so" }>["dai_luong"];
-  dk: DK;
-  mau_loai: Extract<BienCoBaiToan, { kieu: "mau" }>["loai"];
-  mau: string;
-  k_mau: number;
-  khong: boolean;
+/** Như ChonDieuKien nhưng làm việc trực tiếp với điều kiện đã dựng. */
+function SuaDieuKien({ id, dk, doi }: { id: string; dk: DieuKienBaiToan; doi: (dk: DieuKienBaiToan) => void }) {
+  return <ChonDieuKien id={id} gt={dkTuDieuKien(dk)} doi={(v) => doi(dkTuForm(v))} />;
 }
 
-const LA_MAC_DINH: La = { kieu: "so", dai_luong: "tong", dk: DK_MAC_DINH, mau_loai: "it_nhat", mau: "", k_mau: 1, khong: false };
+type KieuLoc = "mau" | "so" | "dk" | "mau_so";
+const kieuLocCua = (l: LocVat): KieuLoc => (l.mau !== undefined && l.so !== undefined ? "mau_so" : l.mau !== undefined ? "mau" : l.so !== undefined ? "so" : "dk");
 
-function laThanhBienCo(l: La, mauDau: string): BienCoBaiToan {
-  const khong = l.khong ? { khong: true } : {};
-  if (l.kieu === "so") return { kieu: "so", dai_luong: l.dai_luong, dieu_kien: dkTuForm(l.dk), ...khong };
-  return { kieu: "mau", loai: l.mau_loai, mau: l.mau || mauDau, ...(l.mau_loai === "dung" ? { k: l.k_mau } : {}), ...khong };
+const locMacDinh = (ngu: Ngu): LocVat => (ngu.coMau ? { mau: ngu.mau[0] } : { dk: { loai: "chan" } });
+
+/** Chọn một loại vật: theo màu, theo số cụ thể, theo điều kiện trên số, hoặc màu kèm số. */
+function ChonLoaiVat({ id, gt, doi, ngu }: { id: string; gt: LocVat; doi: (l: LocVat) => void; ngu: Ngu }) {
+  const kieu = kieuLocCua(gt);
+  const dongDoi = (k: KieuLoc) => {
+    if (k === "mau") doi({ mau: ngu.mau[0] });
+    else if (k === "so") doi({ so: ngu.soDau });
+    else if (k === "dk") doi({ dk: { loai: "chan" } });
+    else doi({ mau: gt.mau ?? ngu.mau[0], so: gt.so ?? ngu.soDau });
+  };
+  return (
+    <span className="hang" style={{ gap: "0.4rem", flexWrap: "wrap" }}>
+      <select aria-label="Loại vật" value={kieu} onChange={(e) => dongDoi(e.target.value as KieuLoc)}>
+        {ngu.coMau && <option value="mau">vật màu / nhóm …</option>}
+        {ngu.coSo && <option value="so">vật ghi số …</option>}
+        {ngu.coSo && <option value="dk">vật có số thỏa điều kiện …</option>}
+        {ngu.coMau && ngu.coSo && <option value="mau_so">vật màu … và ghi số …</option>}
+      </select>
+      {(kieu === "mau" || kieu === "mau_so") && (
+        <select aria-label="Màu" value={ngu.mau.includes(gt.mau ?? "") ? gt.mau : (ngu.mau[0] ?? "")} onChange={(e) => doi({ ...gt, mau: e.target.value })}>
+          {ngu.mau.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+      )}
+      {(kieu === "so" || kieu === "mau_so") && <OSo id={`${id}-so`} nhan="số" gt={gt.so ?? ngu.soDau} min={0} max={999} onDoi={(v) => doi({ ...gt, so: v })} />}
+      {kieu === "dk" && <SuaDieuKien id={`${id}-dk`} dk={gt.dk ?? { loai: "chan" }} doi={(dk) => doi({ dk })} />}
+    </span>
+  );
+}
+
+/** Biến cố lá mặc định khi đổi sang một kiểu mới. */
+function macDinhLa(kieu: KieuLa, ngu: Ngu, soLan: number): La {
+  const loc = locMacDinh(ngu);
+  switch (kieu) {
+    case "so":
+      return { kieu: "so", dai_luong: "tong", dieu_kien: { loai: "chan" } };
+    case "mau":
+      return { kieu: "mau", loai: "it_nhat", mau: ngu.mau[0] };
+    case "dem":
+      return { kieu: "dem", loc, so_sanh: "it_nhat", k: 1 };
+    case "dem_bang":
+      return { kieu: "dem_bang", a: ngu.coMau ? { mau: ngu.mau[0] } : { dk: { loai: "chan" } }, b: ngu.coMau ? { mau: ngu.mau[1] ?? ngu.mau[0] } : { dk: { loai: "le" } } };
+    case "vi_tri":
+      return { kieu: "vi_tri", lan: "cuoi", loc: ngu.coSo ? { so: ngu.soDau } : loc };
+    case "truoc_sau":
+      return { kieu: "truoc_sau", truoc: loc, sau: ngu.coMau ? { mau: ngu.mau[1] ?? ngu.mau[0] } : { dk: { loai: "le" } } };
+    case "dung_thu_tu":
+      return { kieu: "dung_thu_tu", day: Array.from({ length: soLan }, () => loc) };
+    case "lien_tiep":
+      return { kieu: "lien_tiep", loc, k: 2 };
+    case "quan_he":
+      return { kieu: "quan_he", loai: "khac_nhau" };
+  }
+}
+
+/** Biến cố lá cuối cùng gửi vào máy đếm: bổ sung màu còn thiếu, cắt hoặc kéo dài dãy cho khớp số lần lấy. */
+function laThanhBienCo(l: La, ngu: Ngu, soLan: number): La {
+  if (l.kieu === "mau") return { ...l, mau: l.mau || ngu.mau[0] };
+  if (l.kieu === "dung_thu_tu") return { ...l, day: Array.from({ length: soLan }, (_, i) => l.day[i] ?? locMacDinh(ngu)) };
+  return l;
+}
+
+/** Các ô sửa một biến cố lá (đã gồm ô "không" và ô chọn kiểu). */
+function SuaBienCo({ id, la, doi, ngu, soLan, tv }: { id: string; la: La; doi: (l: La) => void; ngu: Ngu; soLan: number; tv: string }) {
+  const kieuDung = (k: KieuLa) => {
+    if (k === "so") return ngu.coSo;
+    if (k === "mau") return ngu.coMau;
+    if (k === "quan_he") return ngu.coSo && soLan >= 2;
+    if (k === "truoc_sau" || k === "lien_tiep") return soLan >= 2;
+    return true;
+  };
+  const khong = la.khong ?? false;
+  const dem = (k: number, f: (v: number) => void, nhan: string) => <OSo id={`${id}-n`} nhan={nhan} gt={k} min={0} max={4} onDoi={f} />;
+  return (
+    <div className="hang" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
+      <label className="hang" style={{ gap: "0.3rem", margin: 0 }}>
+        <input type="checkbox" checked={khong} onChange={(e) => doi({ ...la, khong: e.target.checked })} /> không
+      </label>
+      <select aria-label="Loại điều kiện" value={la.kieu} onChange={(e) => doi({ ...macDinhLa(e.target.value as KieuLa, ngu, soLan), ...(khong ? { khong: true } : {}) })}>
+        {KIEU_LA.filter((k) => kieuDung(k.id) || k.id === la.kieu).map((k) => (
+          <option key={k.id} value={k.id}>
+            {k.ten}
+          </option>
+        ))}
+      </select>
+      {la.kieu === "so" && (
+        <>
+          {soLan > 1 && (
+            <select aria-label="Đại lượng" value={la.dai_luong} onChange={(e) => doi({ ...la, dai_luong: e.target.value as DaiLuongBaiToan })}>
+              {DAI_LUONG.filter((d) => d.can(soLan) || d.id === la.dai_luong).map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.ten}
+                </option>
+              ))}
+            </select>
+          )}
+          <SuaDieuKien id={id} dk={la.dieu_kien} doi={(dieu_kien) => doi({ ...la, dieu_kien })} />
+        </>
+      )}
+      {la.kieu === "mau" && (
+        <>
+          <select aria-label="Biến cố theo màu" value={la.loai} onChange={(e) => doi({ ...la, loai: e.target.value as typeof la.loai })}>
+            {MAU_LOAI.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.ten}
+              </option>
+            ))}
+          </select>
+          {(la.loai === "it_nhat" || la.loai === "dung") && (
+            <select aria-label="Màu cần xét" value={ngu.mau.includes(la.mau ?? "") ? la.mau : (ngu.mau[0] ?? "")} onChange={(e) => doi({ ...la, mau: e.target.value })}>
+              {ngu.mau.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          )}
+          {la.loai === "dung" && <OSo id={`${id}-kmau`} nhan="Số vật màu đó (k)" gt={la.k ?? 1} min={0} max={4} onDoi={(k) => doi({ ...la, k })} />}
+        </>
+      )}
+      {la.kieu === "quan_he" && (
+        <select aria-label="Quan hệ giữa các số" value={la.loai} onChange={(e) => doi({ ...la, loai: e.target.value as typeof la.loai })}>
+          {QUAN_HE.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.ten}
+            </option>
+          ))}
+        </select>
+      )}
+      {la.kieu === "dem" && (
+        <>
+          <span>Có</span>
+          <select aria-label="So sánh số lượng" value={la.so_sanh} onChange={(e) => doi({ ...la, so_sanh: e.target.value as typeof la.so_sanh, ...(e.target.value === "trong_doan" ? { k2: Math.max(la.k, la.k2 ?? la.k) } : {}) })}>
+            {SO_SANH.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.ten}
+              </option>
+            ))}
+          </select>
+          {la.so_sanh !== "tat_ca" && dem(la.k, (k) => doi({ ...la, k, ...(la.so_sanh === "trong_doan" ? { k2: Math.max(k, la.k2 ?? k) } : {}) }), la.so_sanh === "trong_doan" ? "từ" : "k")}
+          {la.so_sanh === "trong_doan" && <OSo id={`${id}-n2`} nhan="đến" gt={la.k2 ?? la.k} min={la.k} max={4} onDoi={(k2) => doi({ ...la, k2 })} />}
+          <ChonLoaiVat id={`${id}-loc`} gt={la.loc} doi={(loc) => doi({ ...la, loc })} ngu={ngu} />
+        </>
+      )}
+      {la.kieu === "dem_bang" && (
+        <>
+          <span>Số</span>
+          <ChonLoaiVat id={`${id}-a`} gt={la.a} doi={(a) => doi({ ...la, a })} ngu={ngu} />
+          <span>bằng số</span>
+          <ChonLoaiVat id={`${id}-b`} gt={la.b} doi={(b) => doi({ ...la, b })} ngu={ngu} />
+        </>
+      )}
+      {la.kieu === "vi_tri" && (
+        <>
+          <span>Lần lấy</span>
+          <select aria-label="Lần lấy" value={String(la.lan)} onChange={(e) => doi({ ...la, lan: e.target.value === "cuoi" ? "cuoi" : Number(e.target.value) })}>
+            {Array.from({ length: soLan }, (_, i) => (
+              <option key={i + 1} value={i + 1}>
+                {i === 0 ? "đầu tiên (lần 1)" : `lần thứ ${i + 1}`}
+              </option>
+            ))}
+            <option value="cuoi">cuối cùng</option>
+          </select>
+          <span>ra</span>
+          <ChonLoaiVat id={`${id}-loc`} gt={la.loc} doi={(loc) => doi({ ...la, loc })} ngu={ngu} />
+        </>
+      )}
+      {la.kieu === "truoc_sau" && (
+        <>
+          <ChonLoaiVat id={`${id}-truoc`} gt={la.truoc} doi={(truoc) => doi({ ...la, truoc })} ngu={ngu} />
+          <strong>được lấy TRƯỚC</strong>
+          <ChonLoaiVat id={`${id}-sau`} gt={la.sau} doi={(sau) => doi({ ...la, sau })} ngu={ngu} />
+        </>
+      )}
+      {la.kieu === "dung_thu_tu" && (
+        <div style={{ width: "100%" }}>
+          <div className="muted">Các {tv} lấy ra phải đúng thứ tự sau (mỗi lần lấy một loại):</div>
+          {laThanhBienCo(la, ngu, soLan).kieu === "dung_thu_tu" &&
+            (laThanhBienCo(la, ngu, soLan) as Extract<La, { kieu: "dung_thu_tu" }>).day.map((l, i) => (
+              <div key={i} className="hang" style={{ gap: "0.4rem", marginTop: "0.3rem" }}>
+                <span>Lần {i + 1}:</span>
+                <ChonLoaiVat id={`${id}-day-${i}`} gt={l} doi={(v) => doi({ ...la, day: (laThanhBienCo(la, ngu, soLan) as Extract<La, { kieu: "dung_thu_tu" }>).day.map((x, j) => (j === i ? v : x)) })} ngu={ngu} />
+              </div>
+            ))}
+        </div>
+      )}
+      {la.kieu === "lien_tiep" && (
+        <>
+          <OSo id={`${id}-k`} nhan="Có ít nhất" gt={la.k} min={2} max={Math.max(2, soLan)} onDoi={(k) => doi({ ...la, k })} />
+          <span>lần lấy liên tiếp ra</span>
+          <ChonLoaiVat id={`${id}-loc`} gt={la.loc} doi={(loc) => doi({ ...la, loc })} ngu={ngu} />
+        </>
+      )}
+    </div>
+  );
 }
 
 type KieuNguon = NguonMo["kieu"];
@@ -157,7 +428,7 @@ interface Mau {
   so_lan: number;
   hoan_lai: boolean;
   la: La[];
-  phep?: "va" | "hoac";
+  phep?: "va" | "hoac" | "xor";
   phu_dinh?: boolean;
   de: string;
 }
@@ -169,7 +440,7 @@ const MAU: Mau[] = [
     ten_vat: "số",
     so_lan: 1,
     hoan_lai: false,
-    la: [{ ...LA_MAC_DINH, dk: { ...DK_MAC_DINH, loai: "chinh_phuong" } }],
+    la: [{ kieu: "so", dai_luong: "tong", dieu_kien: { loai: "chinh_phuong" } }],
     de: "Viết một số tự nhiên lẻ có 2 chữ số bất kỳ. Tính xác suất của biến cố “Số tự nhiên viết ra là một số chính phương”.",
   },
   {
@@ -179,8 +450,8 @@ const MAU: Mau[] = [
     so_lan: 1,
     hoan_lai: false,
     la: [
-      { ...LA_MAC_DINH, dk: { ...DK_MAC_DINH, loai: "chia_het", k: 3 } },
-      { ...LA_MAC_DINH, dk: { ...DK_MAC_DINH, loai: "chia_het", k: 5 } },
+      { kieu: "so", dai_luong: "tong", dieu_kien: { loai: "chia_het", k: 3 } },
+      { kieu: "so", dai_luong: "tong", dieu_kien: { loai: "chia_het", k: 5 } },
     ],
     phep: "hoac",
     de: "Chọn ngẫu nhiên một số tự nhiên có 2 chữ số. Tính xác suất để số đó chia hết cho 3 hoặc chia hết cho 5.",
@@ -191,7 +462,7 @@ const MAU: Mau[] = [
     ten_vat: "bi",
     so_lan: 2,
     hoan_lai: false,
-    la: [{ ...LA_MAC_DINH, dk: { ...DK_MAC_DINH, loai: "le" } }],
+    la: [{ kieu: "so", dai_luong: "tong", dieu_kien: { loai: "le" } }],
     de: "Một túi đựng 4 viên bi đánh số 1; 2; 3; 4. Lấy ngẫu nhiên lần lượt 2 viên bi, viên bi lấy ra lần đầu không trả lại vào túi. Xác suất lấy được hai viên bi có tổng hai số là một số lẻ là:",
   },
   {
@@ -200,8 +471,62 @@ const MAU: Mau[] = [
     ten_vat: "học sinh",
     so_lan: 2,
     hoan_lai: false,
-    la: [{ ...LA_MAC_DINH, kieu: "mau", mau: "nữ" }],
+    la: [{ kieu: "mau", loai: "it_nhat", mau: "nữ" }],
     de: "Một nhóm học sinh gồm 3 học sinh nam, 4 học sinh nữ. Chọn ngẫu nhiên hai học sinh. Tính xác suất để có ít nhất một bạn nữ.",
+  },
+  {
+    ten: "Thẻ 6, 7, 8: thẻ số 8 lấy cuối cùng",
+    nguon: { kieu: "ds_so", text: "6 7 8" },
+    ten_vat: "thẻ",
+    so_lan: 3,
+    hoan_lai: false,
+    la: [{ kieu: "vi_tri", lan: "cuoi", loc: { so: 8 } }],
+    de: "Một hộp chứa 3 tấm thẻ cùng loại được đánh số lần lượt từ 6; 7; 8. Bạn Việt lấy lần lượt 3 tấm thẻ từ hộp một cách ngẫu nhiên. Tấm thẻ lấy ra không được trả lại hộp. Tính xác suất của biến cố A: “Tấm thẻ đánh số 8 được lấy cuối cùng”.",
+  },
+  {
+    ten: "Thẻ 6, 7, 8: 6 lấy trước 8",
+    nguon: { kieu: "ds_so", text: "6 7 8" },
+    ten_vat: "thẻ",
+    so_lan: 3,
+    hoan_lai: false,
+    la: [{ kieu: "truoc_sau", truoc: { so: 6 }, sau: { so: 8 } }],
+    de: "Một hộp chứa 3 tấm thẻ đánh số 6; 7; 8. Lấy lần lượt 3 tấm thẻ không trả lại. Tính xác suất để thẻ số 6 được lấy trước thẻ số 8.",
+  },
+  {
+    ten: "2 xúc xắc: tổng từ 5 đến 9",
+    nguon: { kieu: "danh_so", n: 6 },
+    ten_vat: "mặt xúc xắc",
+    so_lan: 2,
+    hoan_lai: true,
+    la: [{ kieu: "so", dai_luong: "tong", dieu_kien: { loai: "trong_doan", k: 5, k2: 9 } }],
+    de: "Gieo hai con xúc xắc cân đối. Tính xác suất để tổng số chấm nằm trong khoảng từ 5 đến 9.",
+  },
+  {
+    ten: "2 xúc xắc: hiệu hai số bằng 2",
+    nguon: { kieu: "danh_so", n: 6 },
+    ten_vat: "mặt xúc xắc",
+    so_lan: 2,
+    hoan_lai: true,
+    la: [{ kieu: "so", dai_luong: "hieu_tuyet_doi", dieu_kien: { loai: "bang", k: 2 } }],
+    de: "Gieo hai con xúc xắc cân đối. Tính xác suất để hiệu hai số chấm (số lớn trừ số bé) bằng 2.",
+  },
+  {
+    ten: "Đồng xu 3 lần: 2 lần liên tiếp ngửa",
+    nguon: { kieu: "theo_mau", nhom: "ngửa 1, sấp 1" },
+    ten_vat: "mặt đồng xu",
+    so_lan: 3,
+    hoan_lai: true,
+    la: [{ kieu: "lien_tiep", loc: { mau: "ngửa" }, k: 2 }],
+    de: "Tung một đồng xu cân đối 3 lần. Tính xác suất để có hai lần liên tiếp xuất hiện mặt ngửa.",
+  },
+  {
+    ten: "Thẻ 1–5, lấy 3: ít nhất 2 số chẵn",
+    nguon: { kieu: "danh_so", n: 5 },
+    ten_vat: "thẻ",
+    so_lan: 3,
+    hoan_lai: false,
+    la: [{ kieu: "dem", loc: { dk: { loai: "chan" } }, so_sanh: "it_nhat", k: 2 }],
+    de: "Một hộp có 5 thẻ đánh số từ 1 đến 5. Lấy lần lượt 3 thẻ không trả lại. Tính xác suất để có ít nhất 2 thẻ mang số chẵn.",
   },
 ];
 
@@ -216,7 +541,6 @@ function giaTriPhuongAn(s: string): number | null {
 
 const CHU = ["A", "B", "C", "D", "E", "F"];
 
-const dkTuAI = (x: DkMo): DK => ({ ...DK_MAC_DINH, loai: x.loai, k: x.k ?? 3, m: x.m ?? 3, r: x.r ?? 1, d: x.d ?? 1 });
 
 /** Các bài đã lưu: mở phiên hoặc xóa. */
 function BaiDaLuu({ thuVien, onDoi }: { thuVien: ThuVien; onDoi: () => void }) {
@@ -290,7 +614,7 @@ export function BaiMo({ thuVien, aiBat, onDaLuu }: { thuVien: ThuVien; aiBat: bo
   const [soLan, setSoLan] = useState(MAU[0]!.so_lan);
   const [hoanLai, setHoanLai] = useState(false);
   const [cacLa, setCacLa] = useState<La[]>(MAU[0]!.la);
-  const [phep, setPhep] = useState<"va" | "hoac">("va");
+  const [phep, setPhep] = useState<"va" | "hoac" | "xor">("va");
   const [phuDinh, setPhuDinh] = useState(false);
   const [de, setDe] = useState(MAU[0]!.de);
   const [tieuDe, setTieuDe] = useState("");
@@ -299,36 +623,19 @@ export function BaiMo({ thuVien, aiBat, onDaLuu }: { thuVien: ThuVien; aiBat: bo
   const [dangLuu, setDangLuu] = useState(false);
   const [daLuu, setDaLuu] = useState<string | null>(null);
   const [dangDoc, setDangDoc] = useState(false);
-  const [ghiChuAI, setGhiChuAI] = useState<{ khop: boolean; ly_do: string } | null>(null);
+  const [ghiChuAI, setGhiChuAI] = useState<{ khop: boolean; ly_do: string; mo_ho: string | null } | null>(null);
   const [dapAn, setDapAn] = useState("");
 
   function apDungAI(d: DocDeMo) {
-    const loc: LocSo[] = d.loc.map((l) => ({ dk: dkTuForm(dkTuAI(l)), ...(l.khong ? { khong: true } : {}) }));
-    const nguonMoi: NguonMo =
-      d.nguon_kieu === "day_so"
-        ? { kieu: "day_so", tu: d.tu ?? 10, den: d.den ?? 99, buoc: d.buoc ?? 1, loc }
-        : d.nguon_kieu === "ds_so"
-          ? { kieu: "ds_so", text: d.text ?? "" }
-          : d.nguon_kieu === "danh_so"
-            ? { kieu: "danh_so", n: d.n ?? 4 }
-            : { kieu: d.nguon_kieu, nhom: d.nhom ?? "" };
+    const nguonMoi = nguonTuAI(d);
     setNguon(nguonMoi);
     setTenVat(d.ten_vat || "vật");
     setSoLan(Math.min(4, Math.max(1, d.so_lan)));
     setHoanLai(d.hoan_lai);
     if (d.bien_co.length) {
-      setCacLa(
-        d.bien_co.map((b) => ({
-          ...LA_MAC_DINH,
-          kieu: b.kieu,
-          dai_luong: b.dai_luong ?? "tong",
-          dk: b.dk ? dkTuAI(b.dk) : DK_MAC_DINH,
-          mau_loai: b.mau_loai ?? "it_nhat",
-          mau: b.mau ?? "",
-          k_mau: b.k_mau ?? 1,
-          khong: b.khong,
-        })),
-      );
+      const v = taoVatTuNguon(nguonMoi);
+      const mauDau = "vat" in v ? (v.vat.find((x) => x.mau !== undefined)?.mau ?? "") : "";
+      setCacLa(d.bien_co.map((b) => bienCoTuAI(b, mauDau) as La));
     }
     setPhep(d.phep);
     setPhuDinh(d.phu_dinh);
@@ -344,7 +651,7 @@ export function BaiMo({ thuVien, aiBat, onDaLuu }: { thuVien: ThuVien; aiBat: bo
     try {
       const d = await api.docDeMo(de);
       apDungAI(d);
-      setGhiChuAI({ khop: d.khop, ly_do: d.ly_do });
+      setGhiChuAI({ khop: d.khop, ly_do: d.ly_do, mo_ho: d.mo_ho });
     } catch (e) {
       setLoi((e as Error).message);
     } finally {
@@ -368,15 +675,22 @@ export function BaiMo({ thuVien, aiBat, onDaLuu }: { thuVien: ThuVien; aiBat: bo
   }
 
   const vat = useMemo(() => taoVatTuNguon(nguon), [nguon]);
-  const coSo = "vat" in vat && vat.vat.some((v) => v.so !== undefined);
-  const coMau = "vat" in vat && vat.vat.some((v) => v.mau !== undefined);
-  const danhSachMau = "vat" in vat ? [...new Set(vat.vat.map((x) => x.mau).filter((m): m is string => !!m))] : [];
+  const ngu: Ngu = useMemo(() => {
+    const ds = "vat" in vat ? vat.vat : [];
+    return {
+      mau: [...new Set(ds.map((x) => x.mau).filter((m): m is string => !!m))],
+      coMau: ds.some((v) => v.mau !== undefined),
+      coSo: ds.some((v) => v.so !== undefined),
+      soDau: ds.find((v) => v.so !== undefined)?.so ?? 1,
+    };
+  }, [vat]);
+  const { coSo, coMau } = ngu;
 
   const form: FormMo = useMemo(() => {
-    const cac = cacLa.map((l) => laThanhBienCo(l, danhSachMau[0] ?? ""));
+    const cac = cacLa.map((l) => laThanhBienCo(l, ngu, soLan));
     const bien_co: BienCoBaiToan = cac.length === 1 ? cac[0]! : { kieu: "gop", phep, cac };
     return { nguon, ten_vat: tenVat, so_lan: soLan, hoan_lai: hoanLai, bien_co, phu_dinh: phuDinh };
-  }, [nguon, tenVat, soLan, hoanLai, cacLa, phep, phuDinh]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [nguon, tenVat, soLan, hoanLai, cacLa, phep, phuDinh, ngu]);
 
   const ketQua = useMemo(() => (cacLa.length ? xayBaiMo(form) : { loi: "Cần ít nhất một điều kiện cho biến cố" }), [form, cacLa.length]);
   const cauHinh: CauHinhBaiToan | null = "cau_hinh" in ketQua ? { ...ketQua.cau_hinh, seed } : null;
@@ -398,7 +712,7 @@ export function BaiMo({ thuVien, aiBat, onDaLuu }: { thuVien: ThuVien; aiBat: bo
     });
   }, [tinh, dapAn]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const datLa = (i: number, v: Partial<La>) => setCacLa((a) => a.map((l, j) => (j === i ? { ...l, ...v } : l)));
+  const datLa = (i: number, l: La) => setCacLa((a) => a.map((x, j) => (j === i ? l : x)));
   const datLoc = (i: number, v: Partial<LocSo>) =>
     setNguon((n) => (n.kieu !== "day_so" ? n : { ...n, loc: n.loc.map((l, j) => (j === i ? { ...l, ...v } : l)) }));
 
@@ -454,6 +768,11 @@ export function BaiMo({ thuVien, aiBat, onDaLuu }: { thuVien: ThuVien; aiBat: bo
           <div className={`thong-bao ${ghiChuAI.khop ? "tin" : "canh-bao"}`} style={{ marginTop: "0.6rem" }}>
             {ghiChuAI.khop ? "AI hiểu đề như sau: " : "Đề này có thể chưa khớp các khối hiện có. "}
             {ghiChuAI.ly_do} <strong>Hãy kiểm tra lại các ô bên dưới và đối chiếu với đề.</strong>
+          </div>
+        )}
+        {ghiChuAI?.mo_ho && (
+          <div className="thong-bao canh-bao" style={{ marginTop: "0.6rem" }}>
+            <strong>Đề có thể hiểu theo nhiều cách:</strong> {ghiChuAI.mo_ho} Hãy chọn đúng cách hiểu ở các ô bên dưới trước khi tin kết quả.
           </div>
         )}
       </div>
@@ -551,74 +870,31 @@ export function BaiMo({ thuVien, aiBat, onDaLuu }: { thuVien: ThuVien; aiBat: bo
                 <button type="button" className={phep === "hoac" ? "dang-chon" : ""} onClick={() => setPhep("hoac")}>
                   HOẶC (ít nhất một)
                 </button>
+                <button type="button" className={phep === "xor" ? "dang-chon" : ""} onClick={() => setPhep("xor")}>
+                  CHỈ MỘT (hoặc loại trừ)
+                </button>
               </div>
             )}
-            <div className="hang" style={{ gap: "0.5rem", flexWrap: "wrap" }}>
-              <label className="hang" style={{ gap: "0.3rem", margin: 0 }}>
-                <input type="checkbox" checked={l.khong} onChange={(e) => datLa(i, { khong: e.target.checked })} /> không
-              </label>
-              {coSo && coMau && (
-                <select aria-label="Xét theo" value={l.kieu} onChange={(e) => datLa(i, { kieu: e.target.value as La["kieu"] })}>
-                  <option value="so">Xét theo các số</option>
-                  <option value="mau">Xét theo màu / nhóm</option>
-                </select>
-              )}
-              {(l.kieu === "so" && coSo) || !coMau ? (
-                <>
-                  {soLan > 1 && (
-                    <select aria-label="Đại lượng" value={l.dai_luong} onChange={(e) => datLa(i, { dai_luong: e.target.value as La["dai_luong"] })}>
-                      {DAI_LUONG.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.ten}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  <ChonDieuKien id={`bm-bc-${i}`} gt={l.dk} doi={(v) => datLa(i, { dk: v })} />
-                </>
-              ) : (
-                <>
-                  <select aria-label="Biến cố theo màu" value={l.mau_loai} onChange={(e) => datLa(i, { mau_loai: e.target.value as La["mau_loai"] })}>
-                    {MAU_LOAI.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.ten}
-                      </option>
-                    ))}
-                  </select>
-                  {(l.mau_loai === "it_nhat" || l.mau_loai === "dung") && (
-                    <select aria-label="Màu cần xét" value={danhSachMau.includes(l.mau) ? l.mau : (danhSachMau[0] ?? "")} onChange={(e) => datLa(i, { mau: e.target.value })}>
-                      {danhSachMau.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  {l.mau_loai === "dung" && <OSo id={`bm-kmau-${i}`} nhan="Số vật màu đó (k)" gt={l.k_mau} min={0} max={4} onDoi={(v) => datLa(i, { k_mau: v })} />}
-                </>
-              )}
-              {cacLa.length > 1 && (
-                <button type="button" className="phu" onClick={() => setCacLa((a) => a.filter((_, j) => j !== i))}>
-                  Bỏ
-                </button>
-              )}
-            </div>
+            <SuaBienCo id={`bm-bc-${i}`} la={l} doi={(v) => datLa(i, v)} ngu={ngu} soLan={soLan} tv={tv} />
+            {cacLa.length > 1 && (
+              <button type="button" className="phu nho" style={{ marginTop: "0.4rem" }} onClick={() => setCacLa((a) => a.filter((_, j) => j !== i))}>
+                Bỏ điều kiện này
+              </button>
+            )}
           </div>
         ))}
         {cacLa.length < 6 && (
-          <button
-            type="button"
-            className="phu"
-            style={{ marginTop: "0.6rem" }}
-            onClick={() => setCacLa((a) => [...a, { ...LA_MAC_DINH, kieu: coSo ? "so" : "mau", dk: { ...DK_MAC_DINH, loai: "chan" } }])}
-          >
-            + Thêm điều kiện (ghép bằng và / hoặc)
+          <button type="button" className="phu" style={{ marginTop: "0.6rem" }} onClick={() => setCacLa((a) => [...a, macDinhLa(coSo ? "so" : coMau ? "mau" : "dem", ngu, soLan)])}>
+            + Thêm điều kiện (ghép bằng và / hoặc / chỉ một)
           </button>
         )}
         <label className="hang" style={{ margin: "0.8rem 0 0", gap: "0.4rem", fontWeight: 600 }}>
           <input type="checkbox" style={{ width: "1.1rem", height: "1.1rem" }} checked={phuDinh} onChange={(e) => setPhuDinh(e.target.checked)} />
           Đề hỏi biến cố NGƯỢC LẠI (xác suất để cả biến cố trên KHÔNG xảy ra)
         </label>
+        <div className="muted" style={{ marginTop: "0.3rem" }}>
+          Ô “không” ở đầu mỗi điều kiện chỉ đảo điều kiện đó; ô này đảo cả nhóm đã ghép. “Không phải cả hai” khác “cả hai đều không”.
+        </div>
       </div>
 
       <div className="the ket-qua-bt">
@@ -633,6 +909,11 @@ export function BaiMo({ thuVien, aiBat, onDaLuu }: { thuVien: ThuVien; aiBat: bo
             <div className="ct-ket-qua" style={{ marginTop: "0.6rem" }}>
               P = {tinh.p.toString()} ≈ {(tinh.p.soThuc() * 100).toFixed(2).replace(".", ",")}% ({tinh.gs.thoa} kết quả thuận lợi trên {tinh.gs.tong} kết quả có thể)
             </div>
+            {(tinh.gs.thoa === 0 || tinh.gs.thoa === tinh.gs.tong) && (
+              <div className="thong-bao canh-bao" style={{ marginTop: "0.6rem" }}>
+                <strong>Kết quả bất thường:</strong> xác suất bằng {tinh.gs.thoa === 0 ? "0 (biến cố không thể xảy ra)" : "1 (biến cố chắc chắn xảy ra)"}. Nếu đề không nói như vậy, hãy kiểm tra lại biến cố ở mục 3. Ví dụ: “thẻ số 8 được lấy cuối cùng” phải chọn “Vật được lấy ở lần thứ …”, không phải “tổng bằng 8”.
+              </div>
+            )}
             <div className="truong" style={{ marginTop: "0.8rem" }}>
               <label htmlFor="bm-dap-an">Các phương án trong đề (nếu có, cách nhau bằng dấu phẩy)</label>
               <input id="bm-dap-an" style={{ maxWidth: 360 }} value={dapAn} onChange={(e) => setDapAn(e.target.value)} placeholder="1/2, 1/3, 1/6, 1/4" />

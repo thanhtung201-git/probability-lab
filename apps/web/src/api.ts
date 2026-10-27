@@ -1,4 +1,4 @@
-import type { CauHinhThiNghiem, ChanDoanCuoi, GiaThuyet, MaNgoNhan, ThuVienNgoNhan, ThuVienTinhHuong, TinhHuong } from "@plab/core";
+import type { BienCoAI, CauHinhThiNghiem, DkAI, ChanDoanCuoi, GiaThuyet, MaNgoNhan, ThuVienNgoNhan, ThuVienTinhHuong, TinhHuong } from "@plab/core";
 
 async function goi<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api${url}`, {
@@ -129,19 +129,14 @@ export interface DocDe {
   dap_an: string[];
 }
 
-export interface DkMo {
-  loai: "chan" | "le" | "nguyen_to" | "chinh_phuong" | "doi_xung" | "chu_so_khac_nhau" | "co_chu_so" | "chia_het" | "du" | "bang" | "lon_hon" | "nho_hon";
-  k: number | null;
-  m: number | null;
-  r: number | null;
-  d: number | null;
-  khong: boolean;
-}
+export type DkMo = DkAI;
 
 /** Kết quả AI đọc đề cho tab "Bài toán mở" (chỉ là các khối điền sẵn, chưa có con số xác suất). */
 export interface DocDeMo {
   khop: boolean;
   ly_do: string;
+  /** Các cách hiểu khác nhau của đề (nếu đề mơ hồ); null nếu đề rõ ràng. */
+  mo_ho: string | null;
   tieu_de: string;
   ten_vat: string;
   nguon_kieu: "day_so" | "ds_so" | "danh_so" | "theo_mau" | "mau_va_so";
@@ -154,16 +149,8 @@ export interface DocDeMo {
   nhom: string | null;
   so_lan: number;
   hoan_lai: boolean;
-  phep: "va" | "hoac";
-  bien_co: {
-    kieu: "so" | "mau";
-    dai_luong: "tong" | "tich" | "lon_nhat" | "nho_nhat" | "ghep" | null;
-    dk: DkMo | null;
-    mau_loai: "it_nhat" | "dung" | "cung_mau" | "khac_mau" | null;
-    mau: string | null;
-    k_mau: number | null;
-    khong: boolean;
-  }[];
+  phep: "va" | "hoac" | "xor";
+  bien_co: BienCoAI[];
   phu_dinh: boolean;
   dap_an: string[];
 }

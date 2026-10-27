@@ -1,6 +1,6 @@
 // Schema Zod: kiểm tra dữ liệu đi vào bộ mô phỏng và dữ liệu AI trả về.
 import { z } from "zod";
-import type { BienCoBaiToan } from "./types";
+import type { BienCoBaiToan, DieuKienBaiToan, LocVat } from "./types";
 
 export const GIOI_HAN = {
   SO_LAN_TOI_DA: 100_000,
@@ -229,31 +229,98 @@ const VatTongQuatSchema = z
   .object({ mau: z.string().trim().min(1).max(12).optional(), so: z.number().int().min(0).max(999).optional() })
   .refine((v) => v.mau !== undefined || v.so !== undefined, { message: "Mỗi vật cần có màu hoặc số" });
 
+const So = (min: number, max: number) => z.number().int().min(min).max(max);
+const K_SO = So(-99999, 99999);
+
 const DieuKienBaiToanSchema = z.discriminatedUnion("loai", [
   z.object({ loai: z.literal("chan") }),
   z.object({ loai: z.literal("le") }),
   z.object({ loai: z.literal("nguyen_to") }),
-  z.object({ loai: z.literal("chia_het"), k: z.number().int().min(1).max(999) }),
-  z.object({ loai: z.literal("du"), m: z.number().int().min(2).max(99), r: z.number().int().min(0).max(98) }),
-  z.object({ loai: z.literal("bang"), k: z.number().int().min(0).max(99999) }),
-  z.object({ loai: z.literal("lon_hon"), k: z.number().int().min(0).max(99999) }),
-  z.object({ loai: z.literal("nho_hon"), k: z.number().int().min(0).max(99999) }),
+  z.object({ loai: z.literal("hop_so") }),
+  z.object({ loai: z.literal("chia_het"), k: So(1, 999) }),
+  z.object({ loai: z.literal("khong_chia_het"), k: So(1, 999) }),
+  z.object({ loai: z.literal("uoc_cua"), k: So(1, 99999) }),
+  z.object({ loai: z.literal("du"), m: So(2, 99), r: So(0, 98) }),
+  z.object({ loai: z.literal("bang"), k: K_SO }),
+  z.object({ loai: z.literal("khac"), k: K_SO }),
+  z.object({ loai: z.literal("lon_hon"), k: K_SO }),
+  z.object({ loai: z.literal("nho_hon"), k: K_SO }),
+  z.object({ loai: z.literal("lon_hon_hoac_bang"), k: K_SO }),
+  z.object({ loai: z.literal("nho_hon_hoac_bang"), k: K_SO }),
+  z.object({ loai: z.literal("trong_doan"), k: K_SO, k2: K_SO }),
+  z.object({ loai: z.literal("ngoai_doan"), k: K_SO, k2: K_SO }),
+  z.object({ loai: z.literal("duong") }),
+  z.object({ loai: z.literal("am") }),
   z.object({ loai: z.literal("chinh_phuong") }),
   z.object({ loai: z.literal("chu_so_khac_nhau") }),
   z.object({ loai: z.literal("doi_xung") }),
-  z.object({ loai: z.literal("co_chu_so"), d: z.number().int().min(0).max(9) }),
+  z.object({ loai: z.literal("co_chu_so"), d: So(0, 9) }),
+  z.object({ loai: z.literal("tan_cung"), d: So(0, 9) }),
+  z.object({ loai: z.literal("hang_chuc"), d: So(0, 9) }),
+  z.object({ loai: z.literal("hang_chuc_chan") }),
+  z.object({ loai: z.literal("hang_chuc_le") }),
+  z.object({ loai: z.literal("tong_chu_so"), k: So(0, 99) }),
 ]);
+
+const LocVatSchema = z.object({ mau: z.string().max(12).optional(), so: So(0, 999).optional(), dk: DieuKienBaiToanSchema.optional() });
+const Khong = { khong: z.boolean().optional() };
 
 const BienCoBaiToanSchema: z.ZodType<BienCoBaiToan> = z.lazy(() =>
   z.union([
-    z.object({ kieu: z.literal("so"), dai_luong: z.enum(["tong", "tich", "lon_nhat", "nho_nhat", "ghep"]), dieu_kien: DieuKienBaiToanSchema, khong: z.boolean().optional() }),
-    z.object({ kieu: z.literal("mau"), loai: z.enum(["it_nhat", "dung", "cung_mau", "khac_mau"]), mau: z.string().max(12).optional(), k: z.number().int().min(0).max(4).optional(), khong: z.boolean().optional() }),
-    z.object({ kieu: z.literal("gop"), phep: z.enum(["va", "hoac"]), cac: z.array(BienCoBaiToanSchema).min(2, "Ghép biến cố cần ít nhất 2 biến cố con").max(6, "Ghép tối đa 6 biến cố con"), khong: z.boolean().optional() }),
+    z.object({ kieu: z.literal("so"), dai_luong: z.enum(["tong", "tich", "lon_nhat", "nho_nhat", "ghep", "hieu", "hieu_tuyet_doi", "thuong", "tong_binh_phuong", "binh_phuong_tong"]), dieu_kien: DieuKienBaiToanSchema, ...Khong }),
+    z.object({ kieu: z.literal("mau"), loai: z.enum(["it_nhat", "dung", "cung_mau", "khac_mau"]), mau: z.string().max(12).optional(), k: So(0, 4).optional(), ...Khong }),
+    z.object({ kieu: z.literal("quan_he"), loai: z.enum(["bang_nhau", "khac_nhau", "cung_chan_le", "nguyen_to_cung_nhau", "tang_dan", "giam_dan"]), ...Khong }),
+    z.object({ kieu: z.literal("dem"), loc: LocVatSchema, so_sanh: z.enum(["bang", "it_nhat", "nhieu_nhat", "trong_doan", "tat_ca"]), k: So(0, 4), k2: So(0, 4).optional(), ...Khong }),
+    z.object({ kieu: z.literal("dem_bang"), a: LocVatSchema, b: LocVatSchema, ...Khong }),
+    z.object({ kieu: z.literal("vi_tri"), lan: z.union([So(1, 4), z.literal("cuoi")]), loc: LocVatSchema, ...Khong }),
+    z.object({ kieu: z.literal("truoc_sau"), truoc: LocVatSchema, sau: LocVatSchema, ...Khong }),
+    z.object({ kieu: z.literal("dung_thu_tu"), day: z.array(LocVatSchema).min(1).max(4), ...Khong }),
+    z.object({ kieu: z.literal("lien_tiep"), loc: LocVatSchema, k: So(2, 4), ...Khong }),
+    z.object({ kieu: z.literal("gop"), phep: z.enum(["va", "hoac", "xor"]), cac: z.array(BienCoBaiToanSchema).min(2, "Ghép biến cố cần ít nhất 2 biến cố con").max(6, "Ghép tối đa 6 biến cố con"), ...Khong }),
   ]),
 );
 
-/** Các biến cố lá (kiểu số hoặc màu) của một biến cố, kể cả khi được ghép nhiều tầng. */
+/** Các biến cố lá (mọi loại trừ "gop") của một biến cố, kể cả khi được ghép nhiều tầng. */
 const laBienCo = (bc: BienCoBaiToan): Exclude<BienCoBaiToan, { kieu: "gop" }>[] => (bc.kieu === "gop" ? bc.cac.flatMap(laBienCo) : [bc]);
+
+/** Các điều kiện trên số nằm trong một biến cố lá (kể cả bên trong bộ lọc loại vật). */
+const dieuKienCua = (bc: Exclude<BienCoBaiToan, { kieu: "gop" }>): DieuKienBaiToan[] => {
+  const tuLoc = (l: LocVat) => (l.dk ? [l.dk] : []);
+  switch (bc.kieu) {
+    case "so":
+      return [bc.dieu_kien];
+    case "dem":
+    case "vi_tri":
+    case "lien_tiep":
+      return tuLoc(bc.loc);
+    case "dem_bang":
+      return [...tuLoc(bc.a), ...tuLoc(bc.b)];
+    case "truoc_sau":
+      return [...tuLoc(bc.truoc), ...tuLoc(bc.sau)];
+    case "dung_thu_tu":
+      return bc.day.flatMap(tuLoc);
+    default:
+      return [];
+  }
+};
+
+/** Các bộ lọc loại vật nằm trong một biến cố lá. */
+const locCua = (bc: Exclude<BienCoBaiToan, { kieu: "gop" }>): LocVat[] => {
+  switch (bc.kieu) {
+    case "dem":
+    case "vi_tri":
+    case "lien_tiep":
+      return [bc.loc];
+    case "dem_bang":
+      return [bc.a, bc.b];
+    case "truoc_sau":
+      return [bc.truoc, bc.sau];
+    case "dung_thu_tu":
+      return bc.day;
+    default:
+      return [];
+  }
+};
 
 export const CauHinhBaiToanSchema = z
   .object({
@@ -276,17 +343,54 @@ export const CauHinhBaiToanSchema = z
     let cach = 1;
     for (let i = 0; i < c.so_lan; i++) cach *= c.hoan_lai ? N : Math.max(1, N - i);
     if (cach > GIOI_HAN.SO_CACH_LAY_TOI_DA) loi(`Số cách lấy là ${cach.toLocaleString("vi-VN")}, quá lớn (tối đa ${GIOI_HAN.SO_CACH_LAY_TOI_DA.toLocaleString("vi-VN")}). Hãy giảm số vật hoặc số lần lấy`);
+    const coSo = c.vat.every((v) => v.so !== undefined);
+    const coMau = c.vat.every((v) => v.mau !== undefined);
+    const mauCo = new Set(c.vat.map((v) => v.mau));
     for (const bc of laBienCo(c.bien_co)) {
-      if (bc.kieu === "so") {
-        if (c.vat.some((v) => v.so === undefined)) loi("Biến cố trên số cần mọi vật đều có số");
-        if (bc.dieu_kien.loai === "du" && bc.dieu_kien.r >= bc.dieu_kien.m) loi("Số dư phải nhỏ hơn số chia");
-      } else {
-        if (c.vat.some((v) => v.mau === undefined)) loi("Biến cố trên màu cần mọi vật đều có màu");
-        const mauCo = new Set(c.vat.map((v) => v.mau));
-        if ((bc.loai === "it_nhat" || bc.loai === "dung") && (!bc.mau || !mauCo.has(bc.mau))) loi("Màu cần xét phải là một màu có trong tập vật");
-        if (bc.loai === "dung" && (bc.k === undefined || bc.k > c.so_lan)) loi("Số vật màu cần xét phải từ 0 đến số lần lấy");
-        if (bc.loai === "khac_mau" && c.so_lan !== 2) loi("“Khác màu” chỉ dùng khi lấy 2 vật");
-        if ((bc.loai === "cung_mau" || bc.loai === "khac_mau") && c.so_lan < 2) loi("Cần lấy từ 2 vật trở lên");
+      for (const dk of dieuKienCua(bc)) {
+        if (dk.loai === "du" && dk.r >= dk.m) loi("Số dư phải nhỏ hơn số chia");
+        if ((dk.loai === "trong_doan" || dk.loai === "ngoai_doan") && dk.k > dk.k2) loi("Đoạn [k, k2] bị ngược: k phải nhỏ hơn hoặc bằng k2");
+      }
+      for (const l of locCua(bc)) {
+        if (l.mau === undefined && l.so === undefined && l.dk === undefined) loi("Cần chỉ rõ loại vật: theo màu, theo số hoặc theo điều kiện trên số");
+        if (l.mau !== undefined && (!coMau || !mauCo.has(l.mau))) loi(`Màu “${l.mau}” phải là một màu có trong tập vật`);
+        if ((l.so !== undefined || l.dk !== undefined) && !coSo) loi("Điều kiện trên số cần mọi vật đều có số");
+        if (l.so !== undefined && !c.vat.some((v) => v.so === l.so)) loi(`Không có vật nào ghi số ${l.so}`);
+      }
+      switch (bc.kieu) {
+        case "so":
+          if (!coSo) loi("Biến cố trên số cần mọi vật đều có số");
+          if ((bc.dai_luong === "hieu" || bc.dai_luong === "thuong") && c.so_lan !== 2) loi("Hiệu và thương chỉ dùng khi lấy 2 vật");
+          if (bc.dai_luong === "hieu_tuyet_doi" && c.so_lan < 2) loi("Hiệu hai số cần lấy từ 2 vật trở lên");
+          break;
+        case "mau":
+          if (!coMau) loi("Biến cố trên màu cần mọi vật đều có màu");
+          if ((bc.loai === "it_nhat" || bc.loai === "dung") && (!bc.mau || !mauCo.has(bc.mau))) loi("Màu cần xét phải là một màu có trong tập vật");
+          if (bc.loai === "dung" && (bc.k === undefined || bc.k > c.so_lan)) loi("Số vật màu cần xét phải từ 0 đến số lần lấy");
+          if (bc.loai === "khac_mau" && c.so_lan !== 2) loi("“Khác màu” chỉ dùng khi lấy 2 vật");
+          if ((bc.loai === "cung_mau" || bc.loai === "khac_mau") && c.so_lan < 2) loi("Cần lấy từ 2 vật trở lên");
+          break;
+        case "quan_he":
+          if (!coSo) loi("Quan hệ giữa các số cần mọi vật đều có số");
+          if (c.so_lan < 2) loi("Quan hệ giữa các số cần lấy từ 2 vật trở lên");
+          break;
+        case "dem":
+          if (bc.so_sanh === "trong_doan" && (bc.k2 === undefined || bc.k2 < bc.k)) loi("“Từ k đến k2” cần k2 lớn hơn hoặc bằng k");
+          break;
+        case "vi_tri":
+          if (bc.lan !== "cuoi" && bc.lan > c.so_lan) loi(`Chỉ lấy ${c.so_lan} lần nên không có lần thứ ${bc.lan}`);
+          break;
+        case "truoc_sau":
+          if (c.so_lan < 2) loi("“Lấy trước / lấy sau” cần lấy từ 2 vật trở lên");
+          break;
+        case "dung_thu_tu":
+          if (bc.day.length !== c.so_lan) loi(`Dãy thứ tự phải có đúng ${c.so_lan} phần tử (bằng số lần lấy)`);
+          break;
+        case "lien_tiep":
+          if (bc.k > c.so_lan) loi(`Chỉ lấy ${c.so_lan} lần nên không thể có ${bc.k} lần liên tiếp`);
+          break;
+        case "dem_bang":
+          break;
       }
     }
   });

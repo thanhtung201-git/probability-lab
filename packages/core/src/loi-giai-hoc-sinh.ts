@@ -174,7 +174,8 @@ export function loiGiaiHocSinh(ch: CauHinhBaiToan): LoiGiaiHocSinh {
   buoc.push({ tieu_de: "Bước 4. Tính xác suất", dong: tinh });
 
   // Lưu ý theo từng loại đề
-  if (k >= 2 && !ch.hoan_lai) luu_y.push("“Lấy lần lượt, không trả lại” và “lấy cùng lúc” cho cùng một xác suất; chỉ cần đếm tử và mẫu theo cùng một cách (cùng có thứ tự hoặc cùng không thứ tự).");
+  const coThuTu = laCuaBienCo(ch.bien_co).some((b) => b.kieu === "vi_tri" || b.kieu === "truoc_sau" || b.kieu === "dung_thu_tu" || b.kieu === "lien_tiep");
+  if (k >= 2 && !ch.hoan_lai && !coThuTu) luu_y.push("“Lấy lần lượt, không trả lại” và “lấy cùng lúc” cho cùng một xác suất; chỉ cần đếm tử và mẫu theo cùng một cách (cùng có thứ tự hoặc cùng không thứ tự).");
   if (k >= 2 && ch.hoan_lai) luu_y.push("Lấy xong được bỏ lại nên các lần lấy độc lập với nhau: kết quả lần trước không làm thay đổi lần sau.");
   if (ch.bien_co.kieu === "gop") {
     luu_y.push(
@@ -183,6 +184,16 @@ export function loiGiaiHocSinh(ch: CauHinhBaiToan): LoiGiaiHocSinh {
         : "“HOẶC” nghĩa là thỏa ít nhất một điều kiện. Kết quả thỏa cả hai điều kiện chỉ được đếm một lần (ví dụ số 15 vừa chia hết cho 3 vừa chia hết cho 5 nhưng vẫn chỉ tính 1).",
     );
   }
+  const la = laCuaBienCo(ch.bien_co);
+  if (ch.bien_co.kieu === "gop" && ch.bien_co.phep === "xor") {
+    luu_y.push("“Hoặc loại trừ” nghĩa là chỉ đúng một trong các điều kiện; kết quả thỏa cả hai điều kiện KHÔNG được tính.");
+  }
+  if (coThuTu) {
+    luu_y.push("Điều kiện về thứ tự, vị trí lấy khác với điều kiện về giá trị: ta xét xem vật nào được lấy ở lần thứ mấy, nên phải đếm các kết quả có thứ tự (6, 7, 8) và (8, 7, 6) là hai kết quả khác nhau.");
+  }
+  if (la.some((b) => b.kieu === "dem" && b.so_sanh === "it_nhat")) luu_y.push("“Ít nhất k” gồm cả trường hợp đúng k và nhiều hơn k; đừng nhầm với “đúng k”.");
+  if (la.some((b) => b.kieu === "so" && b.dai_luong === "thuong")) luu_y.push("Với thương, số chia phải khác 0; kết quả có số chia bằng 0 không được tính là thuận lợi.");
+  if (la.some((b) => b.kieu === "so" && (b.dai_luong === "hieu" || b.dai_luong === "thuong"))) luu_y.push("Hiệu và thương phụ thuộc thứ tự lấy: lần lấy thứ nhất trừ (chia) cho lần lấy thứ hai.");
   if (ch.phu_dinh) luu_y.push(`Đề hỏi biến cố “không xảy ra”. Cách khác: tính xác suất biến cố đối rồi lấy 1 trừ đi: P = 1 − ${gs.tong - gs.thoa}/${gs.tong} = ${rut}.`);
 
   return {

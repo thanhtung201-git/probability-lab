@@ -62,10 +62,14 @@ export {
   soCachLay,
   nhanVat,
   moTaBienCoBaiToan,
+  moTaDieuKien,
+  moTaLoc,
+  khopLoc,
   thoaBienCoBaiToan,
   type KhongGianMau,
   type KetQuaLietKe,
 } from "./mo-phong/thi-nghiem/bai-toan";
+export { bienCoTuAI, dieuKienTuAI, nguonTuAI, thieuBienCo, type BienCoAI, type DkAI, type LocAI, type NguonAI } from "./mo-phong/thi-nghiem/bien-co-ai";
 export { FORM_BAI_TOAN_MAC_DINH, docDaySo, docVatTongQuat, xayBaiToan, type FormBaiToan } from "./mo-phong/thi-nghiem/bai-toan-form";
 export {
   FORM_MO_MAC_DINH,

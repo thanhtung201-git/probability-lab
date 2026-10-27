@@ -11,8 +11,8 @@ export interface FormBaiToan {
   so_lan: number;
   hoan_lai: boolean;
   loai_bien_co: "so" | "mau";
-  dai_luong: Extract<BienCoBaiToan, { kieu: "so" }>["dai_luong"];
-  dieu_kien: DieuKienBaiToan["loai"];
+  dai_luong: "tong" | "tich" | "lon_nhat" | "nho_nhat" | "ghep";
+  dieu_kien: "chan" | "le" | "nguyen_to" | "chia_het" | "du" | "bang" | "lon_hon" | "nho_hon" | "chinh_phuong" | "chu_so_khac_nhau" | "doi_xung" | "co_chu_so";
   k: number;
   m: number;
   r: number;

@@ -146,25 +146,69 @@ export type DieuKienBaiToan =
   | { loai: "chan" }
   | { loai: "le" }
   | { loai: "nguyen_to" }
+  | { loai: "hop_so" }
   | { loai: "chia_het"; k: number }
+  | { loai: "khong_chia_het"; k: number }
+  | { loai: "uoc_cua"; k: number }
   | { loai: "du"; m: number; r: number }
   | { loai: "bang"; k: number }
+  | { loai: "khac"; k: number }
   | { loai: "lon_hon"; k: number }
   | { loai: "nho_hon"; k: number }
+  | { loai: "lon_hon_hoac_bang"; k: number }
+  | { loai: "nho_hon_hoac_bang"; k: number }
+  /** Từ k đến k2 (gồm hai đầu mút). */
+  | { loai: "trong_doan"; k: number; k2: number }
+  /** Nhỏ hơn k hoặc lớn hơn k2. */
+  | { loai: "ngoai_doan"; k: number; k2: number }
+  | { loai: "duong" }
+  | { loai: "am" }
   | { loai: "chinh_phuong" }
   /** Các chữ số đều khác nhau (11 không thỏa, 12 thỏa). */
   | { loai: "chu_so_khac_nhau" }
   /** Số đối xứng, đọc xuôi ngược như nhau (121, 44). */
   | { loai: "doi_xung" }
   /** Có chữ số d trong cách viết thập phân. */
-  | { loai: "co_chu_so"; d: number };
+  | { loai: "co_chu_so"; d: number }
+  /** Chữ số hàng đơn vị (tận cùng) bằng d. */
+  | { loai: "tan_cung"; d: number }
+  /** Chữ số hàng chục bằng d. */
+  | { loai: "hang_chuc"; d: number }
+  | { loai: "hang_chuc_chan" }
+  | { loai: "hang_chuc_le" }
+  /** Tổng các chữ số bằng k. */
+  | { loai: "tong_chu_so"; k: number };
 
-/** Biến cố của bài toán tổng quát: trên các số ghi trên vật, hoặc trên màu của vật. */
+/** Đại lượng tính từ các số của bộ vật đã lấy (theo thứ tự lấy). "hieu" và "thuong" chỉ dùng khi lấy 2 vật: lần 1 trừ / chia lần 2. */
+export type DaiLuongBaiToan = "tong" | "tich" | "lon_nhat" | "nho_nhat" | "ghep" | "hieu" | "hieu_tuyet_doi" | "thuong" | "tong_binh_phuong" | "binh_phuong_tong";
+
+/** Bộ lọc chọn ra một loại vật: đúng màu, đúng số, hoặc số thỏa điều kiện (các ràng buộc có mặt phải cùng thỏa). */
+export interface LocVat {
+  mau?: string;
+  so?: number;
+  dk?: DieuKienBaiToan;
+}
+
+/** Biến cố của bài toán tổng quát: trên các số ghi trên vật, trên màu, trên vị trí/thứ tự lấy, hoặc ghép nhiều biến cố con. */
 export type BienCoBaiToan =
-  | { kieu: "so"; dai_luong: "tong" | "tich" | "lon_nhat" | "nho_nhat" | "ghep"; dieu_kien: DieuKienBaiToan; khong?: boolean }
+  | { kieu: "so"; dai_luong: DaiLuongBaiToan; dieu_kien: DieuKienBaiToan; khong?: boolean }
   | { kieu: "mau"; loai: "it_nhat" | "dung" | "cung_mau" | "khac_mau"; mau?: string; k?: number; khong?: boolean }
-  /** Ghép nhiều biến cố con: "va" = xảy ra đồng thời, "hoac" = ít nhất một. `khong` đảo kết quả của cả nhóm. */
-  | { kieu: "gop"; phep: "va" | "hoac"; cac: BienCoBaiToan[]; khong?: boolean };
+  /** Quan hệ giữa các số lấy ra: bằng nhau, đôi một khác nhau, cùng tính chẵn lẻ, nguyên tố cùng nhau, tăng dần, giảm dần. */
+  | { kieu: "quan_he"; loai: "bang_nhau" | "khac_nhau" | "cung_chan_le" | "nguyen_to_cung_nhau" | "tang_dan" | "giam_dan"; khong?: boolean }
+  /** Đếm số vật thỏa `loc` trong bộ đã lấy rồi so với k (và k2 khi "trong_doan"); "tat_ca" = mọi vật lấy ra đều thỏa. */
+  | { kieu: "dem"; loc: LocVat; so_sanh: "bang" | "it_nhat" | "nhieu_nhat" | "trong_doan" | "tat_ca"; k: number; k2?: number; khong?: boolean }
+  /** Số vật thỏa `a` bằng số vật thỏa `b` (ví dụ số bi đỏ bằng số bi xanh). */
+  | { kieu: "dem_bang"; a: LocVat; b: LocVat; khong?: boolean }
+  /** Vật được lấy ở lần thứ `lan` (1 là đầu tiên, "cuoi" là lần cuối) thỏa `loc`. */
+  | { kieu: "vi_tri"; lan: number | "cuoi"; loc: LocVat; khong?: boolean }
+  /** Có một vật thỏa `truoc` được lấy trước một vật thỏa `sau`. */
+  | { kieu: "truoc_sau"; truoc: LocVat; sau: LocVat; khong?: boolean }
+  /** Các lần lấy đúng theo dãy: lần i thỏa day[i]. */
+  | { kieu: "dung_thu_tu"; day: LocVat[]; khong?: boolean }
+  /** Có ít nhất k lần lấy liên tiếp đều thỏa `loc`. */
+  | { kieu: "lien_tiep"; loc: LocVat; k: number; khong?: boolean }
+  /** Ghép nhiều biến cố con: "va" = xảy ra đồng thời, "hoac" = ít nhất một, "xor" = đúng một. `khong` đảo kết quả của cả nhóm. */
+  | { kieu: "gop"; phep: "va" | "hoac" | "xor"; cac: BienCoBaiToan[]; khong?: boolean };
 
 /**
  * Bài toán tổng quát (mo-phong/thi-nghiem/bai-toan.ts): lấy lần lượt `so_lan` vật từ `vat`, có hoặc không hoàn lại,
