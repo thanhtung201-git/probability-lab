@@ -53072,28 +53072,89 @@ var CauHinhTheSchema = external_exports.discriminatedUnion("che_do", [
   })
 ]);
 var VatTongQuatSchema = external_exports.object({ mau: external_exports.string().trim().min(1).max(12).optional(), so: external_exports.number().int().min(0).max(999).optional() }).refine((v) => v.mau !== void 0 || v.so !== void 0, { message: "M\u1ED7i v\u1EADt c\u1EA7n c\xF3 m\xE0u ho\u1EB7c s\u1ED1" });
+var So = (min, max) => external_exports.number().int().min(min).max(max);
+var K_SO = So(-99999, 99999);
 var DieuKienBaiToanSchema = external_exports.discriminatedUnion("loai", [
   external_exports.object({ loai: external_exports.literal("chan") }),
   external_exports.object({ loai: external_exports.literal("le") }),
   external_exports.object({ loai: external_exports.literal("nguyen_to") }),
-  external_exports.object({ loai: external_exports.literal("chia_het"), k: external_exports.number().int().min(1).max(999) }),
-  external_exports.object({ loai: external_exports.literal("du"), m: external_exports.number().int().min(2).max(99), r: external_exports.number().int().min(0).max(98) }),
-  external_exports.object({ loai: external_exports.literal("bang"), k: external_exports.number().int().min(0).max(99999) }),
-  external_exports.object({ loai: external_exports.literal("lon_hon"), k: external_exports.number().int().min(0).max(99999) }),
-  external_exports.object({ loai: external_exports.literal("nho_hon"), k: external_exports.number().int().min(0).max(99999) }),
+  external_exports.object({ loai: external_exports.literal("hop_so") }),
+  external_exports.object({ loai: external_exports.literal("chia_het"), k: So(1, 999) }),
+  external_exports.object({ loai: external_exports.literal("khong_chia_het"), k: So(1, 999) }),
+  external_exports.object({ loai: external_exports.literal("uoc_cua"), k: So(1, 99999) }),
+  external_exports.object({ loai: external_exports.literal("du"), m: So(2, 99), r: So(0, 98) }),
+  external_exports.object({ loai: external_exports.literal("bang"), k: K_SO }),
+  external_exports.object({ loai: external_exports.literal("khac"), k: K_SO }),
+  external_exports.object({ loai: external_exports.literal("lon_hon"), k: K_SO }),
+  external_exports.object({ loai: external_exports.literal("nho_hon"), k: K_SO }),
+  external_exports.object({ loai: external_exports.literal("lon_hon_hoac_bang"), k: K_SO }),
+  external_exports.object({ loai: external_exports.literal("nho_hon_hoac_bang"), k: K_SO }),
+  external_exports.object({ loai: external_exports.literal("trong_doan"), k: K_SO, k2: K_SO }),
+  external_exports.object({ loai: external_exports.literal("ngoai_doan"), k: K_SO, k2: K_SO }),
+  external_exports.object({ loai: external_exports.literal("duong") }),
+  external_exports.object({ loai: external_exports.literal("am") }),
   external_exports.object({ loai: external_exports.literal("chinh_phuong") }),
   external_exports.object({ loai: external_exports.literal("chu_so_khac_nhau") }),
   external_exports.object({ loai: external_exports.literal("doi_xung") }),
-  external_exports.object({ loai: external_exports.literal("co_chu_so"), d: external_exports.number().int().min(0).max(9) })
+  external_exports.object({ loai: external_exports.literal("co_chu_so"), d: So(0, 9) }),
+  external_exports.object({ loai: external_exports.literal("tan_cung"), d: So(0, 9) }),
+  external_exports.object({ loai: external_exports.literal("hang_chuc"), d: So(0, 9) }),
+  external_exports.object({ loai: external_exports.literal("hang_chuc_chan") }),
+  external_exports.object({ loai: external_exports.literal("hang_chuc_le") }),
+  external_exports.object({ loai: external_exports.literal("tong_chu_so"), k: So(0, 99) })
 ]);
+var LocVatSchema = external_exports.object({ mau: external_exports.string().max(12).optional(), so: So(0, 999).optional(), dk: DieuKienBaiToanSchema.optional() });
+var Khong = { khong: external_exports.boolean().optional() };
 var BienCoBaiToanSchema = external_exports.lazy(
   () => external_exports.union([
-    external_exports.object({ kieu: external_exports.literal("so"), dai_luong: external_exports.enum(["tong", "tich", "lon_nhat", "nho_nhat", "ghep"]), dieu_kien: DieuKienBaiToanSchema, khong: external_exports.boolean().optional() }),
-    external_exports.object({ kieu: external_exports.literal("mau"), loai: external_exports.enum(["it_nhat", "dung", "cung_mau", "khac_mau"]), mau: external_exports.string().max(12).optional(), k: external_exports.number().int().min(0).max(4).optional(), khong: external_exports.boolean().optional() }),
-    external_exports.object({ kieu: external_exports.literal("gop"), phep: external_exports.enum(["va", "hoac"]), cac: external_exports.array(BienCoBaiToanSchema).min(2, "Gh\xE9p bi\u1EBFn c\u1ED1 c\u1EA7n \xEDt nh\u1EA5t 2 bi\u1EBFn c\u1ED1 con").max(6, "Gh\xE9p t\u1ED1i \u0111a 6 bi\u1EBFn c\u1ED1 con"), khong: external_exports.boolean().optional() })
+    external_exports.object({ kieu: external_exports.literal("so"), dai_luong: external_exports.enum(["tong", "tich", "lon_nhat", "nho_nhat", "ghep", "hieu", "hieu_tuyet_doi", "thuong", "tong_binh_phuong", "binh_phuong_tong"]), dieu_kien: DieuKienBaiToanSchema, ...Khong }),
+    external_exports.object({ kieu: external_exports.literal("mau"), loai: external_exports.enum(["it_nhat", "dung", "cung_mau", "khac_mau"]), mau: external_exports.string().max(12).optional(), k: So(0, 4).optional(), ...Khong }),
+    external_exports.object({ kieu: external_exports.literal("quan_he"), loai: external_exports.enum(["bang_nhau", "khac_nhau", "cung_chan_le", "nguyen_to_cung_nhau", "tang_dan", "giam_dan"]), ...Khong }),
+    external_exports.object({ kieu: external_exports.literal("dem"), loc: LocVatSchema, so_sanh: external_exports.enum(["bang", "it_nhat", "nhieu_nhat", "trong_doan", "tat_ca"]), k: So(0, 4), k2: So(0, 4).optional(), ...Khong }),
+    external_exports.object({ kieu: external_exports.literal("dem_bang"), a: LocVatSchema, b: LocVatSchema, ...Khong }),
+    external_exports.object({ kieu: external_exports.literal("vi_tri"), lan: external_exports.union([So(1, 4), external_exports.literal("cuoi")]), loc: LocVatSchema, ...Khong }),
+    external_exports.object({ kieu: external_exports.literal("truoc_sau"), truoc: LocVatSchema, sau: LocVatSchema, ...Khong }),
+    external_exports.object({ kieu: external_exports.literal("dung_thu_tu"), day: external_exports.array(LocVatSchema).min(1).max(4), ...Khong }),
+    external_exports.object({ kieu: external_exports.literal("lien_tiep"), loc: LocVatSchema, k: So(2, 4), ...Khong }),
+    external_exports.object({ kieu: external_exports.literal("gop"), phep: external_exports.enum(["va", "hoac", "xor"]), cac: external_exports.array(BienCoBaiToanSchema).min(2, "Gh\xE9p bi\u1EBFn c\u1ED1 c\u1EA7n \xEDt nh\u1EA5t 2 bi\u1EBFn c\u1ED1 con").max(6, "Gh\xE9p t\u1ED1i \u0111a 6 bi\u1EBFn c\u1ED1 con"), ...Khong })
   ])
 );
 var laBienCo = (bc) => bc.kieu === "gop" ? bc.cac.flatMap(laBienCo) : [bc];
+var dieuKienCua = (bc) => {
+  const tuLoc = (l) => l.dk ? [l.dk] : [];
+  switch (bc.kieu) {
+    case "so":
+      return [bc.dieu_kien];
+    case "dem":
+    case "vi_tri":
+    case "lien_tiep":
+      return tuLoc(bc.loc);
+    case "dem_bang":
+      return [...tuLoc(bc.a), ...tuLoc(bc.b)];
+    case "truoc_sau":
+      return [...tuLoc(bc.truoc), ...tuLoc(bc.sau)];
+    case "dung_thu_tu":
+      return bc.day.flatMap(tuLoc);
+    default:
+      return [];
+  }
+};
+var locCua = (bc) => {
+  switch (bc.kieu) {
+    case "dem":
+    case "vi_tri":
+    case "lien_tiep":
+      return [bc.loc];
+    case "dem_bang":
+      return [bc.a, bc.b];
+    case "truoc_sau":
+      return [bc.truoc, bc.sau];
+    case "dung_thu_tu":
+      return bc.day;
+    default:
+      return [];
+  }
+};
 var CauHinhBaiToanSchema = external_exports.object({
   loai: external_exports.literal("bai_toan"),
   che_do: external_exports.literal("bai_toan"),
@@ -53113,17 +53174,54 @@ var CauHinhBaiToanSchema = external_exports.object({
   let cach = 1;
   for (let i = 0; i < c.so_lan; i++) cach *= c.hoan_lai ? N : Math.max(1, N - i);
   if (cach > GIOI_HAN.SO_CACH_LAY_TOI_DA) loi(`S\u1ED1 c\xE1ch l\u1EA5y l\xE0 ${cach.toLocaleString("vi-VN")}, qu\xE1 l\u1EDBn (t\u1ED1i \u0111a ${GIOI_HAN.SO_CACH_LAY_TOI_DA.toLocaleString("vi-VN")}). H\xE3y gi\u1EA3m s\u1ED1 v\u1EADt ho\u1EB7c s\u1ED1 l\u1EA7n l\u1EA5y`);
+  const coSo = c.vat.every((v) => v.so !== void 0);
+  const coMau = c.vat.every((v) => v.mau !== void 0);
+  const mauCo = new Set(c.vat.map((v) => v.mau));
   for (const bc of laBienCo(c.bien_co)) {
-    if (bc.kieu === "so") {
-      if (c.vat.some((v) => v.so === void 0)) loi("Bi\u1EBFn c\u1ED1 tr\xEAn s\u1ED1 c\u1EA7n m\u1ECDi v\u1EADt \u0111\u1EC1u c\xF3 s\u1ED1");
-      if (bc.dieu_kien.loai === "du" && bc.dieu_kien.r >= bc.dieu_kien.m) loi("S\u1ED1 d\u01B0 ph\u1EA3i nh\u1ECF h\u01A1n s\u1ED1 chia");
-    } else {
-      if (c.vat.some((v) => v.mau === void 0)) loi("Bi\u1EBFn c\u1ED1 tr\xEAn m\xE0u c\u1EA7n m\u1ECDi v\u1EADt \u0111\u1EC1u c\xF3 m\xE0u");
-      const mauCo = new Set(c.vat.map((v) => v.mau));
-      if ((bc.loai === "it_nhat" || bc.loai === "dung") && (!bc.mau || !mauCo.has(bc.mau))) loi("M\xE0u c\u1EA7n x\xE9t ph\u1EA3i l\xE0 m\u1ED9t m\xE0u c\xF3 trong t\u1EADp v\u1EADt");
-      if (bc.loai === "dung" && (bc.k === void 0 || bc.k > c.so_lan)) loi("S\u1ED1 v\u1EADt m\xE0u c\u1EA7n x\xE9t ph\u1EA3i t\u1EEB 0 \u0111\u1EBFn s\u1ED1 l\u1EA7n l\u1EA5y");
-      if (bc.loai === "khac_mau" && c.so_lan !== 2) loi("\u201CKh\xE1c m\xE0u\u201D ch\u1EC9 d\xF9ng khi l\u1EA5y 2 v\u1EADt");
-      if ((bc.loai === "cung_mau" || bc.loai === "khac_mau") && c.so_lan < 2) loi("C\u1EA7n l\u1EA5y t\u1EEB 2 v\u1EADt tr\u1EDF l\xEAn");
+    for (const dk of dieuKienCua(bc)) {
+      if (dk.loai === "du" && dk.r >= dk.m) loi("S\u1ED1 d\u01B0 ph\u1EA3i nh\u1ECF h\u01A1n s\u1ED1 chia");
+      if ((dk.loai === "trong_doan" || dk.loai === "ngoai_doan") && dk.k > dk.k2) loi("\u0110o\u1EA1n [k, k2] b\u1ECB ng\u01B0\u1EE3c: k ph\u1EA3i nh\u1ECF h\u01A1n ho\u1EB7c b\u1EB1ng k2");
+    }
+    for (const l of locCua(bc)) {
+      if (l.mau === void 0 && l.so === void 0 && l.dk === void 0) loi("C\u1EA7n ch\u1EC9 r\xF5 lo\u1EA1i v\u1EADt: theo m\xE0u, theo s\u1ED1 ho\u1EB7c theo \u0111i\u1EC1u ki\u1EC7n tr\xEAn s\u1ED1");
+      if (l.mau !== void 0 && (!coMau || !mauCo.has(l.mau))) loi(`M\xE0u \u201C${l.mau}\u201D ph\u1EA3i l\xE0 m\u1ED9t m\xE0u c\xF3 trong t\u1EADp v\u1EADt`);
+      if ((l.so !== void 0 || l.dk !== void 0) && !coSo) loi("\u0110i\u1EC1u ki\u1EC7n tr\xEAn s\u1ED1 c\u1EA7n m\u1ECDi v\u1EADt \u0111\u1EC1u c\xF3 s\u1ED1");
+      if (l.so !== void 0 && !c.vat.some((v) => v.so === l.so)) loi(`Kh\xF4ng c\xF3 v\u1EADt n\xE0o ghi s\u1ED1 ${l.so}`);
+    }
+    switch (bc.kieu) {
+      case "so":
+        if (!coSo) loi("Bi\u1EBFn c\u1ED1 tr\xEAn s\u1ED1 c\u1EA7n m\u1ECDi v\u1EADt \u0111\u1EC1u c\xF3 s\u1ED1");
+        if ((bc.dai_luong === "hieu" || bc.dai_luong === "thuong") && c.so_lan !== 2) loi("Hi\u1EC7u v\xE0 th\u01B0\u01A1ng ch\u1EC9 d\xF9ng khi l\u1EA5y 2 v\u1EADt");
+        if (bc.dai_luong === "hieu_tuyet_doi" && c.so_lan < 2) loi("Hi\u1EC7u hai s\u1ED1 c\u1EA7n l\u1EA5y t\u1EEB 2 v\u1EADt tr\u1EDF l\xEAn");
+        break;
+      case "mau":
+        if (!coMau) loi("Bi\u1EBFn c\u1ED1 tr\xEAn m\xE0u c\u1EA7n m\u1ECDi v\u1EADt \u0111\u1EC1u c\xF3 m\xE0u");
+        if ((bc.loai === "it_nhat" || bc.loai === "dung") && (!bc.mau || !mauCo.has(bc.mau))) loi("M\xE0u c\u1EA7n x\xE9t ph\u1EA3i l\xE0 m\u1ED9t m\xE0u c\xF3 trong t\u1EADp v\u1EADt");
+        if (bc.loai === "dung" && (bc.k === void 0 || bc.k > c.so_lan)) loi("S\u1ED1 v\u1EADt m\xE0u c\u1EA7n x\xE9t ph\u1EA3i t\u1EEB 0 \u0111\u1EBFn s\u1ED1 l\u1EA7n l\u1EA5y");
+        if (bc.loai === "khac_mau" && c.so_lan !== 2) loi("\u201CKh\xE1c m\xE0u\u201D ch\u1EC9 d\xF9ng khi l\u1EA5y 2 v\u1EADt");
+        if ((bc.loai === "cung_mau" || bc.loai === "khac_mau") && c.so_lan < 2) loi("C\u1EA7n l\u1EA5y t\u1EEB 2 v\u1EADt tr\u1EDF l\xEAn");
+        break;
+      case "quan_he":
+        if (!coSo) loi("Quan h\u1EC7 gi\u1EEFa c\xE1c s\u1ED1 c\u1EA7n m\u1ECDi v\u1EADt \u0111\u1EC1u c\xF3 s\u1ED1");
+        if (c.so_lan < 2) loi("Quan h\u1EC7 gi\u1EEFa c\xE1c s\u1ED1 c\u1EA7n l\u1EA5y t\u1EEB 2 v\u1EADt tr\u1EDF l\xEAn");
+        break;
+      case "dem":
+        if (bc.so_sanh === "trong_doan" && (bc.k2 === void 0 || bc.k2 < bc.k)) loi("\u201CT\u1EEB k \u0111\u1EBFn k2\u201D c\u1EA7n k2 l\u1EDBn h\u01A1n ho\u1EB7c b\u1EB1ng k");
+        break;
+      case "vi_tri":
+        if (bc.lan !== "cuoi" && bc.lan > c.so_lan) loi(`Ch\u1EC9 l\u1EA5y ${c.so_lan} l\u1EA7n n\xEAn kh\xF4ng c\xF3 l\u1EA7n th\u1EE9 ${bc.lan}`);
+        break;
+      case "truoc_sau":
+        if (c.so_lan < 2) loi("\u201CL\u1EA5y tr\u01B0\u1EDBc / l\u1EA5y sau\u201D c\u1EA7n l\u1EA5y t\u1EEB 2 v\u1EADt tr\u1EDF l\xEAn");
+        break;
+      case "dung_thu_tu":
+        if (bc.day.length !== c.so_lan) loi(`D\xE3y th\u1EE9 t\u1EF1 ph\u1EA3i c\xF3 \u0111\xFAng ${c.so_lan} ph\u1EA7n t\u1EED (b\u1EB1ng s\u1ED1 l\u1EA7n l\u1EA5y)`);
+        break;
+      case "lien_tiep":
+        if (bc.k > c.so_lan) loi(`Ch\u1EC9 l\u1EA5y ${c.so_lan} l\u1EA7n n\xEAn kh\xF4ng th\u1EC3 c\xF3 ${bc.k} l\u1EA7n li\xEAn ti\u1EBFp`);
+        break;
+      case "dem_bang":
+        break;
     }
   }
 });
@@ -53247,11 +53345,18 @@ function soCachLay(N, k, hoanLai) {
   return kq;
 }
 var laNguyenTo = (x) => {
-  if (x < 2) return false;
+  if (!Number.isInteger(x) || x < 2) return false;
   for (let d = 2; d * d <= x; d++) if (x % d === 0) return false;
   return true;
 };
+var ucln2 = (a, b) => b === 0 ? Math.abs(a) : ucln2(b, a % b);
+var chuSoCua = (v) => String(Math.abs(v));
+var tongChuSo = (v) => [...chuSoCua(v)].reduce((s, c) => s + Number(c), 0);
+var DK_CHO_SO_THUC = /* @__PURE__ */ new Set(["bang", "khac", "lon_hon", "nho_hon", "lon_hon_hoac_bang", "nho_hon_hoac_bang", "trong_doan", "ngoai_doan", "duong", "am"]);
+var EPS = 1e-9;
 function thoaDieuKien(dk, v) {
+  if (!Number.isFinite(v)) return false;
+  if (!Number.isInteger(v) && !DK_CHO_SO_THUC.has(dk.loai)) return false;
   switch (dk.loai) {
     case "chan":
       return v % 2 === 0;
@@ -53259,31 +53364,61 @@ function thoaDieuKien(dk, v) {
       return Math.abs(v) % 2 === 1;
     case "nguyen_to":
       return laNguyenTo(v);
+    case "hop_so":
+      return v >= 4 && !laNguyenTo(v);
     case "chia_het":
       return dk.k > 0 && v % dk.k === 0;
+    case "khong_chia_het":
+      return dk.k > 0 && v % dk.k !== 0;
+    case "uoc_cua":
+      return v > 0 && dk.k % v === 0;
     case "du":
       return dk.m > 0 && (v % dk.m + dk.m) % dk.m === dk.r;
     case "bang":
-      return v === dk.k;
+      return Math.abs(v - dk.k) < EPS;
+    case "khac":
+      return Math.abs(v - dk.k) >= EPS;
     case "lon_hon":
-      return v > dk.k;
+      return v > dk.k + EPS;
     case "nho_hon":
-      return v < dk.k;
+      return v < dk.k - EPS;
+    case "lon_hon_hoac_bang":
+      return v > dk.k - EPS;
+    case "nho_hon_hoac_bang":
+      return v < dk.k + EPS;
+    case "trong_doan":
+      return v > dk.k - EPS && v < dk.k2 + EPS;
+    case "ngoai_doan":
+      return v < dk.k - EPS || v > dk.k2 + EPS;
+    case "duong":
+      return v > EPS;
+    case "am":
+      return v < -EPS;
     case "chinh_phuong": {
       if (v < 0) return false;
       const c = Math.round(Math.sqrt(v));
       return c * c === v;
     }
     case "chu_so_khac_nhau": {
-      const cs = String(Math.abs(v));
+      const cs = chuSoCua(v);
       return new Set(cs).size === cs.length;
     }
     case "doi_xung": {
-      const cs = String(Math.abs(v));
+      const cs = chuSoCua(v);
       return cs === [...cs].reverse().join("");
     }
     case "co_chu_so":
-      return String(Math.abs(v)).includes(String(dk.d));
+      return chuSoCua(v).includes(String(dk.d));
+    case "tan_cung":
+      return Math.abs(v) % 10 === dk.d;
+    case "hang_chuc":
+      return Math.floor(Math.abs(v) / 10) % 10 === dk.d;
+    case "hang_chuc_chan":
+      return Math.abs(v) >= 10 && Math.floor(Math.abs(v) / 10) % 2 === 0;
+    case "hang_chuc_le":
+      return Math.abs(v) >= 10 && Math.floor(Math.abs(v) / 10) % 2 === 1;
+    case "tong_chu_so":
+      return tongChuSo(v) === dk.k;
   }
 }
 function giaTriDaiLuong(dl, vs) {
@@ -53299,29 +53434,107 @@ function giaTriDaiLuong(dl, vs) {
       return Math.min(...so2);
     case "ghep":
       return Number(so2.join(""));
+    case "hieu":
+      return so2[0] - so2.slice(1).reduce((a, b) => a + b, 0);
+    case "hieu_tuyet_doi":
+      return Math.max(...so2) - Math.min(...so2);
+    case "thuong":
+      return so2[1] === 0 || so2[1] === void 0 ? NaN : so2[0] / so2[1];
+    case "tong_binh_phuong":
+      return so2.reduce((a, b) => a + b * b, 0);
+    case "binh_phuong_tong": {
+      const t = so2.reduce((a, b) => a + b, 0);
+      return t * t;
+    }
   }
+}
+function khopLoc(l, v) {
+  if (l.mau !== void 0 && v.mau !== l.mau) return false;
+  if (l.so !== void 0 && v.so !== l.so) return false;
+  if (l.dk !== void 0 && (v.so === void 0 || !thoaDieuKien(l.dk, v.so))) return false;
+  return true;
 }
 function thoaMotBienCo(bc, vs) {
   let thoa;
-  if (bc.kieu === "gop") {
-    thoa = bc.phep === "va" ? bc.cac.every((c) => thoaMotBienCo(c, vs)) : bc.cac.some((c) => thoaMotBienCo(c, vs));
-  } else if (bc.kieu === "so") {
-    thoa = thoaDieuKien(bc.dieu_kien, giaTriDaiLuong(bc.dai_luong, vs));
-  } else {
-    const dem = vs.filter((v) => v.mau === bc.mau).length;
-    switch (bc.loai) {
-      case "it_nhat":
-        thoa = dem >= 1;
-        break;
-      case "dung":
-        thoa = dem === (bc.k ?? 0);
-        break;
-      case "cung_mau":
-        thoa = vs.every((v) => v.mau === vs[0].mau);
-        break;
-      case "khac_mau":
-        thoa = vs.length === 2 && vs[0].mau !== vs[1].mau;
-        break;
+  switch (bc.kieu) {
+    case "gop": {
+      const kq = bc.cac.map((c) => thoaMotBienCo(c, vs));
+      thoa = bc.phep === "va" ? kq.every(Boolean) : bc.phep === "hoac" ? kq.some(Boolean) : kq.filter(Boolean).length === 1;
+      break;
+    }
+    case "so":
+      thoa = thoaDieuKien(bc.dieu_kien, giaTriDaiLuong(bc.dai_luong, vs));
+      break;
+    case "mau": {
+      const dem = vs.filter((v) => v.mau === bc.mau).length;
+      switch (bc.loai) {
+        case "it_nhat":
+          thoa = dem >= 1;
+          break;
+        case "dung":
+          thoa = dem === (bc.k ?? 0);
+          break;
+        case "cung_mau":
+          thoa = vs.every((v) => v.mau === vs[0].mau);
+          break;
+        case "khac_mau":
+          thoa = vs.length === 2 && vs[0].mau !== vs[1].mau;
+          break;
+      }
+      break;
+    }
+    case "quan_he": {
+      const so2 = vs.map((v) => v.so ?? 0);
+      switch (bc.loai) {
+        case "bang_nhau":
+          thoa = so2.every((x) => x === so2[0]);
+          break;
+        case "khac_nhau":
+          thoa = new Set(so2).size === so2.length;
+          break;
+        case "cung_chan_le":
+          thoa = so2.every((x) => Math.abs(x) % 2 === Math.abs(so2[0]) % 2);
+          break;
+        case "nguyen_to_cung_nhau":
+          thoa = so2.reduce((g, x) => ucln2(g, x), 0) === 1;
+          break;
+        case "tang_dan":
+          thoa = so2.every((x, i) => i === 0 || x > so2[i - 1]);
+          break;
+        case "giam_dan":
+          thoa = so2.every((x, i) => i === 0 || x < so2[i - 1]);
+          break;
+      }
+      break;
+    }
+    case "dem": {
+      const d = vs.filter((v) => khopLoc(bc.loc, v)).length;
+      thoa = bc.so_sanh === "bang" ? d === bc.k : bc.so_sanh === "it_nhat" ? d >= bc.k : bc.so_sanh === "nhieu_nhat" ? d <= bc.k : bc.so_sanh === "trong_doan" ? d >= bc.k && d <= (bc.k2 ?? bc.k) : d === vs.length;
+      break;
+    }
+    case "dem_bang":
+      thoa = vs.filter((v) => khopLoc(bc.a, v)).length === vs.filter((v) => khopLoc(bc.b, v)).length;
+      break;
+    case "vi_tri": {
+      const v = bc.lan === "cuoi" ? vs[vs.length - 1] : vs[bc.lan - 1];
+      thoa = v !== void 0 && khopLoc(bc.loc, v);
+      break;
+    }
+    case "truoc_sau":
+      thoa = vs.some((a, i) => khopLoc(bc.truoc, a) && vs.some((b, j) => j > i && khopLoc(bc.sau, b)));
+      break;
+    case "dung_thu_tu":
+      thoa = vs.length === bc.day.length && bc.day.every((l, i) => khopLoc(l, vs[i]));
+      break;
+    case "lien_tiep": {
+      let chuoi = 0;
+      let max = 0;
+      for (const v of vs) {
+        chuoi = khopLoc(bc.loc, v) ? chuoi + 1 : 0;
+        max = Math.max(max, chuoi);
+      }
+      thoa = max >= bc.k;
+      break;
     }
   }
   return bc.khong ? !thoa : thoa;
@@ -53331,7 +53544,18 @@ function thoaBienCoBaiToan(ch, vs) {
   return ch.phu_dinh ? !thoa : thoa;
 }
 var nhanVat = (v) => v.mau !== void 0 && v.so !== void 0 ? `${v.mau} ${v.so}` : v.so !== void 0 ? String(v.so) : v.mau ?? "?";
-var TEN_DAI_LUONG = { tong: "t\u1ED5ng c\xE1c s\u1ED1", tich: "t\xEDch c\xE1c s\u1ED1", lon_nhat: "s\u1ED1 l\u1EDBn nh\u1EA5t", nho_nhat: "s\u1ED1 nh\u1ECF nh\u1EA5t", ghep: "s\u1ED1 gh\xE9p \u0111\u01B0\u1EE3c (theo th\u1EE9 t\u1EF1 l\u1EA5y)" };
+var TEN_DAI_LUONG = {
+  tong: "t\u1ED5ng c\xE1c s\u1ED1",
+  tich: "t\xEDch c\xE1c s\u1ED1",
+  lon_nhat: "s\u1ED1 l\u1EDBn nh\u1EA5t",
+  nho_nhat: "s\u1ED1 nh\u1ECF nh\u1EA5t",
+  ghep: "s\u1ED1 gh\xE9p \u0111\u01B0\u1EE3c (theo th\u1EE9 t\u1EF1 l\u1EA5y)",
+  hieu: "hi\u1EC7u (l\u1EA7n 1 tr\u1EEB l\u1EA7n 2)",
+  hieu_tuyet_doi: "hi\u1EC7u hai s\u1ED1 (s\u1ED1 l\u1EDBn tr\u1EEB s\u1ED1 b\xE9)",
+  thuong: "th\u01B0\u01A1ng (l\u1EA7n 1 chia l\u1EA7n 2)",
+  tong_binh_phuong: "t\u1ED5ng b\xECnh ph\u01B0\u01A1ng c\xE1c s\u1ED1",
+  binh_phuong_tong: "b\xECnh ph\u01B0\u01A1ng c\u1EE7a t\u1ED5ng c\xE1c s\u1ED1"
+};
 function moTaDieuKien(dk) {
   switch (dk.loai) {
     case "chan":
@@ -53340,16 +53564,36 @@ function moTaDieuKien(dk) {
       return "l\xE0 s\u1ED1 l\u1EBB";
     case "nguyen_to":
       return "l\xE0 s\u1ED1 nguy\xEAn t\u1ED1";
+    case "hop_so":
+      return "l\xE0 h\u1EE3p s\u1ED1";
     case "chia_het":
       return `chia h\u1EBFt cho ${dk.k}`;
+    case "khong_chia_het":
+      return `kh\xF4ng chia h\u1EBFt cho ${dk.k}`;
+    case "uoc_cua":
+      return `l\xE0 \u01B0\u1EDBc c\u1EE7a ${dk.k}`;
     case "du":
       return `chia ${dk.m} d\u01B0 ${dk.r}`;
     case "bang":
       return `b\u1EB1ng ${dk.k}`;
+    case "khac":
+      return `kh\xE1c ${dk.k}`;
     case "lon_hon":
       return `l\u1EDBn h\u01A1n ${dk.k}`;
     case "nho_hon":
       return `nh\u1ECF h\u01A1n ${dk.k}`;
+    case "lon_hon_hoac_bang":
+      return `l\u1EDBn h\u01A1n ho\u1EB7c b\u1EB1ng ${dk.k}`;
+    case "nho_hon_hoac_bang":
+      return `nh\u1ECF h\u01A1n ho\u1EB7c b\u1EB1ng ${dk.k}`;
+    case "trong_doan":
+      return `t\u1EEB ${dk.k} \u0111\u1EBFn ${dk.k2}`;
+    case "ngoai_doan":
+      return `nh\u1ECF h\u01A1n ${dk.k} ho\u1EB7c l\u1EDBn h\u01A1n ${dk.k2}`;
+    case "duong":
+      return "l\xE0 s\u1ED1 d\u01B0\u01A1ng";
+    case "am":
+      return "l\xE0 s\u1ED1 \xE2m";
     case "chinh_phuong":
       return "l\xE0 s\u1ED1 ch\xEDnh ph\u01B0\u01A1ng";
     case "chu_so_khac_nhau":
@@ -53358,26 +53602,85 @@ function moTaDieuKien(dk) {
       return "l\xE0 s\u1ED1 \u0111\u1ED1i x\u1EE9ng (\u0111\u1ECDc xu\xF4i ng\u01B0\u1EE3c nh\u01B0 nhau)";
     case "co_chu_so":
       return `c\xF3 ch\u1EEF s\u1ED1 ${dk.d}`;
+    case "tan_cung":
+      return `c\xF3 ch\u1EEF s\u1ED1 t\u1EADn c\xF9ng b\u1EB1ng ${dk.d}`;
+    case "hang_chuc":
+      return `c\xF3 ch\u1EEF s\u1ED1 h\xE0ng ch\u1EE5c b\u1EB1ng ${dk.d}`;
+    case "hang_chuc_chan":
+      return "c\xF3 ch\u1EEF s\u1ED1 h\xE0ng ch\u1EE5c l\xE0 s\u1ED1 ch\u1EB5n";
+    case "hang_chuc_le":
+      return "c\xF3 ch\u1EEF s\u1ED1 h\xE0ng ch\u1EE5c l\xE0 s\u1ED1 l\u1EBB";
+    case "tong_chu_so":
+      return `c\xF3 t\u1ED5ng c\xE1c ch\u1EEF s\u1ED1 b\u1EB1ng ${dk.k}`;
   }
 }
 var laMatDongXu = (tenVat) => tenVat === "m\u1EB7t \u0111\u1ED3ng xu";
 var laMatXucXac = (tenVat) => tenVat === "m\u1EB7t x\xFAc x\u1EAFc";
+function moTaLoc(l, tv) {
+  const mat = laMatDongXu(tv) || laMatXucXac(tv);
+  const phan = [];
+  if (l.mau !== void 0) phan.push(mat ? l.mau : `m\xE0u ${l.mau}`);
+  if (l.so !== void 0) phan.push(mat ? String(l.so) : `s\u1ED1 ${l.so}`);
+  if (l.dk !== void 0) phan.push(moTaDieuKien(l.dk));
+  return `${mat ? "m\u1EB7t" : tv}${phan.length ? " " : ""}${phan.join(" ")}`;
+}
+var TEN_QUAN_HE = {
+  bang_nhau: "c\xE1c s\u1ED1 l\u1EA5y ra b\u1EB1ng nhau",
+  khac_nhau: "c\xE1c s\u1ED1 l\u1EA5y ra \u0111\xF4i m\u1ED9t kh\xE1c nhau",
+  cung_chan_le: "c\xE1c s\u1ED1 l\u1EA5y ra c\xF9ng ch\u1EB5n ho\u1EB7c c\xF9ng l\u1EBB",
+  nguyen_to_cung_nhau: "c\xE1c s\u1ED1 l\u1EA5y ra nguy\xEAn t\u1ED1 c\xF9ng nhau (\u01B0\u1EDBc chung l\u1EDBn nh\u1EA5t b\u1EB1ng 1)",
+  tang_dan: "c\xE1c s\u1ED1 l\u1EA5y ra t\u0103ng d\u1EA7n theo th\u1EE9 t\u1EF1 l\u1EA5y",
+  giam_dan: "c\xE1c s\u1ED1 l\u1EA5y ra gi\u1EA3m d\u1EA7n theo th\u1EE9 t\u1EF1 l\u1EA5y"
+};
+var tenLan = (lan) => lan === "cuoi" ? "cu\u1ED1i c\xF9ng" : lan === 1 ? "\u0111\u1EA7u ti\xEAn" : `\u1EDF l\u1EA7n th\u1EE9 ${lan}`;
 function moTaMotBienCo(bc, tv, soLan) {
   let s;
-  if (bc.kieu === "gop") {
-    const noi = bc.phep === "va" ? " v\xE0 " : " ho\u1EB7c ";
-    s = bc.cac.map((c) => c.kieu === "gop" ? `(${moTaMotBienCo(c, tv, soLan)})` : moTaMotBienCo(c, tv, soLan)).join(noi);
-  } else if (bc.kieu === "so") s = `${soLan === 1 ? `${tv} \u0111\u01B0\u1EE3c ch\u1ECDn` : TEN_DAI_LUONG[bc.dai_luong]} ${moTaDieuKien(bc.dieu_kien)}`;
-  else if (laMatDongXu(tv) || laMatXucXac(tv)) {
-    const mat = "m\u1EB7t";
-    if (bc.loai === "it_nhat") s = `c\xF3 \xEDt nh\u1EA5t 1 l\u1EA7n ra ${mat} ${bc.mau}`;
-    else if (bc.loai === "dung") s = `c\xF3 \u0111\xFAng ${bc.k} l\u1EA7n ra ${mat} ${bc.mau}`;
-    else if (bc.loai === "cung_mau") s = `c\xE1c l\u1EA7n ${laMatDongXu(tv) ? "tung" : "gieo"} \u0111\u1EC1u ra c\xF9ng m\u1ED9t m\u1EB7t`;
-    else s = `hai l\u1EA7n ${laMatDongXu(tv) ? "tung" : "gieo"} ra hai m\u1EB7t kh\xE1c nhau`;
-  } else if (bc.loai === "it_nhat") s = `c\xF3 \xEDt nh\u1EA5t 1 ${tv} m\xE0u ${bc.mau}`;
-  else if (bc.loai === "dung") s = `c\xF3 \u0111\xFAng ${bc.k} ${tv} m\xE0u ${bc.mau}`;
-  else if (bc.loai === "cung_mau") s = `c\xE1c ${tv} l\u1EA5y ra c\xF9ng m\xE0u`;
-  else s = `hai ${tv} l\u1EA5y ra kh\xE1c m\xE0u`;
+  const ngu = laMatDongXu(tv) || laMatXucXac(tv);
+  switch (bc.kieu) {
+    case "gop": {
+      const noi = bc.phep === "va" ? " v\xE0 " : bc.phep === "hoac" ? " ho\u1EB7c " : " ho\u1EB7c (ch\u1EC9 \u0111\xFAng m\u1ED9t trong hai) ";
+      s = bc.cac.map((c) => c.kieu === "gop" ? `(${moTaMotBienCo(c, tv, soLan)})` : moTaMotBienCo(c, tv, soLan)).join(noi);
+      break;
+    }
+    case "so":
+      s = `${soLan === 1 ? `${tv} \u0111\u01B0\u1EE3c ch\u1ECDn` : TEN_DAI_LUONG[bc.dai_luong]} ${moTaDieuKien(bc.dieu_kien)}`;
+      break;
+    case "mau":
+      if (ngu) {
+        const mat = "m\u1EB7t";
+        if (bc.loai === "it_nhat") s = `c\xF3 \xEDt nh\u1EA5t 1 l\u1EA7n ra ${mat} ${bc.mau}`;
+        else if (bc.loai === "dung") s = `c\xF3 \u0111\xFAng ${bc.k} l\u1EA7n ra ${mat} ${bc.mau}`;
+        else if (bc.loai === "cung_mau") s = `c\xE1c l\u1EA7n ${laMatDongXu(tv) ? "tung" : "gieo"} \u0111\u1EC1u ra c\xF9ng m\u1ED9t m\u1EB7t`;
+        else s = `hai l\u1EA7n ${laMatDongXu(tv) ? "tung" : "gieo"} ra hai m\u1EB7t kh\xE1c nhau`;
+      } else if (bc.loai === "it_nhat") s = `c\xF3 \xEDt nh\u1EA5t 1 ${tv} m\xE0u ${bc.mau}`;
+      else if (bc.loai === "dung") s = `c\xF3 \u0111\xFAng ${bc.k} ${tv} m\xE0u ${bc.mau}`;
+      else if (bc.loai === "cung_mau") s = `c\xE1c ${tv} l\u1EA5y ra c\xF9ng m\xE0u`;
+      else s = `hai ${tv} l\u1EA5y ra kh\xE1c m\xE0u`;
+      break;
+    case "quan_he":
+      s = TEN_QUAN_HE[bc.loai];
+      break;
+    case "dem": {
+      const loai = moTaLoc(bc.loc, tv);
+      s = bc.so_sanh === "tat_ca" ? `t\u1EA5t c\u1EA3 c\xE1c ${tv} l\u1EA5y ra \u0111\u1EC1u thu\u1ED9c lo\u1EA1i: ${loai}` : bc.so_sanh === "bang" ? `c\xF3 \u0111\xFAng ${bc.k} ${loai}` : bc.so_sanh === "it_nhat" ? `c\xF3 \xEDt nh\u1EA5t ${bc.k} ${loai}` : bc.so_sanh === "nhieu_nhat" ? `c\xF3 nhi\u1EC1u nh\u1EA5t ${bc.k} ${loai}` : `c\xF3 t\u1EEB ${bc.k} \u0111\u1EBFn ${bc.k2 ?? bc.k} ${loai}`;
+      break;
+    }
+    case "dem_bang":
+      s = `s\u1ED1 ${moTaLoc(bc.a, tv)} b\u1EB1ng s\u1ED1 ${moTaLoc(bc.b, tv)}`;
+      break;
+    case "vi_tri":
+      s = `${moTaLoc(bc.loc, tv)} \u0111\u01B0\u1EE3c l\u1EA5y ${tenLan(bc.lan)}`;
+      break;
+    case "truoc_sau":
+      s = `${moTaLoc(bc.truoc, tv)} \u0111\u01B0\u1EE3c l\u1EA5y tr\u01B0\u1EDBc ${moTaLoc(bc.sau, tv)}`;
+      break;
+    case "dung_thu_tu":
+      s = `c\xE1c ${tv} \u0111\u01B0\u1EE3c l\u1EA5y \u0111\xFAng theo th\u1EE9 t\u1EF1: ${bc.day.map((l) => l.so !== void 0 && l.mau === void 0 && !l.dk ? String(l.so) : l.mau !== void 0 && l.so === void 0 && !l.dk ? l.mau : moTaLoc(l, tv)).join(", ")}`;
+      break;
+    case "lien_tiep":
+      s = `c\xF3 ${bc.k} l\u1EA7n l\u1EA5y li\xEAn ti\u1EBFp \u0111\u1EC1u ra ${moTaLoc(bc.loc, tv)}`;
+      break;
+  }
   return bc.khong ? `kh\xF4ng x\u1EA3y ra: ${s}` : s;
 }
 function moTaBienCoBaiToan(ch) {
@@ -53670,6 +53973,81 @@ function xacSuatDieuKienXucXac(soLanTruoc) {
   return new PhanSo(dayKhacMat, dayKhacMat * BigInt(SO_MAT));
 }
 
+// packages/core/src/mo-phong/thi-nghiem/bien-co-ai.ts
+function dieuKienTuAI(x) {
+  const k = x.k ?? 0;
+  switch (x.loai) {
+    case "chan":
+    case "le":
+    case "nguyen_to":
+    case "hop_so":
+    case "duong":
+    case "am":
+    case "chinh_phuong":
+    case "chu_so_khac_nhau":
+    case "doi_xung":
+    case "hang_chuc_chan":
+    case "hang_chuc_le":
+      return { loai: x.loai };
+    case "chia_het":
+    case "khong_chia_het":
+    case "uoc_cua":
+      return { loai: x.loai, k: Math.max(1, k) };
+    case "bang":
+    case "khac":
+    case "lon_hon":
+    case "nho_hon":
+    case "lon_hon_hoac_bang":
+    case "nho_hon_hoac_bang":
+    case "tong_chu_so":
+      return { loai: x.loai, k };
+    case "trong_doan":
+    case "ngoai_doan":
+      return { loai: x.loai, k, k2: x.k2 ?? k };
+    case "du":
+      return { loai: "du", m: x.m ?? 3, r: x.r ?? 0 };
+    case "co_chu_so":
+    case "tan_cung":
+    case "hang_chuc":
+      return { loai: x.loai, d: x.d ?? 0 };
+  }
+}
+function nguonTuAI(d) {
+  switch (d.nguon_kieu) {
+    case "day_so":
+      return { kieu: "day_so", tu: d.tu ?? 10, den: d.den ?? 99, buoc: d.buoc ?? 1, loc: d.loc.map((l) => ({ dk: dieuKienTuAI(l), ...l.khong ? { khong: true } : {} })) };
+    case "ds_so":
+      return { kieu: "ds_so", text: d.text ?? "" };
+    case "danh_so":
+      return { kieu: "danh_so", n: d.n ?? 4 };
+    default:
+      return { kieu: d.nguon_kieu, nhom: d.nhom ?? "" };
+  }
+}
+var locRong = (l) => !l || !l.mau && l.so === null && !l.dk;
+function thieuBienCo(b) {
+  switch (b.kieu) {
+    case "so":
+      return b.dk ? null : "thi\u1EBFu \u0111i\u1EC1u ki\u1EC7n tr\xEAn s\u1ED1 (ch\u1EB5n, l\u1EBB, b\u1EB1ng k \u2026)";
+    case "mau":
+      return b.mau_loai ? null : "thi\u1EBFu ki\u1EC3u bi\u1EBFn c\u1ED1 theo m\xE0u";
+    case "quan_he":
+      return b.quan_he ? null : "thi\u1EBFu quan h\u1EC7 gi\u1EEFa c\xE1c s\u1ED1";
+    case "dem":
+      return locRong(b.loc) || !b.so_sanh ? "thi\u1EBFu lo\u1EA1i v\u1EADt c\u1EA7n \u0111\u1EBFm ho\u1EB7c c\xE1ch so s\xE1nh s\u1ED1 l\u01B0\u1EE3ng" : null;
+    case "dem_bang":
+      return locRong(b.loc) || locRong(b.loc2) ? "thi\u1EBFu m\u1ED9t trong hai lo\u1EA1i v\u1EADt c\u1EA7n so s\xE1nh s\u1ED1 l\u01B0\u1EE3ng" : null;
+    case "vi_tri":
+      return locRong(b.loc) || b.lan === null ? "thi\u1EBFu lo\u1EA1i v\u1EADt ho\u1EB7c l\u1EA7n l\u1EA5y" : null;
+    case "truoc_sau":
+      return locRong(b.loc) || locRong(b.loc2) ? "thi\u1EBFu m\u1ED9t trong hai lo\u1EA1i v\u1EADt c\u1EA7n so th\u1EE9 t\u1EF1" : null;
+    case "dung_thu_tu":
+      return b.day.length === 0 || b.day.some(locRong) ? "d\xE3y th\u1EE9 t\u1EF1 l\u1EA5y ch\u01B0a \u0111\u1EA7y \u0111\u1EE7" : null;
+    case "lien_tiep":
+      return locRong(b.loc) || b.k_dem === null ? "thi\u1EBFu lo\u1EA1i v\u1EADt ho\u1EB7c s\u1ED1 l\u1EA7n li\xEAn ti\u1EBFp" : null;
+  }
+}
+
 // packages/core/src/mo-phong/thi-nghiem/bai-toan-form.ts
 var FORM_BAI_TOAN_MAC_DINH = {
   che_do_vat: "danh_so",
@@ -53773,6 +54151,43 @@ function xayBaiToan(f) {
   const kq = CauHinhBaiToanSchema.safeParse({ ...cau_hinh, seed: 1 });
   if (!kq.success) return { loi: kq.error.issues[0]?.message ?? "C\u1EA5u h\xECnh ch\u01B0a h\u1EE3p l\u1EC7" };
   return { cau_hinh };
+}
+
+// packages/core/src/mo-phong/thi-nghiem/bai-mo.ts
+function taoVatTuNguon(n) {
+  switch (n.kieu) {
+    case "day_so": {
+      if (![n.tu, n.den, n.buoc].every(Number.isInteger)) return { loi: "D\xE3y s\u1ED1 c\u1EA7n c\xE1c s\u1ED1 nguy\xEAn" };
+      if (n.tu < 0 || n.den > 999) return { loi: "C\xE1c s\u1ED1 trong d\xE3y ph\u1EA3i t\u1EEB 0 \u0111\u1EBFn 999" };
+      if (n.tu > n.den) return { loi: "S\u1ED1 b\u1EAFt \u0111\u1EA7u kh\xF4ng \u0111\u01B0\u1EE3c l\u1EDBn h\u01A1n s\u1ED1 k\u1EBFt th\xFAc" };
+      if (n.buoc < 1) return { loi: "B\u01B0\u1EDBc nh\u1EA3y ph\u1EA3i t\u1EEB 1 tr\u1EDF l\xEAn" };
+      const vat = [];
+      for (let x = n.tu; x <= n.den; x += n.buoc) if (n.loc.every((l) => thoaDieuKien(l.dk, x) !== (l.khong ?? false))) vat.push({ so: x });
+      if (vat.length < 2) return { loi: "D\xE3y s\u1ED1 sau khi l\u1ECDc c\xF2n d\u01B0\u1EDBi 2 s\u1ED1, h\xE3y n\u1EDBi \u0111i\u1EC1u ki\u1EC7n" };
+      if (vat.length > GIOI_HAN.SO_VAT_TOI_DA) return { loi: `D\xE3y c\xF3 ${vat.length} s\u1ED1, t\u1ED1i \u0111a ${GIOI_HAN.SO_VAT_TOI_DA}` };
+      return { vat };
+    }
+    case "ds_so": {
+      const phan = n.text.split(/[,;\s]+/).filter(Boolean);
+      const so2 = [];
+      for (const p of phan) {
+        const m = p.match(/^(\d{1,3})(?:-(\d{1,3}))?$/);
+        if (!m) return { loi: `Kh\xF4ng hi\u1EC3u \u201C${p}\u201D. Vi\u1EBFt c\xE1c s\u1ED1 t\u1EEB 0 \u0111\u1EBFn 999, c\xE1ch nhau b\u1EB1ng d\u1EA5u c\xE1ch ho\u1EB7c ph\u1EA9y (c\xF3 th\u1EC3 vi\u1EBFt 1-5)` };
+        const a = Number(m[1]);
+        const b = m[2] === void 0 ? a : Number(m[2]);
+        if (a > b) return { loi: `Kho\u1EA3ng \u201C${p}\u201D b\u1ECB ng\u01B0\u1EE3c` };
+        for (let x = a; x <= b; x++) so2.push(x);
+      }
+      if (so2.length < 2) return { loi: "C\u1EA7n \xEDt nh\u1EA5t 2 s\u1ED1" };
+      if (so2.length > GIOI_HAN.SO_VAT_TOI_DA) return { loi: `T\u1ED1i \u0111a ${GIOI_HAN.SO_VAT_TOI_DA} s\u1ED1` };
+      return { vat: so2.map((x) => ({ so: x })) };
+    }
+    case "danh_so":
+      return docVatTongQuat({ che_do_vat: "danh_so", n: n.n, nhom: "" });
+    case "theo_mau":
+    case "mau_va_so":
+      return docVatTongQuat({ che_do_vat: n.kieu, n: 0, nhom: n.nhom });
+  }
 }
 
 // packages/core/src/mo-phong/thi-nghiem/vat.ts
@@ -56684,29 +57099,49 @@ Quy t\u1EAFc b\u1EAFt bu\u1ED9c:
 }
 var loiCuoi = null;
 var loiGroqCuoi = () => loiCuoi ?? "kh\xF4ng r\xF5 nguy\xEAn nh\xE2n";
-async function goiJson(system, user, ten, schema) {
+async function goiJson(system, user, ten, schema, tuyChon = {}) {
   loiCuoi = null;
   if (!client) {
     loiCuoi = CONFIG.groqApiKey === null ? "AI \u0111ang t\u1EAFt (thi\u1EBFu GROQ_API_KEY trong .env ho\u1EB7c \u0111ang \u0111\u1EB7t PLAB_TAT_AI=1)" : "ch\u01B0a kh\u1EDFi t\u1EA1o \u0111\u01B0\u1EE3c Groq";
     return null;
   }
-  try {
-    const res = await client.chat.completions.create({
-      model: CONFIG.groqModel,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user }
-      ],
-      response_format: { type: "json_schema", json_schema: { name: ten, strict: true, schema } }
-    });
-    const noiDung = res.choices[0]?.message.content;
-    if (!noiDung) loiCuoi = "AI tr\u1EA3 v\u1EC1 n\u1ED9i dung r\u1ED7ng";
-    return noiDung ? JSON.parse(noiDung) : null;
-  } catch (e) {
-    loiCuoi = e instanceof Error ? e.message.slice(0, 200) : String(e);
-    console.warn(`[groq] ${ten} th\u1EA5t b\u1EA1i:`, loiCuoi);
-    return null;
+  const yeuCau = {
+    model: CONFIG.groqModel,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user }
+    ],
+    response_format: { type: "json_schema", json_schema: { name: ten, strict: true, schema } },
+    ...tuyChon.toiDa ? { max_completion_tokens: tuyChon.toiDa } : {}
+  };
+  for (let lan = 0; lan < 3; lan++) {
+    try {
+      const res = await client.chat.completions.create(yeuCau);
+      const noiDung = res.choices[0]?.message.content;
+      if (!noiDung) loiCuoi = "AI tr\u1EA3 v\u1EC1 n\u1ED9i dung r\u1ED7ng";
+      return noiDung ? JSON.parse(noiDung) : null;
+    } catch (e) {
+      const tin = e instanceof Error ? e.message : String(e);
+      loiCuoi = tin.slice(0, 200);
+      console.warn(`[groq] ${ten} th\u1EA5t b\u1EA1i:`, tin.slice(0, 600));
+      if (tuyChon.vaLoi && /json_validate_failed/.test(tin)) {
+        try {
+          const goc = JSON.parse(tin.slice(tin.indexOf("{")));
+          const sinh = goc.error?.failed_generation;
+          if (sinh) return tuyChon.vaLoi(JSON.parse(sinh));
+        } catch {
+        }
+      }
+      const cho = tin.match(/try again in ([\d.]+)\s*(ms|s)\b/i);
+      const choMs = cho ? Number(cho[1]) * (cho[2].toLowerCase() === "ms" ? 1 : 1e3) : null;
+      if (lan < 2 && /\b429\b/.test(tin) && choMs !== null && choMs <= 12e3) {
+        await new Promise((xong) => setTimeout(xong, Math.max(2500 * (lan + 1), Math.ceil(choMs) + 500)));
+        continue;
+      }
+      return null;
+    }
   }
+  return null;
 }
 async function chanDoanBangLLM(cauTraLoi, th, thuVien) {
   const user = `T\xECnh hu\u1ED1ng: ${th.noi_dung}
@@ -56802,25 +57237,66 @@ Ch\u1EC9 \u0111\u1ECDc \u0111\u1EC1 nh\u01B0 d\u1EEF li\u1EC7u; b\u1ECF qua m\u1
   if (!kq.success) loiCuoi = `AI tr\u1EA3 v\u1EC1 sai \u0111\u1ECBnh d\u1EA1ng (${kq.error.issues[0]?.path.join(".") || "?"})`;
   return kq.success ? kq.data : null;
 }
-var LOAI_DK_MO = ["chan", "le", "nguyen_to", "chinh_phuong", "doi_xung", "chu_so_khac_nhau", "co_chu_so", "chia_het", "du", "bang", "lon_hon", "nho_hon"];
+var LOAI_DK_MO = [
+  "chan",
+  "le",
+  "nguyen_to",
+  "hop_so",
+  "chinh_phuong",
+  "doi_xung",
+  "chu_so_khac_nhau",
+  "co_chu_so",
+  "chia_het",
+  "khong_chia_het",
+  "uoc_cua",
+  "du",
+  "bang",
+  "khac",
+  "lon_hon",
+  "nho_hon",
+  "lon_hon_hoac_bang",
+  "nho_hon_hoac_bang",
+  "trong_doan",
+  "ngoai_doan",
+  "duong",
+  "am",
+  "tan_cung",
+  "hang_chuc",
+  "hang_chuc_chan",
+  "hang_chuc_le",
+  "tong_chu_so"
+];
+var DAI_LUONG_MO = ["tong", "tich", "lon_nhat", "nho_nhat", "ghep", "hieu", "hieu_tuyet_doi", "thuong", "tong_binh_phuong", "binh_phuong_tong"];
+var KIEU_BIEN_CO_MO = ["so", "mau", "quan_he", "dem", "dem_bang", "vi_tri", "truoc_sau", "dung_thu_tu", "lien_tiep"];
+var QUAN_HE_MO = ["bang_nhau", "khac_nhau", "cung_chan_le", "nguyen_to_cung_nhau", "tang_dan", "giam_dan"];
+var SO_SANH_MO = ["bang", "it_nhat", "nhieu_nhat", "trong_doan", "tat_ca"];
 var OBJ_DK_MO = {
   type: "object",
   properties: {
     loai: { type: "string", enum: LOAI_DK_MO },
     k: NULLABLE("integer"),
+    k2: NULLABLE("integer"),
     m: NULLABLE("integer"),
     r: NULLABLE("integer"),
     d: NULLABLE("integer"),
     khong: { type: "boolean" }
   },
-  required: ["loai", "k", "m", "r", "d", "khong"],
+  required: ["loai", "k", "k2", "m", "r", "d", "khong"],
   additionalProperties: false
 };
+var OBJ_LOC_MO = {
+  type: "object",
+  properties: { mau: NULLABLE("string"), so: NULLABLE("integer"), dk: { anyOf: [OBJ_DK_MO, { type: "null" }] } },
+  required: ["mau", "so", "dk"],
+  additionalProperties: false
+};
+var OBJ_LOC_KHAC_NULL_MO = OBJ_LOC_MO;
 var SCHEMA_DOC_DE_MO = {
   type: "object",
   properties: {
     khop: { type: "boolean", description: "true n\u1EBFu \u0111\u1EC1 l\xE0 d\u1EA1ng ch\u1ECDn ho\u1EB7c l\u1EA5y v\u1EADt t\u1EEB m\u1ED9t t\u1EADp r\u1ED3i x\xE9t m\u1ED9t bi\u1EBFn c\u1ED1; false n\u1EBFu l\xE0 d\u1EA1ng kh\xE1c" },
     ly_do: { type: "string", description: "M\u1ED9t c\xE2u: AI hi\u1EC3u \u0111\u1EC1 th\u1EBF n\xE0o, ho\u1EB7c v\xEC sao \u0111\u1EC1 kh\xF4ng kh\u1EDBp (\u0111i\u1EC1u ki\u1EC7n n\xE0o ch\u01B0a h\u1ED7 tr\u1EE3)" },
+    mo_ho: { type: ["string", "null"], description: "N\u1EBFu \u0111\u1EC1 c\xF3 th\u1EC3 hi\u1EC3u theo hai c\xE1ch kh\xE1c nhau (v\xED d\u1EE5 l\u1EA5y c\xF3 th\u1EE9 t\u1EF1 hay kh\xF4ng, 'ho\u1EB7c' lo\u1EA1i tr\u1EEB hay kh\xF4ng) th\xEC n\xEAu ng\u1EAFn g\u1ECDn c\xE1c c\xE1ch hi\u1EC3u; \u0111\u1EC1 r\xF5 r\xE0ng th\xEC null" },
     tieu_de: { type: "string", description: "T\xEAn ng\u1EAFn (d\u01B0\u1EDBi 8 t\u1EEB)" },
     ten_vat: { type: "string", description: "T\xEAn g\u1ECDi v\u1EADt: bi, th\u1EBB, s\u1ED1, h\u1ECDc sinh\u2026" },
     nguon_kieu: { type: "string", enum: ["day_so", "ds_so", "danh_so", "theo_mau", "mau_va_so"] },
@@ -56833,41 +57309,52 @@ var SCHEMA_DOC_DE_MO = {
     nhom: NULLABLE("string"),
     so_lan: { type: "integer" },
     hoan_lai: { type: "boolean" },
-    phep: { type: "string", enum: ["va", "hoac"] },
+    phep: { type: "string", enum: ["va", "hoac", "xor"] },
     bien_co: {
       type: "array",
       items: {
         type: "object",
         properties: {
-          kieu: { type: "string", enum: ["so", "mau"] },
-          dai_luong: NULLABLE("string", ["tong", "tich", "lon_nhat", "nho_nhat", "ghep", null]),
+          kieu: { type: "string", enum: KIEU_BIEN_CO_MO },
+          dai_luong: NULLABLE("string", [...DAI_LUONG_MO, null]),
           dk: { anyOf: [OBJ_DK_MO, { type: "null" }] },
           mau_loai: NULLABLE("string", ["it_nhat", "dung", "cung_mau", "khac_mau", null]),
           mau: NULLABLE("string"),
           k_mau: NULLABLE("integer"),
+          quan_he: NULLABLE("string", [...QUAN_HE_MO, null]),
+          loc: OBJ_LOC_MO,
+          loc2: OBJ_LOC_MO,
+          day: { type: "array", items: OBJ_LOC_KHAC_NULL_MO },
+          so_sanh: NULLABLE("string", [...SO_SANH_MO, null]),
+          k_dem: NULLABLE("integer"),
+          k_dem2: NULLABLE("integer"),
+          lan: NULLABLE("integer"),
           khong: { type: "boolean" }
         },
-        required: ["kieu", "dai_luong", "dk", "mau_loai", "mau", "k_mau", "khong"],
+        required: ["kieu", "dai_luong", "dk", "mau_loai", "mau", "k_mau", "quan_he", "loc", "loc2", "day", "so_sanh", "k_dem", "k_dem2", "lan", "khong"],
         additionalProperties: false
       }
     },
     phu_dinh: { type: "boolean" },
     dap_an: { type: "array", items: { type: "string" } }
   },
-  required: ["khop", "ly_do", "tieu_de", "ten_vat", "nguon_kieu", "tu", "den", "buoc", "loc", "text", "n", "nhom", "so_lan", "hoan_lai", "phep", "bien_co", "phu_dinh", "dap_an"],
+  required: ["khop", "ly_do", "mo_ho", "tieu_de", "ten_vat", "nguon_kieu", "tu", "den", "buoc", "loc", "text", "n", "nhom", "so_lan", "hoan_lai", "phep", "bien_co", "phu_dinh", "dap_an"],
   additionalProperties: false
 };
 var DkMoSchema = external_exports.object({
   loai: external_exports.enum(LOAI_DK_MO),
   k: external_exports.number().int().nullable(),
+  k2: external_exports.number().int().nullable(),
   m: external_exports.number().int().nullable(),
   r: external_exports.number().int().nullable(),
   d: external_exports.number().int().nullable(),
   khong: external_exports.boolean()
 });
+var LocMoSchema = external_exports.object({ mau: external_exports.string().nullable(), so: external_exports.number().int().nullable(), dk: DkMoSchema.nullable() });
 var DocDeMoSchema = external_exports.object({
   khop: external_exports.boolean(),
   ly_do: external_exports.string(),
+  mo_ho: external_exports.string().nullable(),
   tieu_de: external_exports.string(),
   ten_vat: external_exports.string(),
   nguon_kieu: external_exports.enum(["day_so", "ds_so", "danh_so", "theo_mau", "mau_va_so"]),
@@ -56880,15 +57367,23 @@ var DocDeMoSchema = external_exports.object({
   nhom: external_exports.string().nullable(),
   so_lan: external_exports.number().int(),
   hoan_lai: external_exports.boolean(),
-  phep: external_exports.enum(["va", "hoac"]),
+  phep: external_exports.enum(["va", "hoac", "xor"]),
   bien_co: external_exports.array(
     external_exports.object({
-      kieu: external_exports.enum(["so", "mau"]),
-      dai_luong: external_exports.enum(["tong", "tich", "lon_nhat", "nho_nhat", "ghep"]).nullable(),
+      kieu: external_exports.enum(KIEU_BIEN_CO_MO),
+      dai_luong: external_exports.enum(DAI_LUONG_MO).nullable(),
       dk: DkMoSchema.nullable(),
       mau_loai: external_exports.enum(["it_nhat", "dung", "cung_mau", "khac_mau"]).nullable(),
       mau: external_exports.string().nullable(),
       k_mau: external_exports.number().int().nullable(),
+      quan_he: external_exports.enum(QUAN_HE_MO).nullable(),
+      loc: LocMoSchema,
+      loc2: LocMoSchema,
+      day: external_exports.array(LocMoSchema),
+      so_sanh: external_exports.enum(SO_SANH_MO).nullable(),
+      k_dem: external_exports.number().int().nullable(),
+      k_dem2: external_exports.number().int().nullable(),
+      lan: external_exports.number().int().nullable(),
       khong: external_exports.boolean()
     })
   ),
@@ -56896,41 +57391,94 @@ var DocDeMoSchema = external_exports.object({
   dap_an: external_exports.array(external_exports.string())
 });
 async function docDeMoBangLLM(noiDung) {
-  const system = `B\u1EA1n \u0111\u1ECDc m\u1ED9t \u0111\u1EC1 x\xE1c su\u1EA5t l\u1EDBp 9 v\xE0 \u0111i\u1EC1n v\xE0o bi\u1EC3u m\u1EABu "b\xE0i to\xE1n m\u1EDF". Ch\u1EC9 \u0110I\u1EC0N BI\u1EC2U M\u1EAAU, tuy\u1EC7t \u0111\u1ED1i kh\xF4ng t\u1EF1 t\xEDnh x\xE1c su\u1EA5t v\xE0 kh\xF4ng ch\u1ECDn \u0111\xE1p \xE1n.
+  const system = `B\u1EA1n \u0111\u1ECDc \u0111\u1EC1 x\xE1c su\u1EA5t l\u1EDBp 9 v\xE0 \u0111i\u1EC1n bi\u1EC3u m\u1EABu "b\xE0i to\xE1n m\u1EDF". Ch\u1EC9 \u0110I\u1EC0N BI\u1EC2U M\u1EAAU, kh\xF4ng t\xEDnh x\xE1c su\u1EA5t, kh\xF4ng ch\u1ECDn \u0111\xE1p \xE1n (m\xE1y s\u1EBD li\u1EC7t k\xEA kh\xF4ng gian m\u1EABu v\xE0 \u0111\u1EBFm).
 
 1) Ngu\u1ED3n v\u1EADt (nguon_kieu):
-- "day_so": v\u1EADt l\xE0 c\xE1c s\u1ED1 nguy\xEAn t\u1EEB tu \u0111\u1EBFn den (b\u01B0\u1EDBc buoc, m\u1EB7c \u0111\u1ECBnh 1), gi\u1EEF l\u1EA1i c\xE1c s\u1ED1 th\u1ECFa m\u1ECDi \u0111i\u1EC1u ki\u1EC7n trong "loc". D\xF9ng cho "s\u1ED1 t\u1EF1 nhi\xEAn l\u1EBB c\xF3 2 ch\u1EEF s\u1ED1" (tu = 10, den = 99, loc = [le]), "s\u1ED1 c\xF3 3 ch\u1EEF s\u1ED1" (tu = 100, den = 999), "s\u1ED1 t\u1EF1 nhi\xEAn t\u1EEB 1 \u0111\u1EBFn 30" (tu = 1, den = 30), "s\u1ED1 c\xF3 hai ch\u1EEF s\u1ED1 kh\xE1c nhau" (loc c\xF3 chu_so_khac_nhau). C\xE1c s\u1ED1 ch\u1EC9 t\u1EEB 0 \u0111\u1EBFn 999. QUAN TR\u1ECCNG: m\u1ECDi t\xEDnh ch\u1EA5t c\u1EE7a T\u1EACP S\u1ED0 n\xEAu trong \u0111\u1EC1 ("l\u1EBB", "ch\u1EB5n", "nguy\xEAn t\u1ED1", "chia h\u1EBFt cho\u2026", "c\xE1c ch\u1EEF s\u1ED1 kh\xE1c nhau") ph\u1EA3i \u0111\u01B0a v\xE0o "loc", kh\xF4ng \u0111\u01B0\u1EE3c b\u1ECF s\xF3t; c\xF2n \u0111i\u1EC1u ki\u1EC7n c\u1EE7a BI\u1EBEN C\u1ED0 c\u1EA7n t\xEDnh x\xE1c su\u1EA5t th\xEC \u0111\u01B0a v\xE0o "bien_co". V\xED d\u1EE5: "Vi\u1EBFt m\u1ED9t s\u1ED1 t\u1EF1 nhi\xEAn l\u1EBB c\xF3 2 ch\u1EEF s\u1ED1 b\u1EA5t k\u1EF3. T\xEDnh x\xE1c su\u1EA5t s\u1ED1 \u0111\xF3 l\xE0 s\u1ED1 ch\xEDnh ph\u01B0\u01A1ng" \u2192 tu = 10, den = 99, loc = [{loai: le}], bien_co = [{kieu: so, dk: chinh_phuong}].
-- "ds_so": \u0111\u1EC1 li\u1EC7t k\xEA r\xF5 c\xE1c s\u1ED1 (text vi\u1EBFt "11 13 25" ho\u1EB7c "1-5").
-- "danh_so": v\u1EADt \u0111\xE1nh s\u1ED1 1..n (t\xFAi bi, th\u1EBB \u0111\xE1nh s\u1ED1); n trong "n".
-- "theo_mau": nhom vi\u1EBFt d\u1EA1ng "\u0111\u1ECF 3, xanh 2" ho\u1EB7c "nam 3, n\u1EEF 4". "mau_va_so": nhom vi\u1EBFt d\u1EA1ng "\u0111\u1ECF: 1 2 3; xanh: 4 5".
-- \u0110\u1ED3ng xu: theo_mau, nhom = "ng\u1EEDa 1, s\u1EA5p 1", ten_vat = "m\u1EB7t \u0111\u1ED3ng xu", hoan_lai = true. X\xFAc x\u1EAFc: danh_so, n = 6, ten_vat = "m\u1EB7t x\xFAc x\u1EAFc", hoan_lai = true.
-- Tr\u01B0\u1EDDng kh\xF4ng d\xF9ng \u0111\u1EC3 null (loc \u0111\u1EC3 m\u1EA3ng r\u1ED7ng).
+- day_so: c\xE1c s\u1ED1 nguy\xEAn t\u1EEB tu \u0111\u1EBFn den (b\u01B0\u1EDBc buoc, m\u1EB7c \u0111\u1ECBnh 1), gi\u1EEF l\u1EA1i s\u1ED1 th\u1ECFa m\u1ECDi \u0111i\u1EC1u ki\u1EC7n trong "loc". V\xED d\u1EE5 "s\u1ED1 t\u1EF1 nhi\xEAn l\u1EBB c\xF3 2 ch\u1EEF s\u1ED1": tu 10, den 99, loc [le]; "s\u1ED1 c\xF3 3 ch\u1EEF s\u1ED1": 100..999. S\u1ED1 ch\u1EC9 t\u1EEB 0 \u0111\u1EBFn 999. M\u1ECDi t\xEDnh ch\u1EA5t c\u1EE7a T\u1EACP S\u1ED0 n\xEAu trong \u0111\u1EC1 (l\u1EBB, ch\u1EB5n, nguy\xEAn t\u1ED1, chia h\u1EBFt, c\xE1c ch\u1EEF s\u1ED1 kh\xE1c nhau) ph\u1EA3i v\xE0o "loc"; \u0111i\u1EC1u ki\u1EC7n c\u1EE7a BI\u1EBEN C\u1ED0 v\xE0o "bien_co". V\xED d\u1EE5 "s\u1ED1 l\u1EBB c\xF3 2 ch\u1EEF s\u1ED1, x\xE1c su\u1EA5t l\xE0 s\u1ED1 ch\xEDnh ph\u01B0\u01A1ng": loc [le], bien_co [so, dk chinh_phuong].
+- ds_so: \u0111\u1EC1 li\u1EC7t k\xEA c\xE1c s\u1ED1, text "6 7 8" ho\u1EB7c "1-5". Th\u1EBB ghi 6, 7, 8 d\xF9ng ds_so (kh\xF4ng d\xF9ng danh_so v\xEC s\u1ED1 kh\xF4ng b\u1EAFt \u0111\u1EA7u t\u1EEB 1).
+- danh_so: v\u1EADt \u0111\xE1nh s\u1ED1 1..n (n trong "n"). theo_mau: nhom "\u0111\u1ECF 3, xanh 2" ho\u1EB7c "nam 3, n\u1EEF 4". mau_va_so: nhom "\u0111\u1ECF: 1 2 3; xanh: 4 5".
+- \u0110\u1ED3ng xu: theo_mau, nhom "ng\u1EEDa 1, s\u1EA5p 1", ten_vat "m\u1EB7t \u0111\u1ED3ng xu", hoan_lai true. X\xFAc x\u1EAFc: danh_so, n 6, ten_vat "m\u1EB7t x\xFAc x\u1EAFc", hoan_lai true.
+- Tr\u01B0\u1EDDng kh\xF4ng d\xF9ng \u0111\u1EC3 null (loc \u0111\u1EC3 []).
 
-2) C\xE1ch l\u1EA5y: so_lan t\u1EEB 1 \u0111\u1EBFn 4. Ch\u1ECDn ho\u1EB7c vi\u1EBFt M\u1ED8T s\u1ED1/v\u1EADt ng\u1EABu nhi\xEAn l\xE0 so_lan = 1. "L\u1EA5y c\xF9ng l\xFAc 2 v\u1EADt", "ch\u1ECDn 2 ng\u01B0\u1EDDi" l\xE0 so_lan = 2, hoan_lai = false. "L\u1EA7n l\u01B0\u1EE3t, kh\xF4ng tr\u1EA3 l\u1EA1i" l\xE0 hoan_lai = false; "tr\u1EA3 l\u1EA1i", "b\u1ECF l\u1EA1i", "c\xF3 ho\xE0n l\u1EA1i" l\xE0 hoan_lai = true.
+2) C\xE1ch l\u1EA5y: so_lan 1 \u0111\u1EBFn 4. Ch\u1ECDn M\u1ED8T s\u1ED1/v\u1EADt l\xE0 so_lan 1. "L\u1EA5y c\xF9ng l\xFAc 2 v\u1EADt", "ch\u1ECDn 2 ng\u01B0\u1EDDi": so_lan 2, hoan_lai false. "L\u1EA7n l\u01B0\u1EE3t, kh\xF4ng tr\u1EA3 l\u1EA1i": hoan_lai false; "tr\u1EA3 l\u1EA1i", "c\xF3 ho\xE0n l\u1EA1i": true. M\xE1y lu\xF4n x\xE9t c\xE1c l\u1EA7n l\u1EA5y c\xF3 th\u1EE9 t\u1EF1.
 
-3) Bi\u1EBFn c\u1ED1: m\u1EA3ng bien_co g\u1ED3m c\xE1c \u0111i\u1EC1u ki\u1EC7n con, gh\xE9p b\u1EB1ng phep ("va" = \u0111\u1ED3ng th\u1EDDi, "hoac" = \xEDt nh\u1EA5t m\u1ED9t). Ch\u1EC9 m\u1ED9t \u0111i\u1EC1u ki\u1EC7n th\xEC phep = "va".
-- kieu "so": dai_luong l\xE0 tong, tich, lon_nhat, nho_nhat, ghep (khi so_lan = 1 c\u1EE9 \u0111\u1EC3 "tong"), dk l\xE0 \u0111i\u1EC1u ki\u1EC7n tr\xEAn s\u1ED1: chan, le, nguyen_to, chinh_phuong, doi_xung, chu_so_khac_nhau, co_chu_so (d l\xE0 ch\u1EEF s\u1ED1), chia_het (k), du (m chia, r d\u01B0; "chia 3 d\u01B0 1" \u2192 m = 3, r = 1), bang (k), lon_hon (k), nho_hon (k). Tr\u01B0\u1EDDng tham s\u1ED1 kh\xF4ng d\xF9ng \u0111\u1EC3 null.
-- kieu "mau": mau_loai l\xE0 it_nhat (c\xF3 \xEDt nh\u1EA5t 1 v\u1EADt m\xE0u "mau"), dung (\u0111\xFAng k_mau v\u1EADt m\xE0u "mau"; "c\u1EA3 2 l\u1EA7n \u0111\u1EC1u tr\u1EAFng" = so_lan 2, dung, k_mau = 2, mau = "tr\u1EAFng"), cung_mau, khac_mau (ch\u1EC9 khi l\u1EA5y 2 v\u1EADt). V\u1EDBi kieu "mau" \u0111\u1EC3 dk = null, v\u1EDBi kieu "so" \u0111\u1EC3 mau_loai = null.
-- khong = true n\u1EBFu \u0111i\u1EC1u ki\u1EC7n \u0111\xF3 b\u1ECB ph\u1EE7 \u0111\u1ECBnh ("kh\xF4ng chia h\u1EBFt cho 5"). phu_dinh = true n\u1EBFu \u0111\u1EC1 h\u1ECFi x\xE1c su\u1EA5t c\u1EA3 bi\u1EBFn c\u1ED1 KH\xD4NG x\u1EA3y ra.
-- dap_an: ch\xE9p c\xE1c ph\u01B0\u01A1ng \xE1n A, B, C, D trong \u0111\u1EC1 theo th\u1EE9 t\u1EF1, v\xED d\u1EE5 ["1/2","1/3"]; kh\xF4ng c\xF3 th\xEC m\u1EA3ng r\u1ED7ng.
+3) Bi\u1EBFn c\u1ED1: m\u1EA3ng bien_co c\xE1c \u0111i\u1EC1u ki\u1EC7n con, gh\xE9p b\u1EB1ng phep: va (\u0111\u1ED3ng th\u1EDDi), hoac (\xEDt nh\u1EA5t m\u1ED9t), xor (\u0111\xFAng m\u1ED9t, "A ho\u1EB7c B nh\u01B0ng kh\xF4ng \u0111\u1ED3ng th\u1EDDi"). M\u1ED9t \u0111i\u1EC1u ki\u1EC7n th\xEC phep va. Ch\u1ECDn \u0110\xDANG kieu:
+(a) so: \u0111i\u1EC1u ki\u1EC7n tr\xEAn \u0111\u1EA1i l\u01B0\u1EE3ng t\xEDnh t\u1EEB c\xE1c s\u1ED1 l\u1EA5y ra. dai_luong: tong, tich, lon_nhat, nho_nhat, ghep (gh\xE9p s\u1ED1 theo th\u1EE9 t\u1EF1 l\u1EA5y), hieu (l\u1EA7n 1 tr\u1EEB l\u1EA7n 2, ch\u1EC9 khi l\u1EA5y 2), hieu_tuyet_doi ("hi\u1EC7u hai s\u1ED1 b\u1EB1ng 2" kh\xF4ng n\xF3i th\u1EE9 t\u1EF1), thuong (l\u1EA7n 1 chia l\u1EA7n 2, ch\u1EC9 khi l\u1EA5y 2), tong_binh_phuong, binh_phuong_tong. so_lan 1 th\xEC \u0111\u1EC3 tong.
+   dk.loai: chan, le, nguyen_to, hop_so, chinh_phuong, chia_het/khong_chia_het/uoc_cua (k), du (m chia, r d\u01B0), bang/khac/lon_hon/nho_hon (k), lon_hon_hoac_bang (k; "\xEDt nh\u1EA5t b\u1EB1ng", "kh\xF4ng nh\u1ECF h\u01A1n"), nho_hon_hoac_bang (k; "kh\xF4ng v\u01B0\u1EE3t qu\xE1", "t\u1ED1i \u0111a"), trong_doan (k \u0111\u1EBFn k2, g\u1ED3m hai \u0111\u1EA7u), ngoai_doan (nh\u1ECF h\u01A1n k ho\u1EB7c l\u1EDBn h\u01A1n k2), duong, am, doi_xung, chu_so_khac_nhau, co_chu_so (d), tan_cung (d: ch\u1EEF s\u1ED1 t\u1EADn c\xF9ng), hang_chuc (d), hang_chuc_chan, hang_chuc_le, tong_chu_so (k). "B\u1ED9i c\u1EE7a k" = chia_het. Ph\xE2n bi\u1EC7t ">" v\u1EDBi "\u2265".
+(b) mau: mau_loai it_nhat (c\xF3 \xEDt nh\u1EA5t 1 v\u1EADt m\xE0u "mau"), dung (\u0111\xFAng k_mau v\u1EADt m\xE0u "mau"), cung_mau, khac_mau (ch\u1EC9 khi l\u1EA5y 2). \u0110\u1EC3 dk null.
+(c) quan_he (so_lan >= 2): bang_nhau, khac_nhau (\u0111\xF4i m\u1ED9t), cung_chan_le, nguyen_to_cung_nhau (\u01AFCLN 1), tang_dan, giam_dan.
+(d) dem: \u0111\u1EBFm v\u1EADt lo\u1EA1i "loc" trong c\xE1c v\u1EADt l\u1EA5y ra, so v\u1EDBi k_dem. so_sanh: bang, it_nhat, nhieu_nhat, trong_doan (k_dem \u0111\u1EBFn k_dem2), tat_ca (m\u1ECDi v\u1EADt \u0111\u1EC1u thu\u1ED9c loc; k_dem 0). "Kh\xF4ng c\xF3 l\u1EA7n n\xE0o" = bang v\u1EDBi k_dem 0. "Kh\xF4ng ph\u1EA3i t\u1EA5t c\u1EA3" = tat_ca v\u1EDBi khong true.
+(e) dem_bang: s\u1ED1 v\u1EADt lo\u1EA1i loc b\u1EB1ng s\u1ED1 v\u1EADt lo\u1EA1i loc2.
+(f) vi_tri: v\u1EADt l\u1EA5y \u1EDF l\u1EA7n "lan" thu\u1ED9c lo\u1EA1i loc. lan 1 = \u0111\u1EA7u ti\xEAn, 2, 3, 4; lan 0 = l\u1EA7n CU\u1ED0I C\xD9NG. Kh\xE1c \u0111i\u1EC1u ki\u1EC7n gi\xE1 tr\u1ECB: "th\u1EBB s\u1ED1 8 \u0111\u01B0\u1EE3c l\u1EA5y cu\u1ED1i c\xF9ng" l\xE0 vi_tri, lan 0, loc {so 8}, KH\xD4NG ph\u1EA3i "t\u1ED5ng b\u1EB1ng 8". "Kh\xF4ng \u0111\u01B0\u1EE3c l\u1EA5y cu\u1ED1i" l\xE0 c\xF9ng \u0111i\u1EC1u ki\u1EC7n v\u1EDBi khong true.
+(g) truoc_sau: c\xF3 v\u1EADt lo\u1EA1i loc \u0111\u01B0\u1EE3c l\u1EA5y TR\u01AF\u1EDAC v\u1EADt lo\u1EA1i loc2 ("th\u1EBB 8 \u0111\u01B0\u1EE3c l\u1EA5y sau th\u1EBB 6" th\xEC loc = th\u1EBB 6, loc2 = th\u1EBB 8).
+(h) dung_thu_tu: l\u1EA7n i thu\u1ED9c lo\u1EA1i day[i] (s\u1ED1 ph\u1EA7n t\u1EED b\u1EB1ng so_lan). "L\u1EA5y l\u1EA7n l\u01B0\u1EE3t 6, 7, 8": day [{so 6},{so 7},{so 8}].
+(i) lien_tiep: c\xF3 \xEDt nh\u1EA5t k_dem l\u1EA7n l\u1EA5y li\xEAn ti\u1EBFp \u0111\u1EC1u thu\u1ED9c lo\u1EA1i loc ("hai l\u1EA7n li\xEAn ti\u1EBFp ra ng\u1EEDa": loc {mau ng\u1EEDa}, k_dem 2).
+Lo\u1EA1i v\u1EADt (loc, loc2, day) l\xE0 {mau, so, dk}: mau cho m\xE0u/nh\xF3m, so cho s\u1ED1 ghi tr\xEAn v\u1EADt, dk cho \u0111i\u1EC1u ki\u1EC7n tr\xEAn s\u1ED1 ("s\u1ED1 ch\u1EB5n": dk chan); ch\u1EC9 \u0111i\u1EC1n tr\u01B0\u1EDDng c\u1EA7n, c\xF2n l\u1EA1i null; trong dk c\u1EE7a loc kh\xF4ng d\xF9ng khong.
+- Tr\u01B0\u1EDDng kh\xF4ng d\xF9ng \u0111\u1EC3 null (day \u0111\u1EC3 []). khong true n\u1EBFu \u0111i\u1EC1u ki\u1EC7n \u0111\xF3 b\u1ECB ph\u1EE7 \u0111\u1ECBnh. phu_dinh true n\u1EBFu \u0111\u1EC1 h\u1ECFi x\xE1c su\u1EA5t c\u1EA3 bi\u1EBFn c\u1ED1 KH\xD4NG x\u1EA3y ra.
+- Ph\xE2n bi\u1EC7t: NOT(A v\xE0 B) kh\xE1c (NOT A v\xE0 NOT B); "\xEDt nh\u1EA5t m\u1ED9t" kh\xE1c "\u0111\xFAng m\u1ED9t"; "t\u1ED5ng b\u1EB1ng 8" kh\xE1c "c\xF3 m\u1ED9t th\u1EBB s\u1ED1 8".
+- dap_an: ch\xE9p c\xE1c ph\u01B0\u01A1ng \xE1n A, B, C, D theo th\u1EE9 t\u1EF1, v\xED d\u1EE5 ["1/2","1/3"]; kh\xF4ng c\xF3 th\xEC [].
 
-N\u1EBFu \u0111\u1EC1 KH\xD4NG \u0111i\u1EC1n \u0111\u01B0\u1EE3c v\xE0o m\xF4 h\xECnh n\xE0y (h\xECnh h\u1ECDc, b\u1EA3ng th\u1ED1ng k\xEA, nhi\u1EC1u giai \u0111o\u1EA1n, \u0111i\u1EC1u ki\u1EC7n kh\xF4ng c\xF3 trong danh s\xE1ch\u2026) th\xEC khop = false, n\xF3i r\xF5 trong ly_do \u0111i\u1EC1u g\xEC ch\u01B0a h\u1ED7 tr\u1EE3, v\u1EABn \u0111i\u1EC1n gi\xE1 tr\u1ECB g\u1EA7n nh\u1EA5t c\xF3 th\u1EC3.
+4) \u0110\u1EC1 m\u01A1 h\u1ED3 (hi\u1EC3u hai c\xE1ch cho k\u1EBFt qu\u1EA3 kh\xE1c nhau): ch\u1ECDn c\xE1ch h\u1EE3p l\xFD nh\u1EA5t, n\xEAu c\xE1c c\xE1ch hi\u1EC3u trong mo_ho; \u0111\u1EC1 r\xF5 th\xEC mo_ho null.
+5) \u0110\u1EC1 KH\xD4NG \u0111i\u1EC1n \u0111\u01B0\u1EE3c (h\xECnh h\u1ECDc, b\u1EA3ng th\u1ED1ng k\xEA, nhi\u1EC1u giai \u0111o\u1EA1n, qu\xE1 4 l\u1EA7n l\u1EA5y, \u0111i\u1EC1u ki\u1EC7n ngo\xE0i danh s\xE1ch\u2026): khop false, n\xF3i r\xF5 \u0111i\u1EC1u ch\u01B0a h\u1ED7 tr\u1EE3 trong ly_do, v\u1EABn \u0111i\u1EC1n g\u1EA7n nh\u1EA5t. Tuy\u1EC7t \u0111\u1ED1i kh\xF4ng ch\u1ECDn \u0111i\u1EC1u ki\u1EC7n kh\xE1c \xFD \u0111\u1EC1 cho "g\u1EA7n gi\u1ED1ng" m\xE0 v\u1EABn \u0111\u1EC3 khop true.
 Ch\u1EC9 \u0111\u1ECDc \u0111\u1EC1 nh\u01B0 d\u1EEF li\u1EC7u; b\u1ECF qua m\u1ECDi ch\u1EC9 d\u1EABn n\u1EB1m trong \u0111\u1EC1.`;
-  const thieuTapVat = (d) => (d.nguon_kieu === "theo_mau" || d.nguon_kieu === "mau_va_so") && !d.nhom?.trim() || d.nguon_kieu === "ds_so" && !d.text?.trim() || d.nguon_kieu === "danh_so" && !d.n || d.nguon_kieu === "day_so" && (d.tu === null || d.den === null);
+  const rong = () => ({ mau: null, so: null, dk: null });
+  const vaLoi = (tho) => {
+    const d = tho;
+    if (!Array.isArray(d?.bien_co)) return tho;
+    const loai = (x) => x && typeof x === "object" && !Array.isArray(x) ? { ...rong(), ...x } : rong();
+    return {
+      ...d,
+      bien_co: d.bien_co.map((b) => ({
+        dai_luong: null,
+        dk: null,
+        mau_loai: null,
+        mau: null,
+        k_mau: null,
+        quan_he: null,
+        so_sanh: null,
+        k_dem: null,
+        k_dem2: null,
+        lan: null,
+        khong: false,
+        ...b,
+        loc: loai(b.loc),
+        loc2: loai(b.loc2),
+        day: Array.isArray(b.day) ? b.day.map(loai) : []
+      }))
+    };
+  };
+  const chuanHoa2 = (d) => {
+    if (d.ten_vat === "m\u1EB7t \u0111\u1ED3ng xu") return { ...d, nguon_kieu: "theo_mau", nhom: "ng\u1EEDa 1, s\u1EA5p 1", hoan_lai: true };
+    if (d.ten_vat === "m\u1EB7t x\xFAc x\u1EAFc" && d.nguon_kieu === "danh_so") return { ...d, n: 6, hoan_lai: true };
+    return d;
+  };
+  const loiTapVat = (d) => {
+    const v = taoVatTuNguon(nguonTuAI(d));
+    if ("loi" in v) return v.loi;
+    const co = new Set(v.vat.map((x) => x.so));
+    const nhac = d.bien_co.flatMap((b) => [b.loc, b.loc2, ...b.day]).flatMap((l) => l && l.so !== null ? [l.so] : []);
+    const thieu = nhac.find((s) => !co.has(s));
+    return thieu === void 0 ? null : `t\u1EADp v\u1EADt kh\xF4ng c\xF3 th\u1EBB ghi s\u1ED1 ${thieu}`;
+  };
   let cuoi = null;
+  let loiVat = null;
   for (let lan = 0; lan < 2; lan++) {
     const tho = await goiJson(system, `\u0110\u1EC1 b\xE0i:
-"""${noiDung}"""`, "doc_de_mo", SCHEMA_DOC_DE_MO);
-    if (tho === null) return cuoi;
+"""${noiDung}"""`, "doc_de_mo", SCHEMA_DOC_DE_MO, { toiDa: 3200, vaLoi });
+    if (tho === null) {
+      if (lan === 0 && !/429/.test(loiGroqCuoi())) continue;
+      return cuoi;
+    }
     const kq = DocDeMoSchema.safeParse(tho);
     if (!kq.success) {
       loiCuoi = `AI tr\u1EA3 v\u1EC1 sai \u0111\u1ECBnh d\u1EA1ng (${kq.error.issues[0]?.path.join(".") || "?"})`;
       continue;
     }
-    cuoi = kq.data;
-    if (!thieuTapVat(cuoi)) return cuoi;
+    cuoi = chuanHoa2(kq.data);
+    loiVat = loiTapVat(cuoi) ?? cuoi.bien_co.map(thieuBienCo).find((x) => x !== null) ?? null;
+    if (!loiVat) return cuoi;
   }
-  return cuoi && { ...cuoi, khop: false, ly_do: `${cuoi.ly_do} (AI ch\u01B0a \u0111i\u1EC1n \u0111\u01B0\u1EE3c t\u1EADp v\u1EADt, h\xE3y t\u1EF1 nh\u1EADp \u1EDF m\u1EE5c 1)` };
+  return cuoi && { ...cuoi, khop: false, ly_do: `${cuoi.ly_do} (AI ch\u01B0a \u0111i\u1EC1n \u0111\u1EE7 bi\u1EC3u m\u1EABu: ${loiVat}. H\xE3y ki\u1EC3m tra v\xE0 t\u1EF1 \u0111i\u1EC1n \u1EDF c\xE1c \xF4 b\xEAn d\u01B0\u1EDBi)` };
 }
 var SCHEMA_GIAI_THICH = {
   type: "object",
