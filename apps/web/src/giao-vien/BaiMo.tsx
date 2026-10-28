@@ -25,6 +25,7 @@ import type { ThuVien } from "../App";
 import { api, type DocDeMo } from "../api";
 import { OSo } from "../phong-thi-nghiem/PhongThiNghiem";
 import { PhongVat } from "../phong-thi-nghiem/PhongVat";
+import { NutAnhDe } from "./NutAnhDe";
 import { luuPhienGanDay, VAT } from "./TrangChu";
 
 /** Điều kiện trên một số, kèm các tham số k, k2, m, r, d (chỉ dùng tham số mà loại đó cần). */
@@ -761,6 +762,16 @@ export function BaiMo({ thuVien, aiBat, onDaLuu }: { thuVien: ThuVien; aiBat: bo
           <button type="button" onClick={() => void docDe()} disabled={!aiBat || dangDoc || de.trim().length < 10}>
             {dangDoc ? "AI đang đọc đề…" : "✨ AI đọc đề và điền sẵn"}
           </button>
+          <NutAnhDe
+            disabled={!aiBat}
+            onLoi={setLoi}
+            onChu={(chu) => {
+              setDe(chu);
+              setGhiChuAI(null);
+              setDaLuu(null);
+            }}
+          />
+          {aiBat && <span className="muted">Có thể dán ảnh bằng Ctrl+V. Sau khi ảnh được đọc, hãy kiểm tra chữ trong ô đề rồi bấm “AI đọc đề”.</span>}
           {!aiBat && <span className="muted">AI chưa bật, hãy chọn mẫu hoặc tự điền các khối.</span>}
         </div>
         {loi && <div className="thong-bao loi" style={{ marginTop: "0.6rem" }}>{loi}</div>}

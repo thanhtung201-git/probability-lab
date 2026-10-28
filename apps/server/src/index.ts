@@ -9,10 +9,12 @@ import { chay, lay } from "./db";
 import { DeBaiSchema, LoiDeBai, taoDeBai } from "./de-bai";
 import { chamRubric, chanDoanLan1, LoiNghiepVu, tongQuanPhien, trangThaiLuot, xuatCsv } from "./dich-vu";
 import { giaiThichBai, taoGiaiThich } from "./giai-thich";
-import { docDeBangLLM, docDeMoBangLLM, llmDangBat, loiGroqCuoi } from "./llm/groq";
+import { docAnhDeBangLLM, docDeBangLLM, docDeMoBangLLM, llmDangBat, loiGroqCuoi } from "./llm/groq";
 import { THU_VIEN_NGO_NHAN, thuVienTinhHuong, TIEN_TO_BAI_TU_NHAP, timTinhHuong } from "./thu-vien";
 
 const app = express();
+// Ảnh đề đã thu nhỏ ở trình duyệt nhưng vẫn lớn hơn JSON thường (Vercel giới hạn body 4,5MB).
+app.use("/api/doc-anh-de", express.json({ limit: "3mb" }));
 app.use(express.json({ limit: "300kb" }));
 
 // Chạy sau proxy của nền tảng triển khai (Fly, Render, Railway…): lấy địa chỉ IP thật từ X-Forwarded-For.
@@ -45,7 +47,7 @@ const gioiHanAI = (req: Request, res: Response, next: NextFunction) => {
   lanGoiAI.set(ip, gan);
   next();
 };
-app.use(["/api/doc-de", "/api/doc-de-mo", "/api/giai-thich-bai"], gioiHanAI);
+app.use(["/api/doc-de", "/api/doc-de-mo", "/api/doc-anh-de", "/api/giai-thich-bai"], gioiHanAI);
 app.use("/api/luot", (req, res, next) => (req.method === "POST" && /\/(giai-thich|tra-loi)$/.test(req.path) ? gioiHanAI(req, res, next) : next()));
 
 type XuLy = (req: Request, res: Response) => unknown;
@@ -225,6 +227,16 @@ app.post(
     const kq = await docDeBangLLM(noi_dung);
     if (!kq) throw new LoiNghiepVu(`AI chưa đọc được đề: ${loiGroqCuoi()}`, 502);
     res.json(kq);
+  }),
+);
+
+app.post(
+  "/api/doc-anh-de",
+  bocLoi(async (req, res) => {
+    const { anh } = z.object({ anh: z.string().regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, "Ảnh không hợp lệ").max(2_800_000) }).parse(req.body);
+    const noi_dung = await docAnhDeBangLLM(anh);
+    if (!noi_dung) throw new LoiNghiepVu(`AI chưa đọc được ảnh: ${loiGroqCuoi()}`, 502);
+    res.json({ noi_dung });
   }),
 );
 

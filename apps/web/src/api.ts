@@ -157,6 +157,7 @@ export interface DocDeMo {
 
 export const api = {
   docDeMo: (noi_dung: string) => post<DocDeMo>("/doc-de-mo", { noi_dung }),
+  docAnhDe: (anh: string) => post<{ noi_dung: string }>("/doc-anh-de", { anh }),
   docDe: (noi_dung: string) => post<DocDe>("/doc-de", { noi_dung }),
   trangThai: () => goi<{ llm_bat: boolean; mo_hinh: string | null }>("/trang-thai"),
   thuVien: () => goi<{ ngo_nhan: ThuVienNgoNhan; tinh_huong: ThuVienTinhHuong }>("/thu-vien"),

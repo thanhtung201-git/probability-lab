@@ -19,6 +19,8 @@ export const CONFIG = {
   groqApiKey: process.env.PLAB_TAT_AI === "1" ? null : process.env.GROQ_API_KEY?.trim() || null,
   /** Mô hình Groq hỗ trợ structured outputs chế độ strict. */
   groqModel: process.env.GROQ_MODEL?.trim() || "openai/gpt-oss-120b",
+  /** Mô hình Groq đọc được ảnh, dùng để chép đề từ ảnh chụp. */
+  groqVisionModel: process.env.GROQ_VISION_MODEL?.trim() || "qwen/qwen3.8-27b",
   groqTimeoutMs: Number(process.env.GROQ_TIMEOUT_MS ?? 20000),
   thuMucData: path.join(GOC_DU_AN, "data"),
   /** Thư mục giao diện đã build (npm run build); có thì máy chủ phục vụ luôn giao diện, không cần chạy riêng. */
