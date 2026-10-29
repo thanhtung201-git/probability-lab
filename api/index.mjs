@@ -58181,12 +58181,50 @@ var oCsv = (v) => {
   const s = v === null || v === void 0 ? "" : String(v);
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
-async function xuatCsv(phienId) {
+var NHAN_NGUON = { lai: "Lu\u1EADt + AI", llm: "AI" };
+var NHAN_DANH_GIA = { dung: "\u0110\xFAng", chua_phu_hop: "Ch\u01B0a ph\xF9 h\u1EE3p", sai: "Sai" };
+async function xuatCsv(phienId, tinhHuong = "") {
   const { nhom } = await tongQuanPhien(phienId);
-  const cot = ["ma_nhom", "lan1", "ma_he_thong", "nguon", "do_tin_cay", "danh_gia_gv", "ma_gv_sua", "ma_cuoi", "lan2", "lan3", "muc1", "muc2", "muc3"];
-  const dong = nhom.map(
-    (n) => [n.ma_nhom, n.lan1, n.ma_ngo_nhan, n.nguon, n.do_tin_cay, n.ket_luan, n.ma_sua, n.ma_cuoi, n.lan2, n.lan3, n.muc1, n.muc2, n.muc3].map(oCsv).join(",")
-  );
+  const cot = [
+    "M\xE3 phi\xEAn",
+    "T\xECnh hu\u1ED1ng",
+    "Nh\xF3m",
+    "L\u1EDDi gi\u1EA3i th\xEDch l\u1EA7n 1",
+    "M\xE3 ng\u1ED9 nh\u1EADn (h\u1EC7 th\u1ED1ng)",
+    "Ngu\u1ED3n ch\u1EA9n \u0111o\xE1n",
+    "\u0110\u1ED9 tin c\u1EADy",
+    "\u0110\xE1nh gi\xE1 c\u1EE7a gi\xE1o vi\xEAn",
+    "M\xE3 gi\xE1o vi\xEAn s\u1EEDa",
+    "M\xE3 ng\u1ED9 nh\u1EADn cu\u1ED1i c\xF9ng",
+    "L\u1EDDi gi\u1EA3i th\xEDch l\u1EA7n 2",
+    "L\u1EDDi gi\u1EA3i th\xEDch l\u1EA7n 3",
+    "M\u1EE9c rubric l\u1EA7n 1",
+    "M\u1EE9c rubric l\u1EA7n 2",
+    "M\u1EE9c rubric l\u1EA7n 3",
+    "M\u1EE9c t\u0103ng l\u1EA7n 1 \u0111\u1EBFn 3"
+  ];
+  const dong = nhom.map((n) => {
+    const m1 = n.muc1;
+    const m3 = n.muc3;
+    return [
+      phienId,
+      tinhHuong,
+      n.ma_nhom,
+      n.lan1,
+      n.ma_ngo_nhan,
+      n.nguon ? NHAN_NGUON[String(n.nguon)] ?? "B\u1ED9 lu\u1EADt" : "",
+      n.do_tin_cay,
+      n.ket_luan ? NHAN_DANH_GIA[String(n.ket_luan)] ?? n.ket_luan : "",
+      n.ma_sua,
+      n.ma_cuoi,
+      n.lan2,
+      n.lan3,
+      m1,
+      n.muc2,
+      m3,
+      m1 != null && m3 != null ? m3 - m1 : ""
+    ].map(oCsv).join(",");
+  });
   return "\uFEFF" + [cot.join(","), ...dong].join("\n");
 }
 
@@ -58416,10 +58454,10 @@ app.get(
 app.get(
   "/api/phien/:id/xuat-csv",
   bocLoi(async (req, res) => {
-    const { phien } = await laySoPhien(String(req.params.id));
+    const { phien, th } = await laySoPhien(String(req.params.id));
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Content-Disposition", `attachment; filename="phien-${phien.id}.csv"`);
-    res.send(await xuatCsv(String(phien.id)));
+    res.setHeader("Content-Disposition", `attachment; filename="nhat-ky-hoc-tap-${phien.id}.csv"`);
+    res.send(await xuatCsv(String(phien.id), th.tieu_de));
   })
 );
 app.post(

@@ -481,3 +481,15 @@ button:hover:not(:disabled):not(.phu), .nut:not(.phu):hover { box-shadow: 0 6px 
 @media (prefers-reduced-motion: reduce) {
   .xu-xu, .xu-xu .mat-xu { animation: none; }
 }
+
+/* ===== Phiếu tổng kết: khi in chỉ giữ nội dung phiếu ===== */
+.phieu-chi-so { grid-template-columns: repeat(4, 1fr); margin-bottom: 1.2rem; }
+@media (max-width: 900px) { .phieu-chi-so { grid-template-columns: repeat(2, 1fr); } }
+@media print {
+  .dau-trang, .banner, .nen-dong, .khong-in { display: none !important; }
+  body { background: #fff !important; }
+  .khung { max-width: none; padding: 0; margin: 0; }
+  .the { box-shadow: none !important; break-inside: avoid; opacity: 1 !important; transform: none !important; }
+  .the::before { display: none; }
+  .o-so { border: 1px solid #d7dbe6; }
+}

@@ -128,13 +128,53 @@ const oCsv = (v: unknown) => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-export async function xuatCsv(phienId: string): Promise<string> {
+const NHAN_NGUON: Record<string, string> = { lai: "Luật + AI", llm: "AI" };
+const NHAN_DANH_GIA: Record<string, string> = { dung: "Đúng", chua_phu_hop: "Chưa phù hợp", sai: "Sai" };
+
+/** Nhật ký học tập của cả phiên: mỗi hàng một nhóm, tiêu đề tiếng Việt, mở thẳng được bằng Excel (UTF-8 có BOM). */
+export async function xuatCsv(phienId: string, tinhHuong = ""): Promise<string> {
   const { nhom } = await tongQuanPhien(phienId);
-  const cot = ["ma_nhom", "lan1", "ma_he_thong", "nguon", "do_tin_cay", "danh_gia_gv", "ma_gv_sua", "ma_cuoi", "lan2", "lan3", "muc1", "muc2", "muc3"];
-  const dong = nhom.map((n) =>
-    [n.ma_nhom, n.lan1, n.ma_ngo_nhan, n.nguon, n.do_tin_cay, n.ket_luan, n.ma_sua, n.ma_cuoi, n.lan2, n.lan3, n.muc1, n.muc2, n.muc3]
+  const cot = [
+    "Mã phiên",
+    "Tình huống",
+    "Nhóm",
+    "Lời giải thích lần 1",
+    "Mã ngộ nhận (hệ thống)",
+    "Nguồn chẩn đoán",
+    "Độ tin cậy",
+    "Đánh giá của giáo viên",
+    "Mã giáo viên sửa",
+    "Mã ngộ nhận cuối cùng",
+    "Lời giải thích lần 2",
+    "Lời giải thích lần 3",
+    "Mức rubric lần 1",
+    "Mức rubric lần 2",
+    "Mức rubric lần 3",
+    "Mức tăng lần 1 đến 3",
+  ];
+  const dong = nhom.map((n) => {
+    const m1 = n.muc1 as number | null;
+    const m3 = n.muc3 as number | null;
+    return [
+      phienId,
+      tinhHuong,
+      n.ma_nhom,
+      n.lan1,
+      n.ma_ngo_nhan,
+      n.nguon ? (NHAN_NGUON[String(n.nguon)] ?? "Bộ luật") : "",
+      n.do_tin_cay,
+      n.ket_luan ? (NHAN_DANH_GIA[String(n.ket_luan)] ?? n.ket_luan) : "",
+      n.ma_sua,
+      n.ma_cuoi,
+      n.lan2,
+      n.lan3,
+      m1,
+      n.muc2,
+      m3,
+      m1 != null && m3 != null ? m3 - m1 : "",
+    ]
       .map(oCsv)
-      .join(","),
-  );
+      .join(",");
+  });
   return "﻿" + [cot.join(","), ...dong].join("\n");
 }

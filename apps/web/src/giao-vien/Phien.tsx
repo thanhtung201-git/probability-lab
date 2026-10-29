@@ -9,13 +9,14 @@ import { tenNhom } from "../ten-nhom";
 import { BaiHocVat } from "./BaiHocVat";
 import { LuongNhom } from "./LuongNhom";
 import { luuPhienGanDay } from "./TrangChu";
+import { PhieuTongKet } from "./PhieuTongKet";
 import { TongQuanLop } from "./TongQuanLop";
 
 export function Phien({ maPhien, thuVien }: { maPhien: string; thuVien: ThuVien }) {
   const [tinhHuong, setTinhHuong] = useState<TinhHuong | null>(null);
   const [tongQuan, setTongQuan] = useState<TongQuan | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
-  const [che, setChe] = useState<"nhom" | "lop">("nhom");
+  const [che, setChe] = useState<"nhom" | "lop" | "phieu">("nhom");
   const [nhomChon, setNhomChon] = useState<string | null>(null);
   const [tenNhomMoi, setTenNhomMoi] = useState("");
   const [loiNhom, setLoiNhom] = useState<string | null>(null);
@@ -89,6 +90,12 @@ export function Phien({ maPhien, thuVien }: { maPhien: string; thuVien: ThuVien 
           <span className="ma-phien">{maPhien}</span>
         </div>
         <div className="hang">
+          <a className="nut phu" href={`/api/phien/${maPhien}/xuat-csv`} download title="Tải nhật ký học tập của các nhóm, mở được bằng Excel">
+            Xuất nhật ký (CSV)
+          </a>
+          <button className={che === "phieu" ? "" : "phu"} onClick={() => { setChe("phieu"); taiTongQuan(); }}>
+            Phiếu tổng kết
+          </button>
           <button className={che === "nhom" ? "" : "phu"} onClick={() => setChe("nhom")}>
             Làm việc với nhóm
           </button>
@@ -117,7 +124,9 @@ export function Phien({ maPhien, thuVien }: { maPhien: string; thuVien: ThuVien 
         {ghiChu?.canh_bao && <div className="thong-bao canh-bao" style={{ marginTop: "0.7rem", marginBottom: 0 }}>{ghiChu.canh_bao}</div>}
       </div>
 
-      {che === "lop" ? (
+      {che === "phieu" ? (
+        <PhieuTongKet maPhien={maPhien} tieuDe={tinhHuong.tieu_de} tongQuan={tongQuan} thuVien={thuVien} onQuayLai={() => setChe("lop")} />
+      ) : che === "lop" ? (
         <TongQuanLop
           maPhien={maPhien}
           tongQuan={tongQuan}

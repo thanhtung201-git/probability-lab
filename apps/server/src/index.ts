@@ -169,10 +169,10 @@ app.get(
 app.get(
   "/api/phien/:id/xuat-csv",
   bocLoi(async (req, res) => {
-    const { phien } = await laySoPhien(String(req.params.id));
+    const { phien, th } = await laySoPhien(String(req.params.id));
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Content-Disposition", `attachment; filename="phien-${phien.id}.csv"`);
-    res.send(await xuatCsv(String(phien.id)));
+    res.setHeader("Content-Disposition", `attachment; filename="nhat-ky-hoc-tap-${phien.id}.csv"`);
+    res.send(await xuatCsv(String(phien.id), th.tieu_de));
   }),
 );
 
