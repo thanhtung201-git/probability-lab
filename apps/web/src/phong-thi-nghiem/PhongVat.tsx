@@ -35,7 +35,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { CachTinh } from "./CachTinh";
 import { Bar, Line } from "react-chartjs-2";
 import { BoThe, HopBi, MatBi, MatThe, MatVatTQ, TapVatTQ } from "./MatBiThe";
-import { SoChay } from "../hieu-ung";
+import { SoChay, phaoGiay } from "../hieu-ung";
+import { LinhVat } from "./LinhVat";
 import { MatDongXu } from "./MatDongXu";
 import { MatXucXac } from "./MatXucXac";
 import "./phong-thi-nghiem.css";
@@ -369,9 +370,31 @@ export function PhongVat({
   const tenKhoa = (k: string) => khoa.find((x) => x.khoa === k)?.nhan ?? k;
   const noiBat = khoaCauHinh && ["phan_phoi", "bien_co", "tung_so", "hai_the"].includes(cauHinh.che_do);
   const pMax = Math.max(...khoa.map((k) => k.xac_suat.soThuc()));
+  const hoiTu = soLieu.so_luot >= 1000 && n > 0 && lechLonNhat < 0.03;
+  const daPhao = useRef(false);
+  useEffect(() => {
+    if (soLieu.so_luot === 0) daPhao.current = false;
+    else if (hoiTu && !daPhao.current) {
+      daPhao.current = true;
+      phaoGiay();
+    }
+  }, [hoiTu, soLieu.so_luot]);
 
   return (
     <div className={`ptn${motCot ? " mot-cot" : ""}`}>
+      {!motCot && (
+        <ol className="tien-trinh" aria-label="Quy trình học tập">
+          {["Dự đoán", "Thí nghiệm", "Khám phá"].map((ten, i) => {
+            const dang = soLieu.so_luot === 0 ? 0 : dangChay ? 1 : 2;
+            return (
+              <li key={ten} className={i < dang ? "xong" : i === dang ? "dang" : ""} aria-current={i === dang ? "step" : undefined}>
+                <span className="so-tt">{i < dang ? "✓" : i + 1}</span>
+                {ten}
+              </li>
+            );
+          })}
+        </ol>
+      )}
       {/* Bảng điều khiển */}
       <div className="the">
         <h2>
@@ -385,7 +408,7 @@ export function PhongVat({
           </div>
         )}
 
-        {cauHinh.loai === "bi" && <HopBi hop={cauHinh.hop} />}
+        {cauHinh.loai === "bi" && <HopBi hop={cauHinh.hop} dangTron={dangLac} />}
         {cauHinh.loai === "bai_toan" && <TapVatTQ vat={cauHinh.vat} tenVat={cauHinh.ten_vat ?? "vật"} />}
         {cauHinh.loai === "the" && (
           <BoThe
@@ -396,7 +419,7 @@ export function PhongVat({
         )}
         <div className="nhan-muc">{DongTu}</div>
         <button className="nut-gieo" onClick={gieoMotLan} disabled={dangChay}>
-          ▶ {DongTu} 1 lượt{hoatHinh ? " (có hoạt hình)" : ""}
+          ▶ {DongTu} thử nào!{hoatHinh ? "" : " (1 lượt)"}
         </button>
         <div className="nut-lo">
           <input
@@ -410,7 +433,7 @@ export function PhongVat({
             onKeyDown={(e) => e.key === "Enter" && soHopLe && gieoLo(soTuyChinhN)}
             disabled={dangChay}
             aria-label={`Số lượt muốn ${dongTu}`}
-            placeholder="Nhập số lượt"
+            placeholder="Muốn thử bao nhiêu lượt?"
           />
           <button className="vua-chon" onClick={() => gieoLo(soTuyChinhN)} disabled={dangChay || !soHopLe}>
             ▶ {DongTu}
@@ -451,12 +474,17 @@ export function PhongVat({
           </div>
           <label>
             <input type="checkbox" checked={hoatHinh} onChange={(e) => setHoatHinh(e.target.checked)} disabled={dangChay} />
-            Hoạt hình
+            Hiệu ứng vui
           </label>
         </div>
       </div>
 
       <div>
+        {!motCot && (
+          <LinhVat
+            trangThai={{ dongTu, DongTu, soLuot: soLieu.so_luot, dangChay, soGhiNhan: soLieu.so_ghi_nhan, coDieuKien: cauHinh.che_do === "dieu_kien", lechLonNhat, hoiTu }}
+          />
+        )}
         {/* Sân khấu */}
         <div className="the">
           <div className="san-khau">
@@ -471,7 +499,7 @@ export function PhongVat({
             {dangLac ? (
               <div className="goi-y">Đang {dongTu}…</div>
             ) : soLieu.so_luot === 0 ? (
-              <div className="goi-y">Bấm nút đỏ để {dongTu} một lượt</div>
+              <div className="goi-y">Bấm nút tím để {dongTu} thử một lượt nào!</div>
             ) : (
               <div className="ket-qua">
                 {khoaCuoi !== undefined ? moTaLuot(cauHinh, mat, khoaCuoi) : "Đã khôi phục số liệu của nhóm"}
@@ -480,6 +508,27 @@ export function PhongVat({
             )}
           </div>
         </div>
+
+        {!motCot && (
+          <div className="the-chi-so" role="group" aria-label="Chỉ số nhanh">
+            <div className="chi-so">
+              <span className="gt">{so(soLieu.so_luot)}</span>
+              <span className="nh">Lượt thử</span>
+            </div>
+            <div className="chi-so">
+              <span className="gt">{so(soLieu.dem[kTheoDoi.khoa] ?? 0)}</span>
+              <span className="nh">Biến cố “{tenKhoa(kTheoDoi.khoa)}” xuất hiện</span>
+            </div>
+            <div className="chi-so">
+              <span className="gt">{n ? pt(tanSuat(kTheoDoi.khoa), 2) : "–"}</span>
+              <span className="nh">Tần số tương đối</span>
+            </div>
+            <div className="chi-so ly-thuyet">
+              <span className="gt">{pt(kTheoDoi.xac_suat.soThuc(), 2)}</span>
+              <span className="nh">Xác suất lý thuyết ({kTheoDoi.xac_suat.toString()})</span>
+            </div>
+          </div>
+        )}
 
         {/* Thực nghiệm và lý thuyết */}
         <div className="the">

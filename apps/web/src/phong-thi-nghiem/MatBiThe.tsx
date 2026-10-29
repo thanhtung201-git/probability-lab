@@ -1,5 +1,9 @@
 // Hình viên bi, thẻ số và hộp đựng, vẽ bằng CSS. Giá trị "mặt" 0 nghĩa là chưa lấy/rút.
+import { useGSAP } from "@gsap/react";
 import { cacSoThuanLoi, nhanVat, thoaBienCo, type BienCoThe, type NhomBi, type VatTongQuat } from "@plab/core";
+import gsap from "gsap";
+import { useRef, type CSSProperties } from "react";
+import { useNayRa } from "../hieu-ung";
 
 const BANG_MAU: Record<string, string> = {
   đỏ: "#dc2626",
@@ -26,10 +30,12 @@ const chiSoTheoTen = (ten: string) => [...ten].reduce((s, c) => s + c.charCodeAt
 
 /** Một vật của bài toán tổng quát: vòng tròn màu (nếu có màu) ghi số (nếu có số); chỉ có số thì vẽ thẻ số. */
 export function MatVatTQ({ vat, kichThuoc = 90, dangLac }: { vat?: VatTongQuat; kichThuoc?: number; dangLac: boolean }) {
+  const biRef = useRef<HTMLDivElement>(null);
+  useNayRa(biRef, dangLac, !!vat && vat.mau !== undefined);
   if (!vat) {
     return (
       <div className="bi-o" style={{ width: kichThuoc }} role="img" aria-label="Chưa lấy">
-        <div className={`bi chua${dangLac ? " dang-lac" : ""}`} style={{ width: kichThuoc, height: kichThuoc, background: "#c7cbd6" }} />
+        <div className={`bi chua${dangLac ? " dang-lac" : ""}`} style={{ width: kichThuoc, height: kichThuoc, backgroundColor: "#c7cbd6" }} />
       </div>
     );
   }
@@ -43,7 +49,7 @@ export function MatVatTQ({ vat, kichThuoc = 90, dangLac }: { vat?: VatTongQuat; 
   const nen = mauBi(vat.mau, chiSoTheoTen(vat.mau));
   return (
     <div className="bi-o" style={{ width: kichThuoc }} role="img" aria-label={nhanVat(vat)}>
-      <div className={`bi${dangLac ? " dang-lac" : ""}`} style={{ width: kichThuoc, height: kichThuoc, background: nen, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: kichThuoc * 0.42, textShadow: "0 1px 2px rgba(0,0,0,0.45)" }}>
+      <div ref={biRef} className={`bi${dangLac ? " dang-lac" : ""}`} style={{ width: kichThuoc, height: kichThuoc, backgroundColor: nen, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: kichThuoc * 0.42, textShadow: "0 1px 2px rgba(0,0,0,0.45)" }}>
         {vat.so ?? ""}
       </div>
       <span className="nhan-bi" style={{ fontSize: Math.max(11, kichThuoc * 0.16) }}>
@@ -90,11 +96,14 @@ export function TapVatTQ({ vat, tenVat }: { vat: VatTongQuat[]; tenVat: string }
 export function MatBi({ mat, hop, kichThuoc = 90, dangLac }: { mat: number; hop: NhomBi[]; kichThuoc?: number; dangLac: boolean }) {
   const nhom = hop[mat - 1];
   const mau = nhom ? mauBi(nhom.ten, mat - 1) : "#c7cbd6";
+  const biRef = useRef<HTMLDivElement>(null);
+  useNayRa(biRef, dangLac, !!nhom);
   return (
     <div className="bi-o" style={{ width: kichThuoc }} role="img" aria-label={nhom ? `Bi ${nhom.ten}` : "Chưa lấy"}>
       <div
+        ref={biRef}
         className={`bi${dangLac ? " dang-lac" : ""}${nhom ? "" : " chua"}`}
-        style={{ width: kichThuoc, height: kichThuoc, background: mau }}
+        style={{ width: kichThuoc, height: kichThuoc, backgroundColor: mau }}
       />
       <span className="nhan-bi" style={{ fontSize: Math.max(11, kichThuoc * 0.16) }}>
         {nhom ? nhom.ten : ""}
@@ -115,33 +124,51 @@ export function MatThe({
   kichThuoc?: number;
   dangLac: boolean;
 }) {
-  const trang = so === 0 ? " chua" : thuanLoi === undefined ? "" : thuanLoi ? " thuan-loi" : " khong-thuan-loi";
+  const trang = thuanLoi === false ? " khong-thuan-loi" : " thuan-loi";
+  const lat = useRef<HTMLDivElement>(null);
+  // Đang rút: thẻ úp (lắc nhẹ); rút xong: thẻ lật ngửa lên để lộ số.
+  useGSAP(
+    () => {
+      const el = lat.current;
+      if (!el) return;
+      const giam = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (dangLac || so === 0) gsap.set(el, { rotateY: 180 });
+      else if (giam) gsap.set(el, { rotateY: 0 });
+      else gsap.fromTo(el, { rotateY: 180, y: -30 }, { rotateY: 0, y: 0, duration: 0.7, ease: "back.out(1.4)" });
+    },
+    { dependencies: [dangLac, so] },
+  );
   return (
     <div
-      className={`the-so${trang}${dangLac ? " dang-lac" : ""}`}
-      style={{ width: kichThuoc * 0.9, height: kichThuoc, fontSize: kichThuoc * 0.46 }}
+      className={`the3d${dangLac ? " dang-lac" : ""}${so === 0 ? " chua" : ""}`}
+      style={{ width: kichThuoc * 0.9, height: kichThuoc, fontSize: kichThuoc * 0.46 } as CSSProperties}
       role="img"
       aria-label={so === 0 ? "Chưa rút" : `Thẻ số ${so}`}
     >
-      {so === 0 ? "?" : so}
-      {so !== 0 && thuanLoi !== undefined && (
-        <span className="dau-the" style={{ fontSize: Math.max(11, kichThuoc * 0.15), whiteSpace: "nowrap" }}>
-          {thuanLoi ? "✓ thuận lợi" : "✗ không"}
-        </span>
-      )}
+      <div className="lat" ref={lat}>
+        <div className={`mat-the-truoc${trang}`}>
+          {so === 0 ? "" : so}
+          {so !== 0 && thuanLoi !== undefined && (
+            <span className="dau-the" style={{ fontSize: Math.max(11, kichThuoc * 0.15), whiteSpace: "nowrap" }}>
+              {thuanLoi ? "✓ thuận lợi" : "✗ không"}
+            </span>
+          )}
+        </div>
+        <div className="mat-the-sau">?</div>
+      </div>
     </div>
   );
 }
 
 /** Hộp bi: các viên bi theo màu kèm số lượng, để cả lớp thấy hộp chứa gì. */
-export function HopBi({ hop }: { hop: NhomBi[] }) {
+export function HopBi({ hop, dangTron = false }: { hop: NhomBi[]; dangTron?: boolean }) {
   const tong = hop.reduce((s, g) => s + g.so, 0);
   return (
     <div className="hop-thong-tin">
-      <div className="hop-bi" aria-label="Các viên bi trong hộp">
+      <div className={`hop-bi${dangTron ? " dang-tron" : ""}`} aria-label="Các viên bi trong hộp">
         {hop.map((g, i) =>
           Array.from({ length: g.so }, (_, k) => (
-            <span key={`${i}-${k}`} className="bi-nho" style={{ background: mauBi(g.ten, i) }} />
+            <span key={`${i}-${k}`} className="bi-nho" style={{ backgroundColor: mauBi(g.ten, i), "--i": i * 7 + k } as CSSProperties} />
           )),
         )}
       </div>

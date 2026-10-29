@@ -278,3 +278,96 @@
 .phan-so > span:last-child { padding: 0.05em 0.3em 0; }
 .luoi-ket-qua { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.2rem, 1fr)); gap: 0.35rem; margin: 0.3rem 0; }
 .luoi-ket-qua > span { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.15rem 0.5rem; text-align: center; white-space: nowrap; }
+
+/* ===== Vật thể 3D: xúc xắc khối, đồng xu vàng–bạc, thẻ lật, bi bóng ===== */
+/* Xúc xắc */
+.xx3d { position: relative; perspective: 700px; flex: none; }
+.xx3d .khoi { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(-24deg) rotateY(32deg); }
+.xx3d.chua { opacity: 0.4; }
+.xx3d::after {
+  content: ""; position: absolute; left: 12%; right: 12%; bottom: -16%; height: 14%; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(17, 24, 39, 0.32), transparent 70%); filter: blur(4px);
+}
+.xx3d .mat-khoi {
+  position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+  padding: 16%; gap: 6%; border-radius: 16%; backface-visibility: hidden;
+  background: linear-gradient(145deg, #ff6b7a, #d11a38 65%, #a50f2a);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25), inset 4px 4px 10px rgba(255, 255, 255, 0.35), inset -6px -6px 12px rgba(0, 0, 0, 0.28);
+}
+.xx3d .mat-khoi span { border-radius: 50%; }
+.xx3d .mat-khoi span.cham { background: radial-gradient(circle at 35% 30%, #ffffff, #e8ecff 70%); box-shadow: inset 0 -2px 3px rgba(0, 0, 0, 0.25); }
+.xx3d.dang-lac .khoi { animation: xx-lan 0.85s linear infinite; }
+@keyframes xx-lan {
+  0% { transform: translateY(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  25% { transform: translateY(-34px) rotateX(120deg) rotateY(100deg) rotateZ(40deg); }
+  50% { transform: translateY(0) rotateX(220deg) rotateY(210deg) rotateZ(90deg); }
+  75% { transform: translateY(-22px) rotateX(300deg) rotateY(290deg) rotateZ(140deg); }
+  100% { transform: translateY(0) rotateX(360deg) rotateY(360deg) rotateZ(180deg); }
+}
+
+/* Đồng xu: mặt trước vàng (ngửa), mặt sau bạc (sấp), viền dày làm bằng các lớp mỏng xếp chồng */
+.xu3d { position: relative; perspective: 700px; flex: none; }
+.xu3d .dong { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(-18deg); }
+.xu3d.chua { opacity: 0.45; }
+.xu3d::after {
+  content: ""; position: absolute; left: 14%; right: 14%; bottom: -14%; height: 12%; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(17, 24, 39, 0.3), transparent 70%); filter: blur(4px);
+}
+.xu3d .lop-vien, .xu3d .mat-xu-truoc, .xu3d .mat-xu-sau { position: absolute; inset: 0; border-radius: 50%; }
+.xu3d .lop-vien { background: linear-gradient(90deg, #b9830f, #f1c64a 50%, #b9830f); }
+.xu3d .mat-xu-truoc, .xu3d .mat-xu-sau {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; line-height: 1; backface-visibility: hidden;
+}
+.xu3d .mat-xu-truoc {
+  transform: translateZ(calc(var(--k) * 0.04)); color: #7a5200;
+  background: radial-gradient(circle at 32% 28%, #fff0a8, #f6c945 52%, #d9a21b);
+  box-shadow: inset 0 0 0 4px #d9a21b, inset 0 0 0 9px #f9dc7c, inset 0 0 14px rgba(0, 0, 0, 0.18);
+}
+.xu3d .mat-xu-sau {
+  transform: rotateX(180deg) translateZ(calc(var(--k) * 0.04)); color: #3b4256;
+  background: radial-gradient(circle at 32% 28%, #ffffff, #dfe3ee 52%, #aeb6c9);
+  box-shadow: inset 0 0 0 4px #9aa2b8, inset 0 0 0 9px #eef0f7, inset 0 0 14px rgba(0, 0, 0, 0.16);
+}
+.xu3d .nhan-mat { font-weight: 600; margin-top: 0.15em; letter-spacing: 0.02em; }
+.xu3d.dang-lat .dong { animation: xu-tung 0.55s linear infinite; }
+@keyframes xu-tung {
+  0% { transform: translateY(0) rotateX(0deg); }
+  50% { transform: translateY(-26px) rotateX(180deg); }
+  100% { transform: translateY(0) rotateX(360deg); }
+}
+
+/* Thẻ số: úp khi đang rút, lật ngửa để lộ số; vàng = thuận lợi, bạc = không */
+.the3d { position: relative; perspective: 700px; flex: none; }
+.the3d.chua { opacity: 0.5; }
+.the3d .lat { position: absolute; inset: 0; transform-style: preserve-3d; }
+.the3d .mat-the-truoc, .the3d .mat-the-sau {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15em;
+  border-radius: 12px; font-weight: 800; line-height: 1; backface-visibility: hidden;
+}
+.the3d .mat-the-truoc { color: #4a3300; border: 3px solid #b9830f; background: linear-gradient(135deg, #fff0a8, #f6c945 55%, #e0a91b); box-shadow: 0 6px 0 #c68f12, 0 12px 22px rgba(17, 24, 39, 0.18); }
+.the3d .mat-the-truoc.khong-thuan-loi { color: #3b4256; border-color: #8e97ad; background: linear-gradient(135deg, #ffffff, #dfe3ee 55%, #b9c0d2); box-shadow: 0 6px 0 #9aa2b8, 0 12px 22px rgba(17, 24, 39, 0.16); }
+.the3d .mat-the-sau {
+  transform: rotateY(180deg); color: #fff; border: 3px solid #3b2a8a; font-size: 1em;
+  background: radial-gradient(circle at 70% 20%, #c471ed, transparent 50%), linear-gradient(160deg, #6a3df0, #3b1f9a);
+  box-shadow: 0 6px 0 #2a1870, 0 12px 22px rgba(17, 24, 39, 0.2);
+}
+.the3d .dau-the { font-weight: 700; }
+.the3d.dang-lac { animation: nay-the 0.3s ease-in-out infinite; }
+
+/* Bi bóng loáng, nảy ra khi được chọn; bi trong hộp xôn xao khi đang trộn */
+.bi { background-image: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 42%), radial-gradient(circle at 70% 78%, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0) 55%); }
+.bi-nho { background-image: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 45%); }
+.hop-bi.dang-tron .bi-nho { animation: tron-bi 0.45s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -0.06s); }
+@keyframes tron-bi {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(3px, -6px); }
+  50% { transform: translate(-3px, 2px); }
+  75% { transform: translate(-2px, -4px); }
+}
+@media (hover: hover) {
+  .ptn .san-khau .xx3d:hover, .ptn .san-khau .xu3d:hover, .ptn .san-khau .the3d:hover { transform: scale(1.08); cursor: pointer; }
+  .xx3d, .xu3d, .the3d { transition: transform 0.25s cubic-bezier(0.3, 1.8, 0.5, 1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xx3d.dang-lac .khoi, .xu3d.dang-lat .dong, .the3d.dang-lac, .hop-bi.dang-tron .bi-nho { animation: none; }
+}

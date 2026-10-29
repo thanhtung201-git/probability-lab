@@ -25,10 +25,10 @@ function useHash() {
 }
 
 const GIOI_THIEU = {
-  phong: { tieuDe: "Phòng thí nghiệm xác suất", moTa: "Gieo hàng nghìn lần trong vài giây và xem tần suất tiến dần về xác suất lý thuyết." },
-  "tiet-hoc": { tieuDe: "Tiết học với AI", moTa: "Nêu tình huống, để học sinh dự đoán, thử nghiệm rồi cùng AI giải thích kết quả." },
-  "bai-mo": { tieuDe: "Bài toán mở", moTa: "Nhập đề bài bất kỳ: hệ thống dựng thí nghiệm, giải chi tiết và chẩn đoán lỗi sai." },
-  phien: { tieuDe: "Phiên học trên lớp", moTa: "Theo dõi từng nhóm làm bài và chốt kiến thức ngay khi cả lớp đã thử." },
+  phong: { tieuDe: "Phòng thí nghiệm xác suất", moTa: "Tung, gieo, rút hàng nghìn lần chỉ trong vài giây, rồi xem sự thật hiện ra!" },
+  "tiet-hoc": { tieuDe: "Tiết học với AI", moTa: "Dự đoán trước, thử nghiệm sau, rồi cùng khám phá xem ai đúng!" },
+  "bai-mo": { tieuDe: "Bài toán mở", moTa: "Cứ nhập đề bất kỳ: hệ thống dựng thí nghiệm, giải từng bước và bắt lỗi sai giúp bạn." },
+  phien: { tieuDe: "Phiên học trên lớp", moTa: "Theo dõi từng nhóm và chốt kiến thức khi cả lớp đã thử xong." },
 } as const;
 
 export function App() {

@@ -10,3 +10,5 @@ eval/ket-qua/
 *.db-shm
 *.db-wal
 .env.local
+
+.env*

@@ -326,3 +326,47 @@ export function useNghiengSanKhau(goc: RefObject<HTMLElement | null>) {
     { scope: goc },
   );
 }
+
+/** Pháo giấy rơi từ trên xuống, dùng khi kết quả thực nghiệm hội tụ về lý thuyết. */
+export function phaoGiay() {
+  if (window.matchMedia(GIAM_CHUYEN_DONG).matches) return;
+  const MAU = ["#6366f1", "#22b8a8", "#ffb84d", "#ff6b81", "#23356b"];
+  for (let i = 0; i < 70; i++) {
+    const manh = document.createElement("span");
+    manh.className = "hat-no";
+    manh.style.background = MAU[i % MAU.length]!;
+    manh.style.width = `${gsap.utils.random(6, 11)}px`;
+    manh.style.height = `${gsap.utils.random(9, 16)}px`;
+    document.body.appendChild(manh);
+    const x = gsap.utils.random(0, window.innerWidth);
+    gsap.fromTo(
+      manh,
+      { x, y: -20, rotate: gsap.utils.random(0, 360), opacity: 1 },
+      {
+        x: x + gsap.utils.random(-120, 120),
+        y: window.innerHeight * gsap.utils.random(0.6, 1),
+        rotate: `+=${gsap.utils.random(240, 720)}`,
+        opacity: 0,
+        duration: gsap.utils.random(1.4, 2.4),
+        delay: gsap.utils.random(0, 0.5),
+        ease: "power1.in",
+        onComplete: () => manh.remove(),
+      },
+    );
+  }
+}
+
+/** Viên bi vừa được chọn: nảy từ trên xuống vùng kết quả. */
+export function useNayRa(goc: RefObject<HTMLElement | null>, dangLac: boolean, coGiaTri: boolean) {
+  useGSAP(
+    () => {
+      if (dangLac || !coGiaTri || !goc.current) return;
+      const mm = gsap.matchMedia();
+      mm.add(BINH_THUONG, () => {
+        gsap.fromTo(goc.current, { y: -90, scale: 0.4, opacity: 0.2 }, { y: 0, scale: 1, opacity: 1, duration: 0.8, ease: "bounce.out", clearProps: "transform,opacity" });
+      });
+      return () => mm.revert();
+    },
+    { dependencies: [dangLac, coGiaTri] },
+  );
+}
